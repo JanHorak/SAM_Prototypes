@@ -149,7 +149,6 @@ public class KeyGenerationManager {
             File keyFile = new File(keyPath);
             obOutStream = new ObjectOutputStream(new FileOutputStream(keyFile));
             obOutStream.writeObject(key);
-            obOutStream.close();
         } catch (IOException ex) {
             Logger.getLogger(KeyGenerationManager.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
@@ -186,15 +185,22 @@ public class KeyGenerationManager {
     
     private Key readSecret(String pathOfKey){
         Key key = null;
+        ObjectInputStream obInStream = null;
         try {
             File file = new File(pathOfKey);
-            ObjectInputStream obInStream = new ObjectInputStream(new FileInputStream(file));
+            obInStream = new ObjectInputStream(new FileInputStream(file));
             key = (Key) obInStream.readObject();
-            obInStream.close();
+            
         } catch (IOException ex) {
             Logger.getLogger(KeyGenerationManager.class.getName()).log(Level.SEVERE, null, ex);
         } catch (ClassNotFoundException ex) {
             Logger.getLogger(KeyGenerationManager.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                obInStream.close();
+            } catch (IOException ex) {
+                Logger.getLogger(KeyGenerationManager.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
 
         return key;

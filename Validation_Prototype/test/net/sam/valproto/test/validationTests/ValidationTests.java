@@ -26,7 +26,7 @@ public class ValidationTests {
         us.setMoney(10000);
 
         Set<ConstraintViolation<Object>> violations = ValidationManager.returnConstraintViolantionSet(us);
-        assertTrue(violations.isEmpty());
+        assertTrue(ValidationManager.isValid(us));
         ValidationManager.validate(us);
     }
     
@@ -39,7 +39,7 @@ public class ValidationTests {
         us.setMoney(4);
 
         Set<ConstraintViolation<Object>> violations = ValidationManager.returnConstraintViolantionSet(us);
-        assertTrue(!violations.isEmpty());
+        assertTrue(!ValidationManager.isValid(us));
         System.out.println("---Errors were expected!---");
         ValidationManager.validate(us);
         System.out.println("---End of expected Errors!---");
