@@ -40,4 +40,13 @@ public class ValidationManager {
     }
     
     
+    /**
+     * Returns the validation of the passed Object
+     * @param ob - the Object we want to validate
+     * @return - the boolean, if the Object is valid
+     */
+    public static boolean isValid(Object ob){
+        return returnConstraintViolantionSet(ob).isEmpty();
+    }
+    
 }
