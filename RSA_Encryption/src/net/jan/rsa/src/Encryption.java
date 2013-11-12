@@ -6,12 +6,14 @@ package net.jan.rsa.src;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 /**
  *
@@ -24,14 +26,20 @@ public class Encryption {
     /**
      * This static method returns the bytearray which is encrypted with the publicKey
      * 
-     * @param cipher gives the cipher-Singleton- instance
      * @param publicKey_path gives the path of the public key
      * @param message gives the message we want to encrypt
      * @return the encrypted bytearray
      * @throws IOException
      * @throws InvalidKeyException 
      */
-    public static byte[] encrypt(Cipher cipher, String publicKey_path, String message) throws IOException, InvalidKeyException {
+    public static byte[] encrypt(String publicKey_path, String message) throws IOException, InvalidKeyException {
+        Cipher cipher = null;
+        try {
+            cipher = Cipher.getInstance(ALGORITHM);
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException ex) {
+            Logger.getLogger(Decryption.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
         // reads the Public Key from the File
         PublicKey publicKey = new KeyGenerationHelper().readPublicKeyFromFile(publicKey_path);
         

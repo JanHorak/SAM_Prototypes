@@ -4,6 +4,8 @@
  */
 package net.sam.valproto.mainvalidator;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -39,6 +41,23 @@ public class ValidationManager {
         return constraintViolations;
     }
     
+    /**
+     * This static method validates an Object and returns the fields with errors
+     * @param ob - the Object we want to validate
+     * @return errorFields - a List of Fields they have errors
+     */
+    public static List<String> returnInvalidFields(Object ob) {
+        List<String> errorFields = new ArrayList<>();
+        Set<ConstraintViolation<Object>> constraintViolations = returnConstraintViolantionSet(ob);
+        for (ConstraintViolation<Object> violation : constraintViolations) {
+            if ( violation.getPropertyPath().toString().isEmpty() ){
+                errorFields.add("Error in global Constraint!");
+            } else {
+                errorFields.add(violation.getPropertyPath().toString());
+            }
+        }
+        return errorFields;
+    }
     
     /**
      * Returns the validation of the passed Object

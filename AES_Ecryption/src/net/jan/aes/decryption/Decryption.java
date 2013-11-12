@@ -32,12 +32,13 @@ public class Decryption {
     /**
      * This method returns the decrypted file you can pass in the parameters.
      * The File returns will be stored at the position you can pass, too.
-     * @param encryptedFile - File, you want to decrypt
+     * @param path2FileForDecryption - File, you want to decrypt
      * @param outputFilePath - File- Location of the decrypted File
      * @param keyPath - Path of the Key (if the path is <b>null</b> it will use the default- Path
      * @return - The Decrypted File
      */
-    public File returnDecryptedFile(File encryptedFile, String outputFilePath, String keyPath) {
+    public File returnDecryptedFile(String path2FileForDecryption, String outputFilePath, String keyPath) {
+        File encryptedFile = new File(path2FileForDecryption);
         if (keyPath == null || keyPath.isEmpty()) {
             keyPath = "secret.key";
         }

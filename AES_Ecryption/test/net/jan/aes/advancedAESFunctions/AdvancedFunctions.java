@@ -56,8 +56,8 @@ public class AdvancedFunctions {
     public void shouldEncryptAFile() {
         File encryptedFile = new File(outputFile_enc);
         File decryptedFile = new File(outputFile_dec);
-        encryptedFile = new Encryption().returnEncryptedFile(new File(dummyFile), encryptedFile.getAbsolutePath(), secKeyPath);
-        decryptedFile = new Decryption().returnDecryptedFile(encryptedFile, outputFile_dec, secKeyPath);
+        encryptedFile = new Encryption().returnEncryptedFile(dummyFile, encryptedFile.getAbsolutePath(), secKeyPath);
+        decryptedFile = new Decryption().returnDecryptedFile(outputFile_enc, outputFile_dec, secKeyPath);
     }
 
     private void createADummyFile() {

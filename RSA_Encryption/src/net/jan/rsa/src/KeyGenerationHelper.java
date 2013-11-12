@@ -71,7 +71,7 @@ public class KeyGenerationHelper {
      * @throws IOException
      * @throws InvalidKeySpecException 
      */
-    public static void generateAndStoreKeys() throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {
+    public void generateAndStoreKeys() throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {
 
         final KeyPairGenerator keyGen = KeyPairGenerator.getInstance(ALGORITHM);
         keyGen.initialize(keySize);
