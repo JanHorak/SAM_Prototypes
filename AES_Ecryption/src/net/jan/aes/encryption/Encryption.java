@@ -32,12 +32,13 @@ public class Encryption {
     /**
      * This method returns the encrypted file you can pass in the parameters.
      * The File returns will be stored at the position you can pass, too.
-     * @param file2Encrypt - File, you want to encrypt
+     * @param path2FileForEncryption - File, you want to encrypt
      * @param outputFilePath - File- Location of the encrypted File
      * @param keyPath - Path of the Key (if the path is <b>null</b> it will use the default- Path
      * @return - The Encrypted File
      */
-    public File returnEncryptedFile(File file2Encrypt,String outputFilePath, String keyPath) {
+    public File returnEncryptedFile(String path2FileForEncryption ,String outputFilePath, String keyPath) {
+        File file2Encrypt = new File(path2FileForEncryption);
         if ( keyPath == null || keyPath.isEmpty() ){
             keyPath = "secret.key";
         }
