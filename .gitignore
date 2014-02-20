@@ -23,3 +23,7 @@ local.properties
 /JPA_Prototype/dist/
 nbproject/
 /build.xml
+/SAM_Server/build/
+/SAM_Server/dist/
+/SAM_FXClient/dist/
+/SAM_FXClient/build/
