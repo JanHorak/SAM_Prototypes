@@ -15,7 +15,7 @@ gen/
 # Local configuration file (sdk path, etc)
 local.properties
 
-
+target/
 
 # Eclipse project files
 .classpath
@@ -27,3 +27,5 @@ nbproject/
 /SAM_Server/dist/
 /SAM_FXClient/dist/
 /SAM_FXClient/build/
+/SAM_FXServer/build/
+/SAM_FXServer/dist/
