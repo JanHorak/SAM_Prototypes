@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package net.sam.client.clientmain;
+package net.sam.server.servermain;
 
 import java.io.BufferedReader;
 import java.io.IOException;
