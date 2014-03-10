@@ -6,10 +6,16 @@
 
 package net.sam.server.sam_mainserver;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.logging.Level;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
+import net.sam.server.entities.MediaStorage;
 import net.sam.server.entities.Member;
+import net.sam.server.enums.EnumMediaType;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -55,7 +61,7 @@ public class DataGeneration {
         
         m4.setName("Vladimir Vampir");
         m4.setPassword("ddd");
-        m4.setActive(true);
+        m4.setActive(false);
         
         m5.setName("Clark Kämmt");
         m5.setPassword("aaa");
@@ -66,6 +72,35 @@ public class DataGeneration {
         em.persist(m4);
         em.persist(m5);
         em.getTransaction().commit();
+        
+    }
+    
+    @Test
+    public void shouldAddAnImageForMediaStorage(){
+        em.getTransaction().begin();
+        File image = new File("src/main/resources/graphics/AndroidLogo.png");
+        
+        Member m = new Member();
+        m.setUserID(2);
+        
+        MediaStorage ms = new MediaStorage();
+        ms.setFileName("AndroidLogo.png");
+        ms.setDescription("Logo from Android");
+        ms.setType(EnumMediaType.IMAGE);
+        ms.setMemberId(m);
+        try {
+            ms.setContent(Files.readAllBytes(image.toPath()));
+        } catch (IOException ex) {
+            java.util.logging.Logger.getLogger(DataGeneration.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        em.persist(ms);
+        em.getTransaction().commit();
+        
+    }
+    
+    @After
+    public void shutDown(){
         em.close();
     }
     

@@ -11,10 +11,9 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.MapsId;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+import net.sam.server.enums.EnumMediaType;
 
 /**
  *
@@ -27,6 +26,9 @@ public class MediaStorage implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+    
+    @NotNull
+    private EnumMediaType type;
     
     @NotNull
     private String fileName;
@@ -80,7 +82,13 @@ public class MediaStorage implements Serializable {
     public void setDescription(String description) {
         this.description = description;
     }
-    
-    
-    
+
+    public EnumMediaType getType() {
+        return type;
+    }
+
+    public void setType(EnumMediaType type) {
+        this.type = type;
+    }
+     
 }
