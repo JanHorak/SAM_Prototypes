@@ -6,6 +6,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
@@ -16,6 +18,10 @@ import javax.validation.constraints.NotNull;
  */
 @Entity
 @Table(name = "Member")
+@NamedQueries({
+    @NamedQuery(name = "Member.findAll", query = "SELECT m FROM Member m"),
+    @NamedQuery(name = "Member.findByID", query = "SELECT m FROM Member m WHERE m.memberID = :id")
+})
 public class Member implements Serializable{
     
     @Id
