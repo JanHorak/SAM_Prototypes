@@ -22,12 +22,14 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.Ignore;
 import org.slf4j.Logger;
 
 /**
  *
  * @author janhorak
  */
+@Ignore
 public class DataGeneration {
     
     EntityManager em;
