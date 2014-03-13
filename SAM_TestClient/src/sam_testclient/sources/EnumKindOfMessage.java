@@ -11,5 +11,5 @@ package net.sam.server.enums;
  * @author janhorak
  */
 public enum EnumKindOfMessage {
-    REGISTER, MESSAGE, KEYEXCHANGE, LOGIN
+    REGISTER, MESSAGE, KEYEXCHANGE
 }

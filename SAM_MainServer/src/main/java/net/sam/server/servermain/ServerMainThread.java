@@ -9,9 +9,11 @@ package net.sam.server.servermain;
 import java.io.IOException;
 import java.net.Socket;
 import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JTextArea;
 import net.sam.server.entities.Member;
 
 
@@ -27,6 +29,7 @@ public class ServerMainThread extends Thread {
 
     private List<SocketChannel> channelList;
 
+    private List<Socket> socketList;
     private boolean active;
 
     private Server server;
@@ -36,33 +39,30 @@ public class ServerMainThread extends Thread {
     private boolean live = true;
 
     boolean stop = false;
+    
+    private JTextArea area;
 
-    public ServerMainThread(Server server, int maxUsers, List<Member> userList, boolean active) {
+    public ServerMainThread(Server server, int maxUsers, List<Member> userList, boolean active, JTextArea area) {
         this.maxUsers = maxUsers;
         this.userList = userList;
         this.active = active;
         this.server = server;
+        this.area = area;
     }
 
     @Override
     public void run() {
-        int id = 0; //<- Has to be replaced for autogenerate from hibernate
         System.out.println("Thread startet...");
-
+        socketList = new ArrayList<>();
         while (live) {
             if (userList.size() <= maxUsers) {
                 socket = null;
                 try {
                     System.out.println("Thread is waiting for Clients...");
                     socket = server.getServerSocket().accept();
-                    Member u = new Member();
-                    u.setUserID(id);
-                    u.setSocket(socket);
-                    userList.add(u); 
-                    //TODO: <- Do some Database- actions (adding etc)
-                    System.out.println("Added: " + u.toString());
+                    socketList.add(socket);
                     //TODO: <- Start of the Communicationthread here
-                    id++;
+                    new CommunicationThread(socket, area).start();
                 } catch (IOException ex) {
                     /*
                     The Problem is the Blocking- Method of the Serversocket.
@@ -71,14 +71,6 @@ public class ServerMainThread extends Thread {
                     Thread.
                     */
                     live = false;
-                } finally {
-                    if (socket != null) {
-                        try {
-                            socket.close();
-                        } catch (IOException ex) {
-                            Logger.getLogger(ServerMainThread.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    }
                 }
             }
         }

@@ -2,6 +2,7 @@ package net.sam.server.entities;
 
 import java.io.Serializable;
 import java.net.Socket;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -32,9 +33,11 @@ public class Member implements Serializable{
     private Socket socket;
 
     @NotNull
+    @Column(name = "name")
     private String name;
     
     @NotNull
+    @Column(name = "pw")
     private String password;
     
     @NotNull

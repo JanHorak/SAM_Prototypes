@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.JTextArea;
 import net.sam.server.entities.Member;
 
 
@@ -18,7 +19,7 @@ import net.sam.server.entities.Member;
  *
  * @author janhorak
  */
-public class Server extends ClientServerCommunicationBase{
+public class Server implements ClientServerCommunicationBase{
     
     private ServerSocket serverSocket;
     
@@ -28,7 +29,10 @@ public class Server extends ClientServerCommunicationBase{
     
     private ServerMainThread smt;
     
-    public Server(){
+    private JTextArea messageArea;
+    
+    public Server(JTextArea messageArea){
+        this.messageArea = messageArea;
  	try {
             userList = new ArrayList<Member>(MAXUSERS);
  	    this.startUpServer();
@@ -46,7 +50,7 @@ public class Server extends ClientServerCommunicationBase{
     }
     
     private void waiting4Clients(ServerSocket serverSocket) {
- 	smt = new ServerMainThread(this, MAXUSERS, userList, true);
+ 	smt = new ServerMainThread(this, MAXUSERS, userList, true, messageArea);
         smt.start();
     }
     
