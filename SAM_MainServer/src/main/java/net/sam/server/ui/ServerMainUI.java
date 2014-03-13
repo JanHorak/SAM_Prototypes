@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
+import net.sam.server.manager.DataAccess;
 import net.sam.server.servermain.Server;
 
 /**
@@ -100,7 +101,7 @@ public class ServerMainUI extends javax.swing.JFrame {
             }
         });
 
-        pnl_messanges.setBorder(javax.swing.BorderFactory.createTitledBorder("Messanges"));
+        pnl_messanges.setBorder(javax.swing.BorderFactory.createTitledBorder("Messages"));
 
         ta_messanges.setColumns(20);
         ta_messanges.setRows(5);
@@ -114,10 +115,15 @@ public class ServerMainUI extends javax.swing.JFrame {
         );
         pnl_messangesLayout.setVerticalGroup(
             pnl_messangesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 99, Short.MAX_VALUE)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 101, Short.MAX_VALUE)
         );
 
         btn_send.setText("Send");
+        btn_send.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btn_sendActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -235,8 +241,8 @@ public class ServerMainUI extends javax.swing.JFrame {
 
     private void tgl_StartServerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tgl_StartServerActionPerformed
         if (tgl_StartServer.isSelected()) {
-            server = new Server();
-            ta_messanges.append("\n["+new Date().toString()+"] Server started...");
+            server = new Server(ta_messanges);
+            ta_messanges.append("["+new Date().toString()+"] Server started...");
             tgl_StartServer.setText("Stop Server");
         } else {
             try {
@@ -248,6 +254,10 @@ public class ServerMainUI extends javax.swing.JFrame {
             }
         }
     }//GEN-LAST:event_tgl_StartServerActionPerformed
+
+    private void btn_sendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_sendActionPerformed
+
+    }//GEN-LAST:event_btn_sendActionPerformed
 
     /**
      * @param args the command line arguments
@@ -289,7 +299,7 @@ public class ServerMainUI extends javax.swing.JFrame {
     private javax.swing.JLabel lb_serverPORT;
     private javax.swing.JPanel pnl_messanges;
     private javax.swing.JSpinner spr_serverMAXCON;
-    private javax.swing.JTextArea ta_messanges;
+    public javax.swing.JTextArea ta_messanges;
     private javax.swing.JTextField tf_serverIP;
     private javax.swing.JTextField tf_serverPORT;
     private javax.swing.JTextField tf_singleMessange;

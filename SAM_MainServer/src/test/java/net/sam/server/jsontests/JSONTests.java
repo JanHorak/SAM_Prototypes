@@ -25,9 +25,9 @@ public class JSONTests {
     
     @Test
     public void createSomeJSONsTest(){
-        Message m1 = new Message(EnumKindOfMessage.MESSAGE, "I'm a message!");
-        Message m2 = new Message(EnumKindOfMessage.KEYEXCHANGE, "I'm a Keyexchange- request!");
-        Message m3 = new Message(EnumKindOfMessage.REGISTER, "I'm a register- message!");
+        Message m1 = new Message(0, 0, EnumKindOfMessage.MESSAGE, "I'm a message!", "other");
+        Message m2 = new Message(0, 0, EnumKindOfMessage.KEYEXCHANGE, "I'm a Keyexchange- request!", "other");
+        Message m3 = new Message(0, 0, EnumKindOfMessage.REGISTER, "I'm a register- message!", "other");
         
         String json1 = MessageWrapper.createJSON(m1);
         String json2 = MessageWrapper.createJSON(m2);
