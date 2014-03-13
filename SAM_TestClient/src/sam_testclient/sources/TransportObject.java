@@ -4,9 +4,9 @@
  * and open the template in the editor.
  */
 
-package net.sam.server.entities;
+package sam_testclient.sources;
 
-import net.sam.server.enums.EnumKindOfMessage;
+
 
 /**
  * Abstract TrasportObject class. 
@@ -18,6 +18,37 @@ public abstract class TransportObject {
     private EnumKindOfMessage messageType;
     
     private String content;
+    
+    private int recieverId;
+    
+    private int senderId;
+    
+    private String others;
+
+    public int getSenderId() {
+        return senderId;
+    }
+
+    public void setSenderId(int senderId) {
+        this.senderId = senderId;
+    }
+
+    public String getOthers() {
+        return others;
+    }
+
+    public void setOthers(String others) {
+        this.others = others;
+    }
+    
+
+    public int getRecieverId() {
+        return recieverId;
+    }
+
+    public void setRecieverId(int recieverId) {
+        this.recieverId = recieverId;
+    }
 
     public EnumKindOfMessage getMessageType() {
         return messageType;

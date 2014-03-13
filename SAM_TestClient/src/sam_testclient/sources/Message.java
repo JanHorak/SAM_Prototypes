@@ -4,9 +4,8 @@
  * and open the template in the editor.
  */
 
-package net.sam.server.entities;
+package sam_testclient.sources;
 
-import net.sam.server.enums.EnumKindOfMessage;
 
 /**
  *
@@ -14,13 +13,19 @@ import net.sam.server.enums.EnumKindOfMessage;
  */
 public class Message extends TransportObject{
     
-    public Message (EnumKindOfMessage kind, String content){
+    public Message (int senderId, int recieverId, EnumKindOfMessage kind, String content, String others){
         this.setContent(content);
         this.setMessageType(kind);
+        this.setRecieverId(recieverId);
+        this.setSenderId(senderId);
+        this.setOthers(others);
     }
     
     @Override
     public String toString(){
-        return this.getMessageType() + " " + this.getContent();
+        return this.getSenderId() + " to " +this.getRecieverId() + " " 
+                +this.getMessageType() + " "
+                +this.getContent() + " "
+                +this.getOthers();
     }
 }
