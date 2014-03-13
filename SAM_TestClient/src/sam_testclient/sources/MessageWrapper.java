@@ -4,10 +4,10 @@
  * and open the template in the editor.
  */
 
-package net.sam.server.manager;
+package sam_testclient.sources;
 
 import com.google.gson.Gson;
-import net.sam.server.entities.Message;
+
 
 /**
  * Wrapper class for Messages
