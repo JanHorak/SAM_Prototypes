@@ -8,6 +8,7 @@ package net.sam.server.utilities;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 
 /**
  *
@@ -37,4 +38,7 @@ public class Utilities {
         return sb.toString();
     }
     
+    public static String getLogTime(){
+        return "["+new Date().toString()+"]";
+    }
 }

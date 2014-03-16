@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JTextArea;
+import net.sam.server.beans.ServerMainBean;
 import net.sam.server.entities.Member;
 import net.sam.server.entities.Message;
 import net.sam.server.enums.EnumKindOfMessage;
@@ -32,10 +33,13 @@ public class CommunicationThread extends Thread {
     private boolean live = true;
 
     private final JTextArea area;
+    
+    private ServerMainBean sb;
 
     public CommunicationThread(Socket socket, JTextArea area) {
         this.socket = socket;
         this.area = area;
+        sb = ServerMainBean.getInstance();
     }
 
     @Override
@@ -63,6 +67,7 @@ public class CommunicationThread extends Thread {
                 area.append("\n[" + new Date().toString() + "] User registered:");
                 area.append("\n[" + new Date().toString() + "] " + newMember.toString());
                 area.append("\n");
+                sb.addMember_registered(newMember);
             }
 
             if (m.getMessageType() == EnumKindOfMessage.LOGIN) {
@@ -70,6 +75,8 @@ public class CommunicationThread extends Thread {
                     area.append("\n[" + new Date().toString() + "] User logged in:");
                     area.append("\n[" + new Date().toString() + "] " + m.toString());
                     area.append("\n");
+                    Member member = DataAccess.getMemberByName(m.getContent());
+                    sb.addMember_login(member);
                 }
                 else {
                     area.append("\n[" + new Date().toString() + "] User logged tried to log in and failed:");

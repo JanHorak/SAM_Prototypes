@@ -1,13 +1,11 @@
 package net.sam.server.manager;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
-import javax.persistence.spi.PersistenceUnitTransactionType;
 import net.sam.server.entities.Member;
 
 /**
@@ -72,5 +70,26 @@ public abstract class DataAccess {
             shutDown();
         }
 
+    }
+    
+    public static Member getMemberById(int id){
+        setUp();
+        Query q = em.createNamedQuery("Member.findByID").setParameter("id", id);
+        shutDown();
+        return (Member) q.getSingleResult();
+    }
+    
+    public static Member getMemberByName(String name){
+        setUp();
+        Query q = em.createNamedQuery("Member.findByName").setParameter("name", name);
+        shutDown();
+        return (Member) q.getSingleResult();
+    }
+    
+    public static List<Member> getAllRegisteredMembers(){
+        setUp();
+        Query q = em.createNamedQuery("Member.findAll");
+        shutDown();
+        return (List<Member>) q.getResultList();
     }
 }
