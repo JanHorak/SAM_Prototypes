@@ -11,6 +11,9 @@ import java.util.List;
 import net.sam.server.entities.Member;
 import net.sam.server.servermain.ClientServerCommunicationBase;
 import net.sam.server.utilities.Utilities;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Logger;
+
 
 /**
  *
@@ -19,9 +22,13 @@ import net.sam.server.utilities.Utilities;
 
 public class ServerMainBean implements ClientServerCommunicationBase{
     
+    private static Logger logger;
+    
     private ServerMainBean(){
         this.loggedInuserList = new ArrayList<Member>();
         this.registeredUserList = new ArrayList<Member>();
+        BasicConfigurator.configure();
+        logger = org.apache.log4j.Logger.getLogger(ServerMainBean.class);
     }
     
     /**
@@ -33,7 +40,7 @@ public class ServerMainBean implements ClientServerCommunicationBase{
     public static ServerMainBean getInstance() {
         if (instance == null) {
             instance = new ServerMainBean();
-            System.out.println(Utilities.getLogTime() + " Singleton instantiated");
+            logger.info(Utilities.getLogTime()+" Singleton instantiated successfully");
         }
         return instance;
     }

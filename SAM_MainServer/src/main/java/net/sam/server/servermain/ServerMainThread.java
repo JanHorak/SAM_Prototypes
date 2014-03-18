@@ -8,13 +8,15 @@ package net.sam.server.servermain;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JTextArea;
 import net.sam.server.beans.ServerMainBean;
 import net.sam.server.entities.Member;
 import net.sam.server.utilities.Utilities;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Logger;
+
 
 
 /**
@@ -24,26 +26,16 @@ import net.sam.server.utilities.Utilities;
 public class ServerMainThread extends Thread {
 
 
-    ServerMainBean serverMainBean;
-
+    private ServerMainBean serverMainBean;
     private List<Member> userList;
-    
     private int maxUsers;
-
-    private List<SocketChannel> channelList;
-
     private List<Socket> socketList;
     private boolean active;
-
     private Server server;
-
     private Socket socket;
-
     private boolean live = true;
-
-    boolean stop = false;
-    
     private JTextArea area;
+    private Logger logger;
 
     public ServerMainThread(Server server, int maxUsers, List<Member> userList, boolean active, JTextArea area) {
         this.maxUsers = maxUsers;
@@ -52,18 +44,19 @@ public class ServerMainThread extends Thread {
         this.server = server;
         this.area = area;
         serverMainBean = ServerMainBean.getInstance();
-        System.out.println(serverMainBean.getMaxUsers());
+        BasicConfigurator.configure();
+        logger = Logger.getLogger(ServerMainThread.class);
     }
 
     @Override
     public void run() {
-        System.out.println(Utilities.getLogTime()+ " Thread startet...");
+        logger.info(Utilities.getLogTime()+" Server Main Thread started");
         socketList = new ArrayList<>();
         while (live) {
             if (userList.size() <= maxUsers) {
                 socket = null;
                 try {
-                    System.out.println(Utilities.getLogTime()+ " Thread is waiting for Clients...");
+                    logger.info(Utilities.getLogTime()+" Waiting for clients...");
                     socket = server.getServerSocket().accept();
                     socketList.add(socket);
                     //TODO: <- Start of the Communicationthread here
@@ -79,7 +72,7 @@ public class ServerMainThread extends Thread {
                 }
             }
         }
-        System.out.println(Utilities.getLogTime()+ " ServerThread stopped");
+        logger.warn(Utilities.getLogTime() +" Server is stopped");
     }
 
     /**
@@ -90,7 +83,6 @@ public class ServerMainThread extends Thread {
     public void kill() throws IOException {
         for (Member u : userList) {
             u.getSocket().close();
-            System.out.println(Utilities.getLogTime()+ " "+u.toString() + " is disconnected");
         }
         userList.clear();
         interrupt();
