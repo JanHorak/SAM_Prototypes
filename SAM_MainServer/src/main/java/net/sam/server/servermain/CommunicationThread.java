@@ -10,8 +10,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JTextArea;
 import net.sam.server.beans.ServerMainBean;
 import net.sam.server.entities.Member;
@@ -19,6 +17,10 @@ import net.sam.server.entities.Message;
 import net.sam.server.enums.EnumKindOfMessage;
 import net.sam.server.manager.DataAccess;
 import net.sam.server.manager.MessageWrapper;
+import net.sam.server.utilities.Utilities;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Logger;
+
 
 /**
  * CommunitactionThread of the Server. This thread manages the main connections
@@ -29,29 +31,30 @@ import net.sam.server.manager.MessageWrapper;
 public class CommunicationThread extends Thread {
 
     private final Socket socket;
-
     private boolean live = true;
-
-    private final JTextArea area;
-    
+    private final JTextArea area; 
     private ServerMainBean sb;
+    private Logger logger;
 
+    
     public CommunicationThread(Socket socket, JTextArea area) {
         this.socket = socket;
         this.area = area;
         sb = ServerMainBean.getInstance();
+        BasicConfigurator.configure();
+        logger = Logger.getLogger(CommunicationThread.class);
     }
 
     @Override
     public void run() {
-        System.out.println("Ready to read @ " + socket.toString());
+        logger.info(Utilities.getLogTime()+" Client is connected at: "+socket.toString());
         while (live) {
             Message m = null;
             try {
                 // JSON handling
                 m = MessageWrapper.JSON2Message(readMessage());
             } catch (IOException ex) {
-                Logger.getLogger(CommunicationThread.class.getName()).log(Level.SEVERE, null, ex);
+                logger.error(Utilities.getLogTime()+" Error at MessageWrapper");
             }
 
             // Cases for EnumKinds --------------------
@@ -61,7 +64,7 @@ public class CommunicationThread extends Thread {
                     newMember.setName(m.getContent());
                     newMember.setPassword(m.getOthers());
                     newMember.setActive(true);
-                    System.out.println(newMember.toString());
+                    logger.info(Utilities.getLogTime()+" New Member registered");
                 }
                 DataAccess.registerUser(newMember);
                 area.append("\n[" + new Date().toString() + "] User registered:");
@@ -95,7 +98,7 @@ public class CommunicationThread extends Thread {
             try {
                 sleep(500);
             } catch (InterruptedException ex) {
-                Logger.getLogger(CommunicationThread.class.getName()).log(Level.SEVERE, null, ex);
+                logger.error(Utilities.getLogTime()+" Thread is interrupted! "+ex);
             }
         }
     }

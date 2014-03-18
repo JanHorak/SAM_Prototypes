@@ -2,14 +2,17 @@ package net.sam.server.ui;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Properties;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import net.sam.server.beans.ServerMainBean;
+import net.sam.server.manager.FileManager;
 import net.sam.server.servermain.Server;
 import net.sam.server.utilities.Utilities;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Logger;
+
 
 /**
  *
@@ -22,22 +25,32 @@ public class ServerMainUI extends javax.swing.JFrame {
      */
     public ServerMainUI() {
         initComponents();
+        BasicConfigurator.configure();
+        logger = Logger.getLogger(ServerMainUI.class);
+
         this.setTitle("SAM - SecureAndroidMessenger - Server");
         lb_logo.setIcon(new ImageIcon("src/main/resources/graphics/simpleLogoSAM.png"));
-
+        
+        Properties serverprops = FileManager.initProperties(SERVERPROPERTIES);
+        chk_logging.setSelected(Boolean.getBoolean(serverprops.getProperty("logging")));
+        
         serverMainBean = ServerMainBean.getInstance();
 
+        // Loading of the UIThread
         uiThread = new UIUpdateThread(list_members);
         uiThread.start();
+
+        // Get wrapped Lists from Singleton for UI
         ui_registeredInUsers = ServerMainBean.wrapForUI(serverMainBean.getRegisteredMembers());
         ui_loggedInUsers = ServerMainBean.wrapForUI(serverMainBean.getloggedInMembers());
-        
+
+        // ---- UI Settings ------
         ButtonGroup bg = new ButtonGroup();
         bg.add(radio_membersOnline);
         bg.add(radio_membersRegistered);
-        
+
         radio_membersRegistered.doClick();
-        
+        logger.info(Utilities.getLogTime()+" UI loaded successfully");
     }
 
     // ---------- Variables ----------------
@@ -46,10 +59,16 @@ public class ServerMainUI extends javax.swing.JFrame {
     private ServerMainBean serverMainBean;
 
     private UIUpdateThread uiThread;
-    
+
     private List<String> ui_loggedInUsers;
-            
+
     private List<String> ui_registeredInUsers;
+
+    private Logger logger;
+    
+    private static final String SERVERPROPERTIES = "src/main/resources/server.properties";
+    
+    private static final String LOGGINGPROPERTIES = "src/main/resources/log4j.properties";
 
     // ---------- ---------- ----------------
     @SuppressWarnings("unchecked")
@@ -75,6 +94,7 @@ public class ServerMainUI extends javax.swing.JFrame {
         lb_logo = new javax.swing.JLabel();
         jTabbedPane1 = new javax.swing.JTabbedPane();
         jPanel1 = new javax.swing.JPanel();
+        chk_logging = new javax.swing.JCheckBox();
         jPanel2 = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         list_members = new javax.swing.JList();
@@ -158,15 +178,29 @@ public class ServerMainUI extends javax.swing.JFrame {
             }
         });
 
+        chk_logging.setSelected(true);
+        chk_logging.setText("Save logging in File");
+        chk_logging.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                chk_loggingActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 240, Short.MAX_VALUE)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(chk_logging)
+                .addContainerGap(73, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 128, Short.MAX_VALUE)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(chk_logging)
+                .addContainerGap(92, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Settings", jPanel1);
@@ -285,7 +319,7 @@ public class ServerMainUI extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 6, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(tgl_StartServer)
                             .addComponent(lb_logo)))
                     .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -302,17 +336,11 @@ public class ServerMainUI extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     // ---------- Methods -----------------
-    
     //@TODO: Refactoring of the Radio- buttons!!
-    
-
-        
     
     
     // -------------------------------------
-    
-    
-    
+
     private void chk_defaultPORTActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chk_defaultPORTActionPerformed
         if (chk_defaultPORT.isSelected()) {
             tf_serverPORT.setText("2222");
@@ -361,7 +389,7 @@ public class ServerMainUI extends javax.swing.JFrame {
                 ta_messanges.append("\n" + Utilities.getLogTime() + " Server stopped!");
                 tgl_StartServer.setText("Start Server");
             } catch (IOException ex) {
-                Logger.getLogger(ServerMainUI.class.getName()).log(Level.SEVERE, null, ex);
+
             }
         }
     }//GEN-LAST:event_tgl_StartServerActionPerformed
@@ -384,7 +412,7 @@ public class ServerMainUI extends javax.swing.JFrame {
     }//GEN-LAST:event_radio_membersOnlineActionPerformed
 
     private void radio_membersRegisteredActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_radio_membersRegisteredActionPerformed
-        DefaultListModel lm  = new DefaultListModel();
+        DefaultListModel lm = new DefaultListModel();
         if (!serverMainBean.getRegisteredMembers().isEmpty()) {
             List<String> loggedInFormatted = ServerMainBean.wrapForUI(serverMainBean.getRegisteredMembers());
             for (String s : loggedInFormatted) {
@@ -395,6 +423,16 @@ public class ServerMainUI extends javax.swing.JFrame {
         }
         this.list_members.setModel(lm);
     }//GEN-LAST:event_radio_membersRegisteredActionPerformed
+
+    private void chk_loggingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chk_loggingActionPerformed
+        if (chk_logging.isSelected()){
+            FileManager.storeValueInPropertiesFile(SERVERPROPERTIES, "logging", "true");
+            FileManager.storeValueInPropertiesFile(LOGGINGPROPERTIES, "log4j.rootLogger", "info, file");
+        } else {
+            FileManager.storeValueInPropertiesFile(SERVERPROPERTIES, "logging", "false");
+            FileManager.storeValueInPropertiesFile(LOGGINGPROPERTIES, "log4j.rootLogger", "\"\"");
+        }
+    }//GEN-LAST:event_chk_loggingActionPerformed
 
     /**
      * @param args the command line arguments
@@ -428,6 +466,7 @@ public class ServerMainUI extends javax.swing.JFrame {
     private javax.swing.JCheckBox chk_defaultIP;
     private javax.swing.JCheckBox chk_defaultMAXCON;
     private javax.swing.JCheckBox chk_defaultPORT;
+    private javax.swing.JCheckBox chk_logging;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;

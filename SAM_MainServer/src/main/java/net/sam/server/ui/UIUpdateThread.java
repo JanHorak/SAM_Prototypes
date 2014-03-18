@@ -5,12 +5,12 @@
  */
 package net.sam.server.ui;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JList;
 import net.sam.server.beans.ServerMainBean;
 import net.sam.server.manager.DataAccess;
 import net.sam.server.utilities.Utilities;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -22,7 +22,11 @@ public class UIUpdateThread extends Thread {
 
     private ServerMainBean sb;
 
+    private Logger logger;
+    
     public UIUpdateThread(JList loggedInList) {
+        BasicConfigurator.configure();
+        logger = Logger.getLogger(UIUpdateThread.class);
         this.ui_userList = loggedInList;
         sb = ServerMainBean.getInstance();
         sb.setRegisteredMembers(DataAccess.getAllRegisteredMembers());
@@ -30,13 +34,13 @@ public class UIUpdateThread extends Thread {
 
     @Override
     public void run() {
-        System.out.println(Utilities.getLogTime() + " ServerUIThread is started");
+        logger.info(Utilities.getLogTime()+" UI- updateThread is started...");
         while (true) {
 
             try {
                 sleep(5000);
             } catch (InterruptedException ex) {
-                Logger.getLogger(UIUpdateThread.class.getName()).log(Level.SEVERE, null, ex);
+                logger.error(Utilities.getLogTime()+" UIThread is interrupted!");
             }
         }
     }
