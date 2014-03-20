@@ -6,8 +6,11 @@
 
 package net.sam.server.beans;
 
+import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import net.sam.server.entities.Member;
 import net.sam.server.servermain.ClientServerCommunicationBase;
 import net.sam.server.utilities.Utilities;
@@ -21,11 +24,10 @@ import org.apache.log4j.Logger;
 
 public class ServerMainBean implements ClientServerCommunicationBase{
     
-    private static Logger logger;
-    
     private ServerMainBean(){
         this.loggedInuserList = new ArrayList<Member>();
         this.registeredUserList = new ArrayList<Member>();
+        this.socketMap = new HashMap<Integer, Socket>();
         logger = org.apache.log4j.Logger.getLogger(ServerMainBean.class);
     }
     
@@ -43,11 +45,33 @@ public class ServerMainBean implements ClientServerCommunicationBase{
         return instance;
     }
     
+    private static Logger logger;
+    
     private List<Member> loggedInuserList;
     
     private List<Member> registeredUserList;
     
+    private Map<Integer, Socket> socketMap;
+    
     private int maxUsers;
+    
+    public boolean isMemberOnline(int id){
+        return socketMap.containsKey(id);
+    }
+    
+    public Socket returnCommnunicationChannel(int id){
+        return socketMap.get(id);
+    }
+    
+    public Member getMemberById(int id){
+        Member m = new Member();
+        for (Member me : this.loggedInuserList){
+            if (me.getUserID() == id){
+                return me;
+            }
+        }
+        return m;
+    }
 
     public int getMaxUsers() {
         return maxUsers;
@@ -57,8 +81,9 @@ public class ServerMainBean implements ClientServerCommunicationBase{
         this.maxUsers = maxUsers;
     }
     
-    public void addMember_login(Member member){
+    public void addMember_login(Member member, Socket socket){
         this.loggedInuserList.add(member);
+        this.socketMap.put(member.getUserID(), socket);
     }
     
     public void addMember_registered(Member member){
@@ -94,6 +119,15 @@ public class ServerMainBean implements ClientServerCommunicationBase{
             }
         }
         this.loggedInuserList.remove(tmp);
+        this.socketMap.remove(m.getUserID());
         logger.debug(this.loggedInuserList.toString());
+    }
+    
+    public List<Socket> getAllSockets(){
+        List<Socket> result = new ArrayList<Socket>();
+        for (Socket s : this.socketMap.values()){
+            result.add(s);
+        }
+        return result;
     }
 }

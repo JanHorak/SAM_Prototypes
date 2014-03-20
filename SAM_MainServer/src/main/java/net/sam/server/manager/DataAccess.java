@@ -82,21 +82,40 @@ public abstract class DataAccess {
     public static Member getMemberById(int id){
         setUp();
         Query q = em.createNamedQuery("Member.findByID").setParameter("id", id);
-        shutDown();
-        return (Member) q.getSingleResult();
+        try {
+           return (Member) q.getSingleResult();
+        } catch (NoResultException ex) {
+            System.err.println("No User is founded!");
+            return null;
+        } finally {
+            shutDown();
+        }
+        
     }
     
     public static Member getMemberByName(String name){
         setUp();
         Query q = em.createNamedQuery("Member.findByName").setParameter("name", name);
-        shutDown();
-        return (Member) q.getSingleResult();
+        try {
+           return (Member) q.getSingleResult();
+        } catch (NoResultException ex) {
+            System.err.println("No User is founded!");
+            return null;
+        } finally {
+            shutDown();
+        }
     }
     
     public static List<Member> getAllRegisteredMembers(){
         setUp();
         Query q = em.createNamedQuery("Member.findAll");
-        shutDown();
-        return (List<Member>) q.getResultList();
+        try {
+           return (List<Member>) q.getResultList();
+        } catch (NoResultException ex) {
+            System.err.println("No Users are founded!");
+            return null;
+        } finally {
+            shutDown();
+        }
     }
 }

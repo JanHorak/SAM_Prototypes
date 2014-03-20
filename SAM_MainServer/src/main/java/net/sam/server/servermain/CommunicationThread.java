@@ -8,7 +8,10 @@ package net.sam.server.servermain;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.logging.Level;
 import javax.swing.JTextArea;
 import net.sam.server.beans.ServerMainBean;
 import net.sam.server.entities.Member;
@@ -54,6 +57,9 @@ public class CommunicationThread extends Thread {
                 }
 
                 // Cases for EnumKinds --------------------
+                /*
+                 ====================== REGISTER =====================
+                 */
                 if (m.getMessageType() == EnumKindOfMessage.REGISTER) {
                     Member newMember = new Member();
                     if (m.getSenderId() == 0) {
@@ -61,31 +67,39 @@ public class CommunicationThread extends Thread {
                         newMember.setPassword(m.getOthers());
                         newMember.setActive(true);
                         logger.info(Utilities.getLogTime() + " New Member registered");
-                        logger.info(Utilities.getLogTime()+ " "+ newMember.toString());
+                        logger.info(Utilities.getLogTime() + " " + newMember.toString());
                     }
                     DataAccess.registerUser(newMember);
-                    area.append("\n"+Utilities.getLogTime()+ " User registered:");
-                    area.append("\n"+Utilities.getLogTime()+ " "+ newMember.toString());
+                    area.append("\n" + Utilities.getLogTime() + " User registered:");
+                    area.append("\n" + Utilities.getLogTime() + " " + newMember.toString());
                     area.append("\n");
                     sb.addMember_registered(newMember);
                 }
 
+                /*
+                 ====================== LOGIN =====================
+                 */
                 if (m.getMessageType() == EnumKindOfMessage.LOGIN) {
                     if (DataAccess.login(m.getOthers())) {
                         Member member = DataAccess.getMemberByName(m.getContent());
-                        sb.addMember_login(member);
-                        area.append("\n"+Utilities.getLogTime()+ " "+member.getName()+ "logged in");
+                        sb.addMember_login(member, socket);
+
+                        sendLoginResponseMessage(member);
+                        area.append("\n" + Utilities.getLogTime() + " " + member.getName() + "logged in");
                         logger.info(Utilities.getLogTime() + " Member is logged in");
                     } else {
-                        area.append("\n"+Utilities.getLogTime()+ " User logged tried to log in and failed:");
-                        area.append("\n"+Utilities.getLogTime()+ " "+ m.toString());
+                        area.append("\n" + Utilities.getLogTime() + " User logged tried to log in and failed:");
+                        area.append("\n" + Utilities.getLogTime() + " " + m.toString());
                         area.append("\n");
                     }
                 }
 
+                /*
+                 ====================== LOGOUT =====================
+                 */
                 if (m.getMessageType() == EnumKindOfMessage.LOGOUT) {
-                    area.append("\n"+Utilities.getLogTime()+ " Logoutsignal recieved!");
-                    area.append("\n"+Utilities.getLogTime()+ " "+ m.toString());
+                    area.append("\n" + Utilities.getLogTime() + " Logoutsignal recieved!");
+                    area.append("\n" + Utilities.getLogTime() + " " + m.toString());
                     area.append("\n");
                     Member me = new Member();
                     me.setName(m.getContent());
@@ -93,14 +107,51 @@ public class CommunicationThread extends Thread {
                     try {
                         this.socket.close();
                     } catch (IOException ex) {
-                        logger.error("Error at closing client-Socket: " +ex);
+                        logger.error("Error at closing client-Socket: " + ex);
                     }
                 }
 
+                /*
+                 ====================== BUDDY-REQUEST =====================
+                 */
+                // Note: This is prototyped! We need to do a handshake!!
+                // @TODO: HANDSHAKE! -> ISSUE: #27
+                if (m.getMessageType() == EnumKindOfMessage.BUDDY_REQUEST) {
+                    Member memberRequest = DataAccess.getMemberByName(m.getContent());
+                    String json = "";
+                    if (memberRequest != null) {
+                        try {
+                            Message response = new Message(0, m.getSenderId(), EnumKindOfMessage.BUDDY_RESPONSE,
+                                    String.valueOf(memberRequest.getUserID()), m.getContent());
+                            json = MessageWrapper.createJSON(response);
+                            writeMessage(sb.returnCommnunicationChannel(m.getSenderId()), json);
+                            logger.debug("Response sent: " + response.toString());
+                        } catch (IOException ex) {
+                            logger.error("Error at Memberrequest (member was found): " + ex);
+                        }
+                    } else {
+                        try {
+                            Message response = new Message(0, m.getSenderId(), EnumKindOfMessage.SYSTEM,
+                                    "Server: Member not found", "");
+                            json = MessageWrapper.createJSON(response);
+                            writeMessage(sb.returnCommnunicationChannel(m.getSenderId()), json);
+                            logger.debug("Response sent: " + response.toString());
+                        } catch (IOException ex) {
+                            logger.error("Error at Memberrequest: " + ex);
+                        }
+                    }
+                }
+
+                /*
+                 ====================== SIMPLE MESSAGE =====================
+                 */
                 if (m.getMessageType() == EnumKindOfMessage.MESSAGE) {
                     // 0 indicates message to server
                     if (m.getRecieverId() == 0) {
                         area.append(m.getContent());
+                    } else {
+                        forwardMessage(m);
+                        logger.info("Message forwarded: " + m.toString());
                     }
                 }
 
@@ -109,8 +160,8 @@ public class CommunicationThread extends Thread {
                 } catch (InterruptedException ex) {
                     logger.error(Utilities.getLogTime() + " Thread is interrupted! " + ex);
                 }
-            }else{
-                logger.info(Utilities.getLogTime()+ " Socket of Client is closed!");
+            } else {
+                logger.info(Utilities.getLogTime() + " Socket of Client is closed!");
                 live = false;
             }
         }
@@ -133,11 +184,58 @@ public class CommunicationThread extends Thread {
         return message;
     }
 
-    private void forwardMessage() {
-
+    private void writeMessage(Socket socket, String message) throws IOException {
+        PrintWriter printWriter
+                = new PrintWriter(
+                        new OutputStreamWriter(
+                                socket.getOutputStream()));
+        printWriter.print(message);
+        printWriter.flush();
     }
 
-    private void broadcast() {
-
+    private void forwardMessage(Message m) {
+        if (sb.isMemberOnline(m.getRecieverId())) {
+            Member sender = sb.getMemberById(m.getSenderId());
+            m.setContent(formatMessage(sender.getName(), m.getContent()));
+            String json = MessageWrapper.createJSON(m);
+            try {
+                writeMessage(sb.returnCommnunicationChannel(m.getRecieverId()),
+                        json);
+            } catch (IOException ex) {
+                logger.error("Cannot get Communicationchannel! " + ex);
+            }
+        } else {
+            logger.warn("Member is not online!");
+            // @TODO: Write in messagebuffer
+        }
     }
+    
+    
+
+    private void broadcast(Message m) {
+        m.setContent(formatMessage("BroadCast", m.getContent()));
+        for (Socket s : sb.getAllSockets()){
+            try {
+                writeMessage(s, MessageWrapper.createJSON(m));
+            } catch (IOException ex) {
+                java.util.logging.Logger.getLogger(CommunicationThread.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    private String formatMessage(String sender, String content) {
+        return Utilities.getTime() + " " + sender + ": " + content;
+    }
+
+    private void sendLoginResponseMessage(Member me) {
+        // Get right MemberID
+        Message m = new Message(0, me.getUserID(), EnumKindOfMessage.LOGIN_RESPONSE, String.valueOf(me.getUserID()), "");
+        try {
+            writeMessage(sb.returnCommnunicationChannel(me.getUserID()), MessageWrapper.createJSON(m));
+            logger.debug("LoginResponse is sended: " + m.toString());
+        } catch (IOException ex) {
+            logger.error("Cannot send LoginResponse! " + ex);
+        }
+    }
+
 }
