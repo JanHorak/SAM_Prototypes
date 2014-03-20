@@ -36,7 +36,6 @@ public class FileManager {
      * Initializes the Logger
      */
     private static void initLogger(){
-        BasicConfigurator.configure();
         logger = Logger.getLogger(FileManager.class);
     }
     

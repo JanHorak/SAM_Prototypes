@@ -43,7 +43,8 @@ public class Server implements ClientServerCommunicationBase{
     
     private void startUpServer() throws IOException {
         this.serverSocket = new ServerSocket(PORT);
-        this.serverSocket.setSoTimeout(TIMEOUTTIMER);
+        this.serverSocket.setSoTimeout(0); // Timeout of 0 -> infinite
+                                           // Use Timeout from Base, normally
         System.out.println("Port registered...");
         System.out.println("waiting for Client...");
         waiting4Clients(serverSocket);

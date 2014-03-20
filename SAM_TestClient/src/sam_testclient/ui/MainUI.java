@@ -14,10 +14,18 @@ import sam_testclient.sources.MessageWrapper;
  */
 public class MainUI extends javax.swing.JFrame {
 
-    Client client;
-    
+    private Client client;
+
     public MainUI() {
         initComponents();
+    }
+
+    private void prepareUI() {
+        tf_memberName.setEnabled(false);
+        tf_password.setEnabled(false);
+        btn_send.setEnabled(true);
+        btn_register.setEnabled(false);
+        
     }
 
     @SuppressWarnings("unchecked")
@@ -33,13 +41,14 @@ public class MainUI extends javax.swing.JFrame {
         lb_password = new javax.swing.JLabel();
         tf_memberName = new javax.swing.JTextField();
         tf_password = new javax.swing.JPasswordField();
-        btn_login = new javax.swing.JButton();
+        jToggleButton1 = new javax.swing.JToggleButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         lb_name.setText("Name:");
 
         btn_send.setText("Send");
+        btn_send.setEnabled(false);
         btn_send.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btn_sendActionPerformed(evt);
@@ -59,10 +68,10 @@ public class MainUI extends javax.swing.JFrame {
 
         lb_password.setText("Password:");
 
-        btn_login.setText("Login");
-        btn_login.addActionListener(new java.awt.event.ActionListener() {
+        jToggleButton1.setText("Login");
+        jToggleButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btn_loginActionPerformed(evt);
+                jToggleButton1ActionPerformed(evt);
             }
         });
 
@@ -72,15 +81,15 @@ public class MainUI extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(lb_name)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(tf_memberName)
+                        .addComponent(tf_memberName, javax.swing.GroupLayout.PREFERRED_SIZE, 143, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(lb_password)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(tf_password, javax.swing.GroupLayout.PREFERRED_SIZE, 109, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(tf_password))
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                             .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 301, Short.MAX_VALUE)
@@ -89,9 +98,8 @@ public class MainUI extends javax.swing.JFrame {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(btn_register, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(btn_send, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(btn_login, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addContainerGap())
+                            .addComponent(jToggleButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -108,7 +116,7 @@ public class MainUI extends javax.swing.JFrame {
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(btn_register)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btn_login)))
+                        .addComponent(jToggleButton1)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(tf_message, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -123,6 +131,7 @@ public class MainUI extends javax.swing.JFrame {
         client = new Client();
         try {
             client.connect();
+            prepareUI();
         } catch (IOException ex) {
             Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -135,27 +144,39 @@ public class MainUI extends javax.swing.JFrame {
     }//GEN-LAST:event_btn_registerActionPerformed
 
     private void btn_sendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_sendActionPerformed
-        try {
-            client.writeMessage(tf_message.getText());
-        } catch (IOException ex) {
-            Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }//GEN-LAST:event_btn_sendActionPerformed
-
-    private void btn_loginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_loginActionPerformed
-        client = new Client();
-        try {
-            client.connect();
-        } catch (IOException ex) {
-            Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        Message m = new Message(0, 0, EnumKindOfMessage.LOGIN, tf_memberName.getText(), "sss");
+        Message m = new Message(0, 0, EnumKindOfMessage.MESSAGE, tf_message.getText(), "");
         try {
             client.writeMessage(MessageWrapper.createJSON(m));
         } catch (IOException ex) {
             Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }//GEN-LAST:event_btn_loginActionPerformed
+    }//GEN-LAST:event_btn_sendActionPerformed
+
+    private void jToggleButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jToggleButton1ActionPerformed
+        if (jToggleButton1.isSelected()) {
+            client = new Client();
+            try {
+                client.connect();
+                prepareUI();
+            } catch (IOException ex) {
+                Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            Message m = new Message(0, 0, EnumKindOfMessage.LOGIN, tf_memberName.getText(), "sss");
+            try {
+                client.writeMessage(MessageWrapper.createJSON(m));
+            } catch (IOException ex) {
+                Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            jToggleButton1.setText("Logout");
+        } else {
+            Message m = new Message(0, 0, EnumKindOfMessage.LOGOUT, tf_memberName.getText(), "");
+            try {
+                client.writeMessage(MessageWrapper.createJSON(m));
+            } catch (IOException ex) {
+                Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }//GEN-LAST:event_jToggleButton1ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -193,11 +214,11 @@ public class MainUI extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btn_login;
     private javax.swing.JButton btn_register;
     private javax.swing.JButton btn_send;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextArea jTextArea1;
+    private javax.swing.JToggleButton jToggleButton1;
     private javax.swing.JLabel lb_name;
     private javax.swing.JLabel lb_password;
     private javax.swing.JTextField tf_memberName;

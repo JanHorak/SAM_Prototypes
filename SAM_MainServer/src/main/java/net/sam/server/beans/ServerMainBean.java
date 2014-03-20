@@ -11,7 +11,6 @@ import java.util.List;
 import net.sam.server.entities.Member;
 import net.sam.server.servermain.ClientServerCommunicationBase;
 import net.sam.server.utilities.Utilities;
-import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 
 
@@ -27,7 +26,6 @@ public class ServerMainBean implements ClientServerCommunicationBase{
     private ServerMainBean(){
         this.loggedInuserList = new ArrayList<Member>();
         this.registeredUserList = new ArrayList<Member>();
-        BasicConfigurator.configure();
         logger = org.apache.log4j.Logger.getLogger(ServerMainBean.class);
     }
     
@@ -87,4 +85,15 @@ public class ServerMainBean implements ClientServerCommunicationBase{
         return resultList;
     }
     
+    public void logoutMember(Member m){
+        Member tmp = new Member();
+        for (Member me : loggedInuserList){
+            if (me.getName().equals(m.getName())){
+                tmp = me;
+                break;
+            }
+        }
+        this.loggedInuserList.remove(tmp);
+        logger.debug(this.loggedInuserList.toString());
+    }
 }

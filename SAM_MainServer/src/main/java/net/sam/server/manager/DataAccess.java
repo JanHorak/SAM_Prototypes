@@ -24,7 +24,6 @@ public abstract class DataAccess {
     private static Logger logger;
 
     private static void setUp() {
-        BasicConfigurator.configure();
         logger = Logger.getLogger(DataAccess.class);
         emf = Persistence.createEntityManagerFactory("test");
         em = emf.createEntityManager();

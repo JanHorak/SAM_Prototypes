@@ -44,7 +44,6 @@ public class ServerMainThread extends Thread {
         this.server = server;
         this.area = area;
         serverMainBean = ServerMainBean.getInstance();
-        BasicConfigurator.configure();
         logger = Logger.getLogger(ServerMainThread.class);
     }
 
@@ -68,6 +67,7 @@ public class ServerMainThread extends Thread {
                     throw an exception automaticly. We use this to cancel the
                     Thread.
                     */
+                    logger.error("Timeout of serverAccept | Other Exception: "+ex);
                     live = false;
                 }
             }

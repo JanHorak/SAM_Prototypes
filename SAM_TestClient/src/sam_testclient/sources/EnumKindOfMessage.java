@@ -11,5 +11,5 @@ package sam_testclient.sources;
  * @author janhorak
  */
 public enum EnumKindOfMessage {
-    REGISTER, MESSAGE, KEYEXCHANGE, LOGIN
+    REGISTER, MESSAGE, KEYEXCHANGE, LOGIN, LOGOUT
 }

@@ -9,7 +9,6 @@ import javax.swing.JList;
 import net.sam.server.beans.ServerMainBean;
 import net.sam.server.manager.DataAccess;
 import net.sam.server.utilities.Utilities;
-import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 
 /**
@@ -25,7 +24,6 @@ public class UIUpdateThread extends Thread {
     private Logger logger;
     
     public UIUpdateThread(JList loggedInList) {
-        BasicConfigurator.configure();
         logger = Logger.getLogger(UIUpdateThread.class);
         this.ui_userList = loggedInList;
         sb = ServerMainBean.getInstance();
@@ -36,7 +34,7 @@ public class UIUpdateThread extends Thread {
     public void run() {
         logger.info(Utilities.getLogTime()+" UI- updateThread is started...");
         while (true) {
-
+            
             try {
                 sleep(5000);
             } catch (InterruptedException ex) {
