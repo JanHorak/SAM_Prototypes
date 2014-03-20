@@ -8,6 +8,7 @@ package net.sam.server.utilities;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -40,5 +41,10 @@ public class Utilities {
     
     public static String getLogTime(){
         return "["+new Date().toString()+"]";
+    }
+    
+    public static String getTime(){
+        SimpleDateFormat sm = new SimpleDateFormat("HH:mm");
+        return sm.format(new Date()).toString();
     }
 }

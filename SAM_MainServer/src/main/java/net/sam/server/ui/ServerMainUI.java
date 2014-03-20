@@ -395,7 +395,7 @@ public class ServerMainUI extends javax.swing.JFrame {
     }//GEN-LAST:event_tgl_StartServerActionPerformed
 
     private void btn_sendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_sendActionPerformed
-
+        
     }//GEN-LAST:event_btn_sendActionPerformed
 
     private void radio_membersOnlineActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_radio_membersOnlineActionPerformed
