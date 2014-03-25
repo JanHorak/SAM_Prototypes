@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Map;
 import java.util.logging.Level;
 import javax.swing.JTextArea;
 import net.sam.server.beans.ServerMainBean;
@@ -139,6 +140,20 @@ public class CommunicationThread extends Thread {
                         } catch (IOException ex) {
                             logger.error("Error at Memberrequest: " + ex);
                         }
+                    }
+                }
+                
+                /*
+                 ====================== BUDDY-STATUS-REQUEST =====================
+                 */
+                if (m.getMessageType() == EnumKindOfMessage.STATUS_REQUEST){
+                    String[] requestList = m.getContent().split(" ");
+                    Map<Integer, Boolean> buddy_online_Response = sb.getOnlineStatusOfMemberById(requestList);
+                    Message statusResponse = new Message(0, m.getSenderId(), EnumKindOfMessage.STATUS_RESPONSE, buddy_online_Response.toString(), "");
+                    try {
+                        this.writeMessage(sb.returnCommnunicationChannel(m.getSenderId()), MessageWrapper.createJSON(statusResponse));
+                    } catch (IOException ex) {
+                        logger.error("Error @ Status-Response: " + ex);
                     }
                 }
 
