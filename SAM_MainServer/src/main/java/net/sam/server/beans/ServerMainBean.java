@@ -130,4 +130,23 @@ public class ServerMainBean implements ClientServerCommunicationBase{
         }
         return result;
     }
+    
+    public Map<Integer, Boolean> getOnlineStatusOfMemberById(String[] ids){
+        List<Integer> idList = new ArrayList<>();
+        for (int i = 0; i < ids.length; i++){
+            idList.add(Integer.decode(ids[i]));
+        }
+        
+        Map<Integer, Boolean> buddy_online_Response = new HashMap<Integer, Boolean>();
+        for (int id : idList){
+            for (Member m : loggedInuserList){
+                if (m.getUserID() == id){
+                    buddy_online_Response.put(id,Boolean.TRUE);
+                }else {
+                    buddy_online_Response.put(id,Boolean.FALSE);
+                }
+            }
+        }
+        return buddy_online_Response;
+    }
 }

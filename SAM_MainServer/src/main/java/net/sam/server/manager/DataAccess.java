@@ -8,7 +8,6 @@ import javax.persistence.Persistence;
 import javax.persistence.Query;
 import net.sam.server.entities.Member;
 import net.sam.server.utilities.Utilities;
-import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 
 

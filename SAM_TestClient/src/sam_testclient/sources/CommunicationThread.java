@@ -10,10 +10,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.JTextArea;
+import sam_testclient.utilities.Utilities;
 
 /**
  * CommunitactionThread of the Server. This thread manages the main connections
@@ -28,6 +32,7 @@ public class CommunicationThread extends Thread {
     private int id;
     private Client client;
     private Map<Integer, String> buddyList;
+    private Map<Integer, Boolean> buddy_statusList;
     private JList list_buddies;
 
     public CommunicationThread(Client c, JTextArea area, JList list_buddies, int id) {
@@ -36,8 +41,9 @@ public class CommunicationThread extends Thread {
         this.id = id;
         this.list_buddies = list_buddies;
         buddyList = (Map<Integer, String>) FileManager.deserialize("buddyList.data");
+        buddy_statusList = new HashMap<Integer, Boolean>();
         c.setBuddyList(buddyList);
-        updateUI();
+//        updateUI();
     }
 
     /**
@@ -47,6 +53,7 @@ public class CommunicationThread extends Thread {
     @Override
     public void run() {
         System.out.println("Thread started!");
+
         while (live) {
             if (!this.client.getServerSocket().isClosed()) {
                 Message m = null;
@@ -60,20 +67,31 @@ public class CommunicationThread extends Thread {
 
                 if (m.getMessageType() == EnumKindOfMessage.MESSAGE
                         || m.getMessageType() == EnumKindOfMessage.SYSTEM) {
-                    area.append("\n"+m.getContent());
+                    area.append("\n" + m.getContent());
                 }
                 if (m.getMessageType() == EnumKindOfMessage.LOGIN_RESPONSE) {
                     this.client.setId(m.getRecieverId());
-                    System.out.println(id);
+                    Message buddy_status = new Message(client.getId(), 0, EnumKindOfMessage.STATUS_REQUEST, formatStatusRequest(), null);
+                    String buddy_status_request = MessageWrapper.createJSON(buddy_status);
+                    try {
+                        client.writeMessage(buddy_status_request);
+                    } catch (IOException ex) {
+                        Logger.getLogger(CommunicationThread.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
                 if (m.getMessageType() == EnumKindOfMessage.BUDDY_RESPONSE) {
                     buddyList.put(Integer.parseInt(m.getContent()), m.getOthers());
                     System.out.println("Buddy added!");
                     FileManager.serialize(buddyList, "buddyList.data");
-                    area.append("\n"+new SimpleDateFormat("HH:mm").format(new Date()).toString() + " Server: Buddy added!");
+                    area.append("\n" + new SimpleDateFormat("HH:mm").format(new Date()).toString() + " Server: Buddy added!");
                     updateUI();
                 }
 
+                if (m.getMessageType() == EnumKindOfMessage.STATUS_RESPONSE) {
+                    buddy_statusList = Utilities.getOnlineMap(m.getContent());
+                    updateUI();
+                }
+                
                 try {
                     sleep(500);
                 } catch (InterruptedException ex) {
@@ -108,14 +126,23 @@ public class CommunicationThread extends Thread {
     public void updateUI() {
         DefaultListModel lm = new DefaultListModel();
         if (!this.buddyList.isEmpty()) {
-            for (String s : this.buddyList.values()) {
-                lm.addElement(s);
-                System.out.println(s);
+            for (Integer i : buddyList.keySet()) {
+                String status = buddy_statusList.get(i) ? "online" : "offline";
+                lm.addElement(status + ": "+ buddyList.get(i));
             }
         } else {
             lm.addElement("You have no Buddies!!\nPoor!");
         }
         this.list_buddies.setModel(lm);
+    }
+
+    //@TODO: Has to be outsourced!!
+    private String formatStatusRequest() {
+        String result = "";
+        for (Object k : buddyList.keySet().toArray()) {
+            result += k.toString()+" ";
+        }
+        return result;
     }
 
 }
