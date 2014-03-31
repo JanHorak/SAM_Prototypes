@@ -17,13 +17,9 @@ import net.sam.server.entities.MediaStorage;
 import net.sam.server.entities.Member;
 import net.sam.server.enums.EnumMediaType;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 import org.junit.Ignore;
-import org.slf4j.Logger;
 
 /**
  *

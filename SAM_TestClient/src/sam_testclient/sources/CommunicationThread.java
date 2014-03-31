@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -60,7 +61,7 @@ public class CommunicationThread extends Thread {
                 try {
                     // JSON handling
                     m = MessageWrapper.JSON2Message(readMessage());
-                    System.out.println("recieved: " + m.toString());
+                    System.out.println("received: " + m.toString());
                 } catch (IOException ex) {
 
                 }
@@ -70,30 +71,37 @@ public class CommunicationThread extends Thread {
                     area.append("\n" + m.getContent());
                 }
                 if (m.getMessageType() == EnumKindOfMessage.LOGIN_RESPONSE) {
-                    this.client.setId(m.getRecieverId());
-                    Message buddy_status = new Message(client.getId(), 0, EnumKindOfMessage.STATUS_REQUEST, formatStatusRequest(), null);
-                    String buddy_status_request = MessageWrapper.createJSON(buddy_status);
-                    try {
-                        client.writeMessage(buddy_status_request);
-                    } catch (IOException ex) {
-                        Logger.getLogger(CommunicationThread.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+                    client.setId(Integer.decode(m.getContent()));
+                    sendStatusRequest();
+
                 }
                 if (m.getMessageType() == EnumKindOfMessage.BUDDY_RESPONSE) {
+                    // Buddy founded
+
                     buddyList.put(Integer.parseInt(m.getContent()), m.getOthers());
-                    System.out.println("Buddy added!");
+                    // Asking for Status of Buddies
+                    sendStatusRequest();
+                    // Save the new buddy
                     FileManager.serialize(buddyList, "buddyList.data");
                     area.append("\n" + new SimpleDateFormat("HH:mm").format(new Date()).toString() + " Server: Buddy added!");
-                    updateUI();
                 }
 
                 if (m.getMessageType() == EnumKindOfMessage.STATUS_RESPONSE) {
                     buddy_statusList = Utilities.getOnlineMap(m.getContent());
                     updateUI();
                 }
-                
+
                 try {
-                    sleep(500);
+                    /**
+                     * If the Server sends the messages from the buffer
+                     * to the client, he has to "listen quickly".
+                     * So the Time for sleep has to be ca. 50ms
+                     * 
+                     * -> If occurs MalFormedExceptions for JSONs they are
+                     * really unexpected it is possible that the client 
+                     * cannot listen as quick as needed
+                     */
+                    sleep(50);
                 } catch (InterruptedException ex) {
 
                 }
@@ -126,9 +134,12 @@ public class CommunicationThread extends Thread {
     public void updateUI() {
         DefaultListModel lm = new DefaultListModel();
         if (!this.buddyList.isEmpty()) {
-            for (Integer i : buddyList.keySet()) {
-                String status = buddy_statusList.get(i) ? "online" : "offline";
-                lm.addElement(status + ": "+ buddyList.get(i));
+            Iterator it = buddyList.keySet().iterator();
+            while (it.hasNext()) {
+                int number = (int) it.next();
+                System.out.println(number);
+                String status = buddy_statusList.get(number) ? "online" : "offline";
+                lm.addElement(status + ": " + buddyList.get(number));
             }
         } else {
             lm.addElement("You have no Buddies!!\nPoor!");
@@ -137,12 +148,30 @@ public class CommunicationThread extends Thread {
     }
 
     //@TODO: Has to be outsourced!!
+    /**
+     * Returns the formated String of IDs for the Status request.
+     * The String is the content of the Request message
+     * Like 
+     * 1 3
+     * For the Ids of Friends in the own buddyList
+     * @return 
+     */
     private String formatStatusRequest() {
         String result = "";
         for (Object k : buddyList.keySet().toArray()) {
-            result += k.toString()+" ";
+            result += k.toString() + " ";
         }
         return result;
     }
 
+    private void sendStatusRequest() {
+        Message buddy_status = new Message(client.getId(), 0, EnumKindOfMessage.STATUS_REQUEST, formatStatusRequest(), null);
+        String buddy_status_request = MessageWrapper.createJSON(buddy_status);
+        try {
+            client.writeMessage(buddy_status_request);
+        } catch (IOException ex) {
+            Logger.getLogger(CommunicationThread.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
 }

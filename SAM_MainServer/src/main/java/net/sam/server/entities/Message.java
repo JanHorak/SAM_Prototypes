@@ -6,6 +6,7 @@
 
 package net.sam.server.entities;
 
+import java.util.Date;
 import net.sam.server.enums.EnumKindOfMessage;
 
 /**
@@ -13,18 +14,19 @@ import net.sam.server.enums.EnumKindOfMessage;
  * @author janhorak
  */
 public class Message extends TransportObject{
-    
+        
     public Message (int senderId, int recieverId, EnumKindOfMessage kind, String content, String others){
         this.setContent(content);
         this.setMessageType(kind);
-        this.setRecieverId(recieverId);
+        this.setReceiverId(recieverId);
         this.setSenderId(senderId);
         this.setOthers(others);
+        this.setTimestamp(new Date());
     }
     
     @Override
     public String toString(){
-        return this.getSenderId() + " to " +this.getRecieverId() + " " 
+        return this.getTimestamp() +": "+this.getSenderId() + " to " +this.getReceiverId() + " " 
                 +this.getMessageType() + " "
                 +this.getContent() + " "
                 +this.getOthers();

@@ -237,7 +237,7 @@ public class MainUI extends javax.swing.JFrame {
         } catch (IOException ex) {
             Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
         }
-        Message m = new Message(client.getId(), 0, EnumKindOfMessage.REGISTER, tf_memberName.getText(), tf_password.getText());
+        Message m = new Message(0, 0, EnumKindOfMessage.REGISTER, tf_memberName.getText(), tf_password.getText());
         try {
             client.writeMessage(MessageWrapper.createJSON(m));
         } catch (IOException ex) {
@@ -246,12 +246,12 @@ public class MainUI extends javax.swing.JFrame {
     }//GEN-LAST:event_btn_registerActionPerformed
 
     private void btn_sendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_sendActionPerformed
-        Message m = new Message(client.getId(), client.getIdFromBuddy(list_buddies.getSelectedValue().toString()), EnumKindOfMessage.MESSAGE, tf_message.getText(), "");
-        System.out.println(client.getId());
+        int receiverID = client.getIdFromBuddy(list_buddies.getSelectedValue().toString().split(": ")[1]);
+        Message m = new Message(client.getId(), receiverID, EnumKindOfMessage.MESSAGE, tf_message.getText(), "");
         try {
             client.writeMessage(MessageWrapper.createJSON(m));
             jTextArea1.append("\n"+new SimpleDateFormat("HH:mm").format(new Date()).toString() + " Me: " + m.getContent());
-            jTextField1.setText("");
+            tf_message.setText("");
         } catch (IOException ex) {
             Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -275,7 +275,7 @@ public class MainUI extends javax.swing.JFrame {
             }
             tgl_login.setText("Logout");
         } else {
-            Message m = new Message(0, 0, EnumKindOfMessage.LOGOUT, tf_memberName.getText(), "");
+            Message m = new Message(client.getId(), 0, EnumKindOfMessage.LOGOUT, tf_memberName.getText(), "");
             try {
                 client.writeMessage(MessageWrapper.createJSON(m));
             } catch (IOException ex) {
