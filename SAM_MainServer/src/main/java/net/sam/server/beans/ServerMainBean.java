@@ -63,10 +63,20 @@ public class ServerMainBean implements ClientServerCommunicationBase{
         return socketMap.get(id);
     }
     
-    public Member getMemberById(int id){
+    public Member getLoggedInMemberById(int id){
         Member m = new Member();
         for (Member me : this.loggedInuserList){
             if (me.getUserID() == id){
+                return me;
+            }
+        }
+        return m;
+    }
+    
+    public Member getRegisteredMemberIdByName(String name){
+        Member m = new Member();
+        for (Member me : this.registeredUserList){
+            if (me.getName().equals(name)){
                 return me;
             }
         }
@@ -110,6 +120,14 @@ public class ServerMainBean implements ClientServerCommunicationBase{
         return resultList;
     }
     
+    /**
+     * This method is cleaning up the bean and logs out the member.
+     * The member will be searched in the {@link #loggedInuserList} and 
+     * will save the member in the local variable <code>tmp</code>.
+     * The Member will be removed from the socketMap, too.
+     * 
+     * @param m - Member for logout
+     */
     public void logoutMember(Member m){
         Member tmp = new Member();
         for (Member me : loggedInuserList){
@@ -148,5 +166,16 @@ public class ServerMainBean implements ClientServerCommunicationBase{
             }
         }
         return buddy_online_Response;
+    }
+    
+    public boolean isTheMemberRegistered(String name){
+        boolean contains = false;
+        for (Member m : this.registeredUserList){
+            if (name.equals(m.getName())){
+                contains = true;
+                break;
+            }
+        }
+        return contains;
     }
 }
