@@ -1,5 +1,6 @@
 package net.sam.server.ui;
 
+import java.awt.Dimension;
 import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
@@ -27,12 +28,10 @@ public class ServerMainUI extends javax.swing.JFrame {
         initComponents();
         BasicConfigurator.configure();
         logger = Logger.getLogger(ServerMainUI.class);
-
+        
         this.setTitle("SAM - SecureAndroidMessenger - Server");
         lb_logo.setIcon(new ImageIcon("src/main/resources/graphics/simpleLogoSAM.png"));
-        
-        Properties serverprops = FileManager.initProperties(SERVERPROPERTIES);
-        chk_logging.setSelected(Boolean.getBoolean(serverprops.getProperty("logging")));
+        loadConfig();
         
         serverMainBean = ServerMainBean.getInstance();
 
@@ -95,6 +94,10 @@ public class ServerMainUI extends javax.swing.JFrame {
         jTabbedPane1 = new javax.swing.JTabbedPane();
         jPanel1 = new javax.swing.JPanel();
         chk_logging = new javax.swing.JCheckBox();
+        chk_saveMessages = new javax.swing.JCheckBox();
+        lb_settingKeypair = new javax.swing.JLabel();
+        spr_daysKeyPair = new javax.swing.JSpinner();
+        chk_memberListPublic = new javax.swing.JCheckBox();
         jPanel2 = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         list_members = new javax.swing.JList();
@@ -168,7 +171,7 @@ public class ServerMainUI extends javax.swing.JFrame {
         );
         pnl_messangesLayout.setVerticalGroup(
             pnl_messangesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 93, Short.MAX_VALUE)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 124, Short.MAX_VALUE)
         );
 
         btn_send.setText("Send");
@@ -186,21 +189,58 @@ public class ServerMainUI extends javax.swing.JFrame {
             }
         });
 
+        chk_saveMessages.setText("Save Messages in Buffer");
+        chk_saveMessages.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                chk_saveMessagesActionPerformed(evt);
+            }
+        });
+
+        lb_settingKeypair.setText("Recreate Keypair in (days)");
+
+        spr_daysKeyPair.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                spr_daysKeyPairStateChanged(evt);
+            }
+        });
+
+        chk_memberListPublic.setText("Memberlist is public");
+        chk_memberListPublic.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                chk_memberListPublicActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(chk_logging)
-                .addContainerGap(73, Short.MAX_VALUE))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(chk_logging)
+                    .addComponent(chk_saveMessages)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(lb_settingKeypair)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(spr_daysKeyPair, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(chk_memberListPublic))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(chk_logging)
-                .addContainerGap(92, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(chk_saveMessages)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lb_settingKeypair)
+                    .addComponent(spr_daysKeyPair, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(chk_memberListPublic)
+                .addContainerGap(26, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Settings", jPanel1);
@@ -232,7 +272,7 @@ public class ServerMainUI extends javax.swing.JFrame {
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 135, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(radio_membersOnline)
@@ -248,7 +288,7 @@ public class ServerMainUI extends javax.swing.JFrame {
                 .addComponent(radio_membersRegistered)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(radio_membersOnline)
-                .addContainerGap(62, Short.MAX_VALUE))
+                .addContainerGap(90, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Users", jPanel2);
@@ -321,10 +361,11 @@ public class ServerMainUI extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(tgl_StartServer)
-                            .addComponent(lb_logo)))
-                    .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(lb_logo))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(jTabbedPane1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(pnl_messanges, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(pnl_messanges, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(tf_singleMessange, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -338,6 +379,19 @@ public class ServerMainUI extends javax.swing.JFrame {
     // ---------- Methods -----------------
     //@TODO: Refactoring of the Radio- buttons!!
     
+    
+    
+    /**
+     * This method loads the Data from the server.properties and parses
+     * the values to the UI- components.
+     * 
+     */
+    private void loadConfig(){
+        Properties serverprops = FileManager.initProperties(SERVERPROPERTIES);
+        chk_logging.setSelected(Boolean.parseBoolean(serverprops.getProperty("LOGGING")));
+        chk_memberListPublic.setSelected(Boolean.parseBoolean(serverprops.getProperty("MEMBERLISTISPUBLIC")));
+        chk_saveMessages.setSelected(Boolean.parseBoolean(serverprops.getProperty("SAVEMESSAGESINBUFFER")));
+    }
     
     // -------------------------------------
 
@@ -379,6 +433,9 @@ public class ServerMainUI extends javax.swing.JFrame {
     }//GEN-LAST:event_spr_serverMAXCONStateChanged
 
     private void tgl_StartServerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tgl_StartServerActionPerformed
+        // Save the settings for key-recreation
+        FileManager.storeValueInPropertiesFile(SERVERPROPERTIES, "DAYSFORKEYRECREATION", String.valueOf(spr_daysKeyPair.getValue()));
+        
         if (tgl_StartServer.isSelected()) {
             server = new Server(ta_messanges);
             ta_messanges.append(Utilities.getLogTime() + " Server started...");
@@ -426,13 +483,35 @@ public class ServerMainUI extends javax.swing.JFrame {
 
     private void chk_loggingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chk_loggingActionPerformed
         if (chk_logging.isSelected()){
-            FileManager.storeValueInPropertiesFile(SERVERPROPERTIES, "logging", "true");
+            FileManager.storeValueInPropertiesFile(SERVERPROPERTIES, "LOGGING", "true");
             FileManager.storeValueInPropertiesFile(LOGGINGPROPERTIES, "log4j.rootLogger", "info, file");
         } else {
-            FileManager.storeValueInPropertiesFile(SERVERPROPERTIES, "logging", "false");
+            FileManager.storeValueInPropertiesFile(SERVERPROPERTIES, "LOGGING", "false");
             FileManager.storeValueInPropertiesFile(LOGGINGPROPERTIES, "log4j.rootLogger", "\"\"");
         }
     }//GEN-LAST:event_chk_loggingActionPerformed
+
+    private void chk_memberListPublicActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chk_memberListPublicActionPerformed
+        if (chk_memberListPublic.isSelected()){
+            FileManager.storeValueInPropertiesFile(SERVERPROPERTIES, "MEMBERLISTISPUBLIC", "true");
+        } else {
+            FileManager.storeValueInPropertiesFile(SERVERPROPERTIES, "MEMBERLISTISPUBLIC", "false");
+        }
+    }//GEN-LAST:event_chk_memberListPublicActionPerformed
+
+    private void chk_saveMessagesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chk_saveMessagesActionPerformed
+        if (chk_saveMessages.isSelected()){
+            FileManager.storeValueInPropertiesFile(SERVERPROPERTIES, "SAVEMESSAGESINBUFFER", "true");
+        }else {
+            FileManager.storeValueInPropertiesFile(SERVERPROPERTIES, "SAVEMESSAGESINBUFFER", "false");
+        }
+    }//GEN-LAST:event_chk_saveMessagesActionPerformed
+
+    private void spr_daysKeyPairStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spr_daysKeyPairStateChanged
+        if ((int)spr_daysKeyPair.getValue() < 0){
+            spr_daysKeyPair.setValue(0);
+        }
+    }//GEN-LAST:event_spr_daysKeyPairStateChanged
 
     /**
      * @param args the command line arguments
@@ -467,6 +546,8 @@ public class ServerMainUI extends javax.swing.JFrame {
     private javax.swing.JCheckBox chk_defaultMAXCON;
     private javax.swing.JCheckBox chk_defaultPORT;
     private javax.swing.JCheckBox chk_logging;
+    private javax.swing.JCheckBox chk_memberListPublic;
+    private javax.swing.JCheckBox chk_saveMessages;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
@@ -477,10 +558,12 @@ public class ServerMainUI extends javax.swing.JFrame {
     private javax.swing.JLabel lb_serverIP;
     private javax.swing.JLabel lb_serverMAXCON;
     private javax.swing.JLabel lb_serverPORT;
+    private javax.swing.JLabel lb_settingKeypair;
     private javax.swing.JList list_members;
     private javax.swing.JPanel pnl_messanges;
     private javax.swing.JRadioButton radio_membersOnline;
     private javax.swing.JRadioButton radio_membersRegistered;
+    private javax.swing.JSpinner spr_daysKeyPair;
     private javax.swing.JSpinner spr_serverMAXCON;
     public javax.swing.JTextArea ta_messanges;
     private javax.swing.JTextField tf_serverIP;

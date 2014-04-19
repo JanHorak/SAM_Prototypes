@@ -21,7 +21,7 @@ target/
 .classpath
 .project
 /JPA_Prototype/dist/
-nbproject/
+/nbproject/
 /build.xml
 /SAM_Server/build/
 /SAM_Server/dist/
