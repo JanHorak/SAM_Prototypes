@@ -19,13 +19,11 @@ import net.sam.server.enums.EnumMediaType;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.Ignore;
 
 /**
  *
  * @author janhorak
  */
-@Ignore
 public class DataGeneration {
     
     EntityManager em;
@@ -41,34 +39,17 @@ public class DataGeneration {
         em.getTransaction().begin();
         Member m1 = new Member();
         Member m2 = new Member();
-        Member m3 = new Member();
-        Member m4 = new Member();
-        Member m5 = new Member();
-        
-        m1.setName("Darth Vader");
-        m1.setPassword("aaa");
+
+        m1.setName("Test1");
+        m1.setPassword("sss");
         m1.setActive(true);
         
-        m2.setName("Homer Simpson");
-        m2.setPassword("bbb");
+        m2.setName("Test2");
+        m2.setPassword("sss");
         m2.setActive(true);
         
-        m3.setName("Ralf Maier");
-        m3.setPassword("ccc");
-        m3.setActive(true);
-        
-        m4.setName("Vladimir Vampir");
-        m4.setPassword("ddd");
-        m4.setActive(false);
-        
-        m5.setName("Clark Kämmt");
-        m5.setPassword("aaa");
-        m5.setActive(true);
         em.persist(m1);
         em.persist(m2);
-        em.persist(m3);
-        em.persist(m4);
-        em.persist(m5);
         em.getTransaction().commit();
         
     }

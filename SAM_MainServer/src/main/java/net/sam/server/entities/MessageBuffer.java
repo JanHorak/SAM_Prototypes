@@ -7,12 +7,15 @@
 package net.sam.server.entities;
 
 import java.io.Serializable;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToOne;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -21,31 +24,25 @@ import javax.validation.constraints.NotNull;
  */
 @Entity
 @NamedQueries({
-    @NamedQuery(name = "MessageBuffer.findMessagesAllFromSenderToReceiver",
-                query = "SELECT m FROM MessageBuffer m WHERE m.receiverId = :rId")
+    @NamedQuery(name = "MessageBuffer.findAllSavedMessangesFromReceiver",
+                query = "SELECT m FROM MessageBuffer m WHERE m.message.receiverId = :rId")
 })
 public class MessageBuffer implements Serializable {
-
+    
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    
-    @NotNull
-    private int receiverId;
-    
-    @NotNull
-    private int senderId;
-    
-    @NotNull
-    private String message;
-    
 
-    public int getReceiverId() {
-        return receiverId;
+    @NotNull
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private Message message;
+
+    public Message getMessage() {
+        return message;
     }
 
-    public void setReceiverId(int receiverId) {
-        this.receiverId = receiverId;
+    public void setMessage(Message message) {
+        this.message = message;
     }
 
     public Long getId() {
@@ -55,23 +52,5 @@ public class MessageBuffer implements Serializable {
     public void setId(Long id) {
         this.id = id;
     }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public int getSenderId() {
-        return senderId;
-    }
-
-    public void setSenderId(int senderId) {
-        this.senderId = senderId;
-    }
-
-    
-    
+     
 }

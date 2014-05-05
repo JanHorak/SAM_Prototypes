@@ -7,6 +7,7 @@
 package sam_testclient.sources;
 
 import com.google.gson.Gson;
+import sam_testclient.entities.Message;
 
 
 /**

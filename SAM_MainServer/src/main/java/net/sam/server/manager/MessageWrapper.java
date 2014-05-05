@@ -14,15 +14,15 @@ import net.sam.server.entities.Message;
  * @author janhorak
  */
 public abstract class MessageWrapper {
-    
+
     public static String createJSON(Message message){
         Gson gson = new Gson();
         return gson.toJson(message);
     }
-    
+
     public static Message JSON2Message(String json){
         Gson gson = new Gson();
         return (Message) gson.fromJson(json, Message.class);
     }
-    
+
 }

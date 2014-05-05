@@ -28,6 +28,7 @@ public class ServerMainBean implements ClientServerCommunicationBase{
         this.loggedInuserList = new ArrayList<Member>();
         this.registeredUserList = new ArrayList<Member>();
         this.socketMap = new HashMap<Integer, Socket>();
+        
         logger = org.apache.log4j.Logger.getLogger(ServerMainBean.class);
     }
     
@@ -166,6 +167,10 @@ public class ServerMainBean implements ClientServerCommunicationBase{
             }
         }
         return buddy_online_Response;
+    }
+    
+    public String getLoggedInMemberNameById(int id){
+        return getLoggedInMemberById(id).getName();
     }
     
     public boolean isTheMemberRegistered(String name){

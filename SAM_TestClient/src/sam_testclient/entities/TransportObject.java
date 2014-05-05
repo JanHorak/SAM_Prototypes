@@ -4,8 +4,9 @@
  * and open the template in the editor.
  */
 
-package sam_testclient.sources;
+package sam_testclient.entities;
 
+import sam_testclient.enums.EnumKindOfMessage;
 import java.util.Date;
 
 

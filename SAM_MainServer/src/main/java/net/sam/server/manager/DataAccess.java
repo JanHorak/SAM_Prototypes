@@ -100,9 +100,8 @@ public abstract class DataAccess {
     public static void saveMessageInBuffer(Message m){
         setUp();
         MessageBuffer mb = new MessageBuffer();
-        mb.setMessage(m.getContent());
-        mb.setReceiverId(m.getReceiverId());
-        mb.setSenderId(m.getSenderId());
+        System.out.println(m.toString());
+        mb.setMessage(m);
         em.persist(mb);
         em.getTransaction().commit();
         shutDown();
@@ -174,7 +173,7 @@ public abstract class DataAccess {
      */
     public static List<MessageBuffer> getAllMessagesFromBuffer(int receiverId){
         setUp();
-        Query q = em.createNamedQuery("MessageBuffer.findMessagesAllFromSenderToReceiver").setParameter("rId", receiverId);
+        Query q = em.createNamedQuery("MessageBuffer.findAllSavedMessangesFromReceiver").setParameter("rId", receiverId);
         try {
            return (List<MessageBuffer>) q.getResultList();
         } catch (NoResultException ex) {
@@ -192,9 +191,12 @@ public abstract class DataAccess {
      */
     public static void dropMessagesFromBuffer(int receiverId){
         setUp();
-        Query deleteQuery = em.createQuery("DELETE FROM MessageBuffer m WHERE m.receiverId = :id");
-        int deletedRecords = deleteQuery.setParameter("id", receiverId).executeUpdate();
-        logger.info(deletedRecords +" Messages are deleted from buffer!");
+        Query query = em.createNamedQuery("MessageBuffer.findAllSavedMessangesFromReceiver").setParameter("rId", receiverId);
+        List<MessageBuffer> list = query.getResultList();
+        for ( MessageBuffer m : list){
+            em.remove(m);
+        }
+        logger.info(list.size() +" Messages are deleted from buffer!");
         em.getTransaction().commit();
         shutDown();
     }

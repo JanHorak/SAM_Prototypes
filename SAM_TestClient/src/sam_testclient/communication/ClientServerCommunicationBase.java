@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package sam_testclient.sources;
+package sam_testclient.communication;
 
 import java.io.BufferedReader;
 import java.io.IOException;
