@@ -12,13 +12,14 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import javax.swing.JTextArea;
 import net.sam.server.beans.ServerMainBean;
 import net.sam.server.entities.Member;
 import net.sam.server.entities.Message;
 import net.sam.server.entities.MessageBuffer;
+import net.sam.server.enums.EnumHandshakeReason;
+import net.sam.server.enums.EnumHandshakeStatus;
 import net.sam.server.enums.EnumKindOfMessage;
 import net.sam.server.manager.DataAccess;
 import net.sam.server.manager.MessageWrapper;
@@ -130,12 +131,14 @@ public class CommunicationThread extends Thread {
                         List<MessageBuffer> messageBufferList = DataAccess.getAllMessagesFromBuffer(member.getUserID());
                         if (!messageBufferList.isEmpty()) {
                             for (MessageBuffer mw : messageBufferList) {
-                                Message message = new Message(mw.getSenderId(), mw.getReceiverId(), EnumKindOfMessage.MESSAGE, mw.getMessage(), "");
-                                System.out.println(message.toString());
+                                Message message = mw.getMessage();
+
+                                if (message.isHandshake()) {
+                                    message = Message.cleanUpHandshake(message);
+                                }
+                                logger.debug("Message from Buffer for User " + m.getSenderId() + ": " + message.toString());
                                 forwardMessage(message);
                             }
-                            // Look at Documentation for delete-action
-                            System.out.println(member.getUserID());
                             DataAccess.dropMessagesFromBuffer(member.getUserID());
                         } else {
                             logger.info(Utilities.getLogTime() + " No Messages in Buffer for this Member");
@@ -174,125 +177,24 @@ public class CommunicationThread extends Thread {
                     }
                 }
 
-                /*
-                 ====================== BUDDY-REQUEST =====================
-                 */
-                /**
-                 * This part defines the Buddy- Request.
-                 *
-                 * If the client asks for a buddy he sends a
-                 * <code>BUDDY_REQUEST</code> The Request contains the name of
-                 * the buddy in the content- part of the message.
-                 *
-                 * After the message is received the server tries to get the
-                 * requested member by searching in the memory.
-                 * 
-                 * [Why?
-                 * The registered users are loaded in the memory if the 
-                 * bean is instanced and UI- Thread of the server is started.
-                 * So there is no reason for a database request]
-                 *
-                 * If the member is found the server sends a <code>BUDDY_RESPONSE</code>
-                 * back to the client. The content- part is the requested name of the member
-                 * and the other- part is the Id.
-                 * 
-                 * If the member is not found the Server sends a <code>SYSTEM</code>
-                 * flagged Message back with the info that no member with this
-                 * requested name is registered.
-                 */
-                // Note: This is prototyped! We need to do a handshake!!
-                // @TODO: HANDSHAKE! -> ISSUE: #27
-                if (m.getMessageType() == EnumKindOfMessage.BUDDY_REQUEST) {
-                    logger.info(Utilities.getLogTime() + " Buddy Request from User " + m.getSenderId() + " received");
-                    String json = "";
-                    if (sb.isTheMemberRegistered(m.getContent())) {
-                        Member member = sb.getRegisteredMemberIdByName(m.getContent());
-                        Message response = new Message(0, m.getSenderId(), EnumKindOfMessage.BUDDY_RESPONSE,
-                                String.valueOf(member.getUserID()), m.getContent());
-                        json = MessageWrapper.createJSON(response);
-                        try {
-                            writeMessage(sb.returnCommnunicationChannel(m.getSenderId()), json);
-                        } catch (IOException ex) {
-                            java.util.logging.Logger.getLogger(CommunicationThread.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                        logger.debug("Response sent: " + response.toString());
-                    } else {
-                        Message response = new Message(0, m.getSenderId(), EnumKindOfMessage.SYSTEM,
-                                "Server: Member not found", "");
-                        json = MessageWrapper.createJSON(response);
-                        try {
-                            writeMessage(sb.returnCommnunicationChannel(m.getSenderId()), json);
-                        } catch (IOException ex) {
-                            java.util.logging.Logger.getLogger(CommunicationThread.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                        logger.debug("Response sent: " + response.toString());
-                    }
-
-                }
-
-                /*
-                 ====================== BUDDY-STATUS-REQUEST =====================
-                 */                
-                /**
-                 * This part defines the STATUS-REQUEST of the client.
-                 * 
-                 * After the client is registered he sends a <code>STATUS_REQUEST</code>
-                 * for the own buddies. The Status means the online- or offline
-                 * status.
-                 * 
-                 * Because the request can be send after the first login (with no
-                 * buddies) the status can be empty.
-                 * So it has to be verified that the content is not empty - in
-                 * this case the content of the message is a simple
-                 * <code>toString()</code> - Method of the loaded buddyList of the
-                 * client. Because this will be loaded as List the content
-                 * has the form: 3 5
-                 * for the status- request of the buddies 3 and 5.
-                 * 
-                 * Because it is important to reduce the sent messages
-                 * the server bundles the incoming request in a 
-                 * <code>Map<Integer, Boolean></code> with the Id and the 
-                 * status [online = true, offline = false].
-                 * This map will be sent back to the client.
-                 * The content will has the pattern: {id1=boolean1, id2=boolean2,...}
-                 * like:
-                 * {3=true, 5=false}
-                 * This has to be interpreted by the client.
-                 */
-                if (m.getMessageType() == EnumKindOfMessage.STATUS_REQUEST) {
-                    logger.info(Utilities.getLogTime() + " Status Request from User " + m.getSenderId() + " received");
-                    if (!m.getContent().isEmpty()) {
-                        String[] requestList = m.getContent().split(" ");
-                        Map<Integer, Boolean> buddy_online_Response = sb.getOnlineStatusOfMemberById(requestList);
-                        Message statusResponse = new Message(0, m.getSenderId(), EnumKindOfMessage.STATUS_RESPONSE, buddy_online_Response.toString(), "");
-                        try {
-                            this.writeMessage(sb.returnCommnunicationChannel(m.getSenderId()), MessageWrapper.createJSON(statusResponse));
-                        } catch (IOException ex) {
-                            logger.error("Error @ Status-Response: " + ex);
-                        }
-                    } else {
-                        logger.info(Utilities.getLogTime() + " Status Request from User " + m.getSenderId() + " ignored. No Friends.");
-                    }
-                }
 
                 /*
                  ====================== SIMPLE MESSAGE =====================
                  */
                 /**
                  * This part defines the SIMPLE MESSAGE from the client.
-                 * 
-                 * The incoming Message can be divided into two kinds:
-                 * -> with server as receiver
-                 * -> with other client as receiver
-                 * 
-                 * If the server is the receiver it will has the id 0
-                 * and will be printed at the textarea in the UI.
-                 * 
+                 *
+                 * The incoming Message can be divided into two kinds: -> with
+                 * server as receiver -> with other client as receiver
+                 *
+                 * If the server is the receiver it will has the id 0 and will
+                 * be printed at the textarea in the UI.
+                 *
                  * If the server is not the receiver it will be forwarded to
-                 * other clients.
-                 * [Hint: if the message has to be written in the messagebuffer,
-                 * because the client is not online, is placed in the forward- method]
-                 * 
+                 * other clients. [Hint: if the message has to be written in the
+                 * messagebuffer, because the client is not online, is placed in
+                 * the forward- method]
+                 *
                  */
                 if (m.getMessageType() == EnumKindOfMessage.MESSAGE) {
                     logger.info(Utilities.getLogTime() + " Message received");
@@ -302,6 +204,63 @@ public class CommunicationThread extends Thread {
                     } else {
                         logger.info(Utilities.getLogTime() + " Message not for server");
                         forwardMessage(m);
+                    }
+                }
+
+                /*
+                 ====================== HANDSHAKES =====================
+                 */
+                /**
+                 * This part defines the handling of HANDSHAKES.
+                 * 
+                 * Every Handshakehas two important states:
+                 * the START and the END.
+                 * In every kind of Handshake between the clients both states 
+                 * have to be implemented.
+                 * 
+                 * REQUESTKINDS
+                 * ------------
+                 * -> BUDDY_REQUEST
+                 * If the Server receives a START of a Buddy- Request Handshake
+                 * he has to find the ID of the requested user and modify the
+                 * data of the Handshake, too. Then the Handshake has to be 
+                 * forwarded.
+                 * In the END he has to handle if the response is positive or not.
+                 * If not the Server sends the response to the requesting client
+                 * and replaces the sender-ID by the server-ID.
+                 */
+                if (m.getMessageType() == EnumKindOfMessage.HANDSHAKE) {
+
+                    // Handshake for Buddy-Request
+                    if (m.getHandshake().getReason() == EnumHandshakeReason.BUDDY_REQUEST) {
+                        logger.info(Utilities.getLogTime() + " Handshake received");
+                        logger.info(m.toString());
+                        // If the status is Start
+                        if (m.getHandshake().getStatus() == EnumHandshakeStatus.START) {
+
+                            // Get unknwon ID of the receiver by requested Name
+                            int recieverID = sb.getRegisteredMemberIdByName(m.getContent()).getUserID();
+
+                            // Get name of Sender for UI of the Receiver
+                            String senderName = sb.getLoggedInMemberNameById(m.getSenderId());
+                            m.getHandshake().setContent(senderName);
+                            m.getHandshake().setReceiverID(recieverID);
+
+                            // Replace the ServerID with the real ID of the Receiver
+                            m.setReceiverId(recieverID);
+
+                            // Forwarding
+                            forwardMessage(m);
+                        }
+
+                        if (m.getHandshake().getStatus() == EnumHandshakeStatus.END) {
+                            if (m.getHandshake().isAnswer()) {
+                                forwardMessage(m);
+                            } else {
+                                m.setSenderId(0);
+                                forwardMessage(m);
+                            }
+                        }
                     }
                 }
 
@@ -336,10 +295,10 @@ public class CommunicationThread extends Thread {
 
     /**
      * Simple write- method for messages.
-     * 
+     *
      * @param socket
      * @param message
-     * @throws IOException 
+     * @throws IOException
      */
     private void writeMessage(Socket socket, String message) throws IOException {
         PrintWriter printWriter
@@ -350,10 +309,17 @@ public class CommunicationThread extends Thread {
         printWriter.flush();
     }
 
+    /**
+     * Forwards a simple message to the receiver.
+     *
+     * @param m
+     */
     private void forwardMessage(Message m) {
         if (sb.isMemberOnline(m.getReceiverId())) {
-            Member sender = sb.getLoggedInMemberById(m.getSenderId());
-            m.setContent(formatMessage(sender.getName(), m.getContent()));
+            if (m.getMessageType() == EnumKindOfMessage.MESSAGE) {
+                Member sender = sb.getLoggedInMemberById(m.getSenderId());
+                m.setContent(formatMessage(sender.getName(), m.getContent()));
+            }
             String json = MessageWrapper.createJSON(m);
             try {
                 writeMessage(sb.returnCommnunicationChannel(m.getReceiverId()),
@@ -364,8 +330,7 @@ public class CommunicationThread extends Thread {
         } else {
             logger.warn("Member is not online - Save Message in Buffer!");
             DataAccess.saveMessageInBuffer(m);
-            logger.debug(Utilities.getLogTime() + " Message is saved in Buffer");
-
+            logger.debug(Utilities.getLogTime() + " Message is saved in Buffer\n" + m.toString());
         }
     }
 
@@ -374,8 +339,10 @@ public class CommunicationThread extends Thread {
         for (Socket s : sb.getAllSockets()) {
             try {
                 writeMessage(s, MessageWrapper.createJSON(m));
+
             } catch (IOException ex) {
-                java.util.logging.Logger.getLogger(CommunicationThread.class.getName()).log(Level.SEVERE, null, ex);
+                java.util.logging.Logger.getLogger(CommunicationThread.class
+                        .getName()).log(Level.SEVERE, null, ex);
             }
         }
     }

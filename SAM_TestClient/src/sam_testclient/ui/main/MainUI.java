@@ -1,15 +1,21 @@
-package sam_testclient.ui;
+package sam_testclient.ui.main;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import sam_testclient.sources.Client;
-import sam_testclient.sources.CommunicationThread;
-import sam_testclient.sources.EnumKindOfMessage;
-import sam_testclient.sources.Message;
+import javax.swing.JList;
+import javax.swing.JTextArea;
+import sam_testclient.communication.Client;
+import sam_testclient.communication.CommunicationThread;
+import sam_testclient.entities.Handshake;
+import sam_testclient.entities.Message;
+import sam_testclient.enums.EnumHandshakeReason;
+import sam_testclient.enums.EnumHandshakeStatus;
+import sam_testclient.enums.EnumKindOfMessage;
 import sam_testclient.sources.MessageWrapper;
+import sam_testclient.utilities.Utilities;
 
 /**
  *
@@ -30,6 +36,42 @@ public class MainUI extends javax.swing.JFrame {
         btn_register.setEnabled(false);
         
     }
+    
+    public void acceptBuddyRequest(Handshake hs){
+        hs.setSenderID(this.client.getId());
+        hs.setReceiverID(hs.getSenderID());
+        hs.setAnswer(true);
+        hs.setStatus(EnumHandshakeStatus.END);
+        
+        Message handshake = new Message(hs);
+        try {
+            client.writeMessage(MessageWrapper.createJSON(handshake));
+        } catch (IOException ex) {
+            Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public void denyBuddyRequest(Handshake hs){
+        hs.setReceiverID(hs.getSenderID());
+        hs.setSenderID(this.client.getId());
+        hs.setAnswer(false);
+        hs.setStatus(EnumHandshakeStatus.END);
+
+        Message handshake = new Message(hs);
+        try {
+            client.writeMessage(MessageWrapper.createJSON(handshake));
+        } catch (IOException ex) {
+            Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public JTextArea getArea(){
+        return this.jTextArea1;
+    }
+    
+    public JList getBuddyList(){
+        return this.list_buddies;
+    }
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -42,7 +84,7 @@ public class MainUI extends javax.swing.JFrame {
         list_buddies = new javax.swing.JList();
         jLabel1 = new javax.swing.JLabel();
         jTextField1 = new javax.swing.JTextField();
-        jButton1 = new javax.swing.JButton();
+        btn_searchFriend = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         lb_name = new javax.swing.JLabel();
         tf_memberName = new javax.swing.JTextField();
@@ -92,10 +134,10 @@ public class MainUI extends javax.swing.JFrame {
 
         jLabel1.setText("Add a Friend");
 
-        jButton1.setText("Search");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        btn_searchFriend.setText("Search");
+        btn_searchFriend.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                btn_searchFriendActionPerformed(evt);
             }
         });
 
@@ -197,7 +239,7 @@ public class MainUI extends javax.swing.JFrame {
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addComponent(jLabel1)
                         .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 159, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jButton1))
+                    .addComponent(btn_searchFriend))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -221,7 +263,7 @@ public class MainUI extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton1)
+                .addComponent(btn_searchFriend)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -233,7 +275,8 @@ public class MainUI extends javax.swing.JFrame {
         try {
             client.connect();
             prepareUI();
-            new CommunicationThread(this.client, jTextArea1, list_buddies ,client.getId()).start();
+            new CommunicationThread(this.client, this ,client.getId()).start();
+            jTextArea1.append(Utilities.getLogTime() + " Try to register...\n");
         } catch (IOException ex) {
             Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -261,9 +304,10 @@ public class MainUI extends javax.swing.JFrame {
         if (tgl_login.isSelected()) {
             client = new Client();
             try {
+                jTextArea1.append(Utilities.getLogTime() + " Try to login...\n");
                 client.connect();
                 prepareUI();
-                new CommunicationThread(this.client, jTextArea1, list_buddies,client.getId()).start();
+                new CommunicationThread(this.client, this, client.getId()).start();
             } catch (IOException ex) {
                 Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -285,15 +329,24 @@ public class MainUI extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_tgl_loginActionPerformed
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        Message m = new Message(client.getId(), 0, EnumKindOfMessage.BUDDY_REQUEST, jTextField1.getText(), "");
+    private void btn_searchFriendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_searchFriendActionPerformed
+        Handshake hs = new Handshake();
+        hs.setReason(EnumHandshakeReason.BUDDY_REQUEST);
+        hs.setSenderID(this.client.getId());
+        hs.setReceiverID(0);
+        hs.setContent(jTextField1.getText());
+        hs.setStatus(EnumHandshakeStatus.START);
+        
+        Message handshake = new Message(hs);
+        handshake.setOthers("");
         try {
-            client.writeMessage(MessageWrapper.createJSON(m));
+            client.writeMessage(MessageWrapper.createJSON(handshake));
+            jTextArea1.append(Utilities.getLogTime() + " Buddyrequest sended\n");
             jTextField1.setText("");
         } catch (IOException ex) {
             Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }//GEN-LAST:event_btn_searchFriendActionPerformed
 
     private void list_buddiesValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_list_buddiesValueChanged
         if (list_buddies.getSelectedValue() == null){
@@ -340,8 +393,8 @@ public class MainUI extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btn_register;
+    private javax.swing.JButton btn_searchFriend;
     private javax.swing.JButton btn_send;
-    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;

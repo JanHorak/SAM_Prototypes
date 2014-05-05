@@ -10,8 +10,6 @@ package net.sam.server.enums;
  *
  * @author janhorak
  */
-public enum EnumKindOfMessage {
-    REGISTER, MESSAGE, KEYEXCHANGE, LOGIN, LOGOUT, LOGIN_RESPONSE,
-    BUDDY_REQUEST, BUDDY_RESPONSE, STATUS_REQUEST, STATUS_RESPONSE, HANDSHAKE,
-    SYSTEM
+public enum EnumHandshakeStatus {
+    END, START, WAITING, ERROR
 }

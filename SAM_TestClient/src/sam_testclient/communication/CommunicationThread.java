@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package sam_testclient.sources;
+package sam_testclient.communication;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -18,6 +18,13 @@ import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.JTextArea;
+import sam_testclient.entities.Message;
+import sam_testclient.enums.EnumHandshakeStatus;
+import sam_testclient.enums.EnumKindOfMessage;
+import sam_testclient.sources.FileManager;
+import sam_testclient.sources.MessageWrapper;
+import sam_testclient.ui.dialogs.BuddyRequestDialog;
+import sam_testclient.ui.main.MainUI;
 import sam_testclient.utilities.Utilities;
 
 /**
@@ -35,16 +42,17 @@ public class CommunicationThread extends Thread {
     private Map<Integer, String> buddyList;
     private Map<Integer, Boolean> buddy_statusList;
     private JList list_buddies;
+    private MainUI ui;
 
-    public CommunicationThread(Client c, JTextArea area, JList list_buddies, int id) {
+    public CommunicationThread(Client c, MainUI ui, int id) {
+        this.ui = ui;
         this.client = c;
-        this.area = area;
+        this.area = ui.getArea();
         this.id = id;
-        this.list_buddies = list_buddies;
+        this.list_buddies = ui.getBuddyList();
         buddyList = (Map<Integer, String>) FileManager.deserialize("buddyList.data");
         buddy_statusList = new HashMap<Integer, Boolean>();
         c.setBuddyList(buddyList);
-//        updateUI();
     }
 
     /**
@@ -60,7 +68,9 @@ public class CommunicationThread extends Thread {
                 Message m = null;
                 try {
                     // JSON handling
-                    m = MessageWrapper.JSON2Message(readMessage());
+                    String s = readMessage();
+                    System.out.println(s);
+                    m = MessageWrapper.JSON2Message(s);
                     System.out.println("received: " + m.toString());
                 } catch (IOException ex) {
 
@@ -73,7 +83,7 @@ public class CommunicationThread extends Thread {
                 if (m.getMessageType() == EnumKindOfMessage.LOGIN_RESPONSE) {
                     client.setId(Integer.decode(m.getContent()));
                     sendStatusRequest();
-
+                    area.append(Utilities.getLogTime() + " logged in\n");
                 }
                 if (m.getMessageType() == EnumKindOfMessage.BUDDY_RESPONSE) {
                     // Buddy founded
@@ -83,7 +93,32 @@ public class CommunicationThread extends Thread {
                     sendStatusRequest();
                     // Save the new buddy
                     FileManager.serialize(buddyList, "buddyList.data");
-                    area.append("\n" + new SimpleDateFormat("HH:mm").format(new Date()).toString() + " Server: Buddy added!");
+                    area.append("\n" + new SimpleDateFormat("HH:mm").format(new Date()) + " Server: Buddy added!");
+                }
+
+                if (m.getMessageType() == EnumKindOfMessage.HANDSHAKE) {
+                    if (m.getHandshake().getStatus() == EnumHandshakeStatus.START) {
+                        area.append(Utilities.getLogTime() + "Server: Buddyrequest received\n");
+                        new BuddyRequestDialog(ui, m.getHandshake()).setVisible(true);
+                    }
+                    if (m.getHandshake().getStatus() == EnumHandshakeStatus.END) {
+                        // If the message is not coming from server then it is from the buddy
+                        if (m.getReceiverId() != 0 && m.getHandshake().isAnswer()) {
+                            this.buddyList.put(m.getReceiverId(), m.getHandshake().getContent());
+                            FileManager.serialize(this.buddyList, "buddyList.data");
+                            area.append(Utilities.getLogTime() + " " + m.getHandshake().getContent() + " is added to buddylist \n");
+                            sendStatusRequest();
+                        } else {
+//                            // The client doesn't have to be noticed
+//                            area.append(Utilities.getLogTime() + " Server: " + "Client don't want to be your friend :P!\n");
+                        }
+
+                    }
+                    if (m.getHandshake().getStatus() == EnumHandshakeStatus.WAITING) {
+//                        // The client doesn't have to be noticed
+//                        area.append(Utilities.getLogTime() + " Server: " + m.getContent() + " No answer from the client.\n"
+//                                + "Maybe he is offline. The request will be sent later again.\n");
+                    }
                 }
 
                 if (m.getMessageType() == EnumKindOfMessage.STATUS_RESPONSE) {
@@ -93,13 +128,13 @@ public class CommunicationThread extends Thread {
 
                 try {
                     /**
-                     * If the Server sends the messages from the buffer
-                     * to the client, he has to "listen quickly".
-                     * So the Time for sleep has to be ca. 50ms
-                     * 
+                     * If the Server sends the messages from the buffer to the
+                     * client, he has to "listen quickly". So the Time for sleep
+                     * has to be ca. 50ms
+                     *
                      * -> If occurs MalFormedExceptions for JSONs they are
-                     * really unexpected it is possible that the client 
-                     * cannot listen as quick as needed
+                     * really unexpected it is possible that the client cannot
+                     * listen as quick as needed
                      */
                     sleep(50);
                 } catch (InterruptedException ex) {
@@ -149,12 +184,11 @@ public class CommunicationThread extends Thread {
 
     //@TODO: Has to be outsourced!!
     /**
-     * Returns the formated String of IDs for the Status request.
-     * The String is the content of the Request message
-     * Like 
-     * 1 3
-     * For the Ids of Friends in the own buddyList
-     * @return 
+     * Returns the formated String of IDs for the Status request. The String is
+     * the content of the Request message Like 1 3 For the Ids of Friends in the
+     * own buddyList
+     *
+     * @return
      */
     private String formatStatusRequest() {
         String result = "";
@@ -174,4 +208,5 @@ public class CommunicationThread extends Thread {
         }
 
     }
+
 }

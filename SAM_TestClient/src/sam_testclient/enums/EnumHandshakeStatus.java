@@ -4,13 +4,12 @@
  * and open the template in the editor.
  */
 
-package sam_testclient.sources;
+package sam_testclient.enums;
 
 /**
  *
  * @author janhorak
  */
-public enum EnumKindOfMessage {
-    REGISTER, MESSAGE, KEYEXCHANGE, LOGIN, LOGOUT, LOGIN_RESPONSE,
-    BUDDY_REQUEST, BUDDY_RESPONSE, STATUS_REQUEST, STATUS_RESPONSE, SYSTEM
+public enum EnumHandshakeStatus {
+    END, START, WAITING, ERROR
 }

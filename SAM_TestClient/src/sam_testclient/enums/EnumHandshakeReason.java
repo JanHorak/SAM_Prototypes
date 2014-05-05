@@ -4,14 +4,12 @@
  * and open the template in the editor.
  */
 
-package net.sam.server.enums;
+package sam_testclient.enums;
 
 /**
  *
  * @author janhorak
  */
-public enum EnumKindOfMessage {
-    REGISTER, MESSAGE, KEYEXCHANGE, LOGIN, LOGOUT, LOGIN_RESPONSE,
-    BUDDY_REQUEST, BUDDY_RESPONSE, STATUS_REQUEST, STATUS_RESPONSE, HANDSHAKE,
-    SYSTEM
+public enum EnumHandshakeReason {
+    BUDDY_REQUEST, SENDING_FILE
 }
