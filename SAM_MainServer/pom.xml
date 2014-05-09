@@ -125,6 +125,12 @@
             <artifactId>gson</artifactId>
             <version>1.7.2</version>
         </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.17</version>
+            <type>jar</type>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -139,6 +145,63 @@
                         <endorseddirs>${endorseddirs}</endorseddirs>
                     </compilerArguments>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>dependency-jars/</classpathPrefix>
+                            <mainClass>net.sam.server.ui.ServerMainUI</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.5.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <artifact>log4j:log4j:1.2.17</artifact>
+                            <artifact>javax.persistence:persistence-api:1.0.2</artifact>
+                            <outputDirectory>${project.build.directory}/dependency-jars/</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.1</version>
+                <executions>
+                    <execution>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <tasks>
+                                <echo>Copying Properties- Files...</echo>
+                                <copy file="properties/server.properties" tofile="${basedir}/target/properties/server.properties"/>
+                                <copy file="properties/log4j.properties" tofile="${basedir}/target/properties/log4j.properties"/>
+                                <echo>Copying Log- Files...</echo>
+                                <copy file="logs/Server.log" tofile="${basedir}/target/logs/Server.log"/>
+                                <echo>Copying Graphic- Files...</echo>
+                                <copy file="graphics/AndroidLogo.png" tofile="${basedir}/target/graphics/AndroidLogo.png"/>
+                                <copy file="graphics/simpleLogoSAM.png" tofile="${basedir}/target/graphics/simpleLogoSAM.png"/>
+                            </tasks>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

@@ -1,6 +1,5 @@
 package net.sam.server.ui;
 
-import java.awt.Dimension;
 import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
@@ -13,6 +12,7 @@ import net.sam.server.servermain.Server;
 import net.sam.server.utilities.Utilities;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
+
 
 
 /**
@@ -30,7 +30,7 @@ public class ServerMainUI extends javax.swing.JFrame {
         logger = Logger.getLogger(ServerMainUI.class);
         
         this.setTitle("SAM - SecureAndroidMessenger - Server");
-        lb_logo.setIcon(new ImageIcon("src/main/resources/graphics/simpleLogoSAM.png"));
+        lb_logo.setIcon(new ImageIcon("graphics/simpleLogoSAM.png"));
         loadConfig();
         
         serverMainBean = ServerMainBean.getInstance();
@@ -65,9 +65,9 @@ public class ServerMainUI extends javax.swing.JFrame {
 
     private Logger logger;
     
-    private static final String SERVERPROPERTIES = "src/main/resources/server.properties";
+    private static final String SERVERPROPERTIES = "properties/server.properties";
     
-    private static final String LOGGINGPROPERTIES = "src/main/resources/log4j.properties";
+    private static final String LOGGINGPROPERTIES = "properties/log4j.properties";
 
     // ---------- ---------- ----------------
     @SuppressWarnings("unchecked")

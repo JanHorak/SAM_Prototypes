@@ -31,3 +31,4 @@ target/
 /SAM_FXServer/dist/
 /Kassensystem/build/
 /SAM_TestClient/dist/
+/SAM_MainServer/target (copy)/

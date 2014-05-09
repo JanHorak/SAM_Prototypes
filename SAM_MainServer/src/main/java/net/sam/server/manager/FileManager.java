@@ -20,7 +20,6 @@ import java.nio.file.Path;
 import java.util.Properties;
 import net.sam.server.entities.MediaStorage;
 import net.sam.server.utilities.Utilities;
-import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 
 
@@ -114,12 +113,6 @@ public class FileManager {
             logger.error(Utilities.getLogTime() + " FileNotFound");
         } catch (IOException ex) {
             logger.error(Utilities.getLogTime() + " IO");
-        } finally {
-            try {
-                r.close();
-            } catch (IOException ex) {
-                logger.error(Utilities.getLogTime() + " Cant close Reader");
-            }
         }
         logger.info(Utilities.getLogTime() + " Properties are loaded");
         return property;
