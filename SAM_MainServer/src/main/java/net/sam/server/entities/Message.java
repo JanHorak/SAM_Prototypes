@@ -19,6 +19,7 @@ import net.sam.server.enums.EnumKindOfMessage;
  */
 
 @Entity
+@net.sam.server.validation.Message
 public class Message extends TransportObject implements Serializable{
 
     protected Message() {}
@@ -37,6 +38,7 @@ public class Message extends TransportObject implements Serializable{
         this.setReceiverId(hs.getReceiverID());
         this.setSenderId(hs.getSenderID());
         this.setContent(hs.getContent());
+        this.setOthers("Not in use (because Handshake)");
         this.setMessageType(EnumKindOfMessage.HANDSHAKE);
         this.setTimestamp(new Date());
     }
@@ -68,7 +70,7 @@ public class Message extends TransportObject implements Serializable{
     private Handshake handshake;
     
     public Handshake getHandshake(){
-        if (this.handshake != null){
+        if (isHandshake()){
             return this.handshake;
         } 
         return null;
