@@ -15,6 +15,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
+import javax.validation.constraints.NotNull;
 import net.sam.server.enums.EnumKindOfMessage;
 
 /**
@@ -32,18 +33,24 @@ public abstract class TransportObject implements Serializable {
     private Long id;
 
     @Enumerated(EnumType.STRING)
+    @NotNull
     private EnumKindOfMessage messageType;
 
+    @NotNull
     private String content;
 
+    @NotNull
     private int receiverId;
 
+    @NotNull
     private int senderId;
 
+    @NotNull
     private String others;
 
     //@TODO: @Temporal- annotation for timestamp adden
     //       maybe changes in the testdata- adden
+    @NotNull
     private Date timestamp;
 
     public int getSenderId() {

@@ -199,7 +199,7 @@ public class CommunicationThread extends Thread {
     }
 
     private void sendStatusRequest() {
-        Message buddy_status = new Message(client.getId(), 0, EnumKindOfMessage.STATUS_REQUEST, formatStatusRequest(), null);
+        Message buddy_status = new Message(client.getId(), 0, EnumKindOfMessage.STATUS_REQUEST, formatStatusRequest(), "");
         String buddy_status_request = MessageWrapper.createJSON(buddy_status);
         try {
             client.writeMessage(buddy_status_request);
