@@ -7,8 +7,15 @@
 package sam_testclient.entities;
 
 import java.io.Serializable;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import sam_testclient.enums.EnumHandshakeReason;
 import sam_testclient.enums.EnumHandshakeStatus;
+
 
 
 
@@ -21,17 +28,21 @@ import sam_testclient.enums.EnumHandshakeStatus;
  * 
  * @author janhorak
  */
-
+@Entity
 public class Handshake implements Serializable{
 
     private int senderID;
     
     private int receiverID;
-
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
     
+    @Enumerated(EnumType.STRING)
     private EnumHandshakeStatus status;
     
+    @Enumerated(EnumType.STRING)
     private EnumHandshakeReason reason;
     
     private boolean answer;
