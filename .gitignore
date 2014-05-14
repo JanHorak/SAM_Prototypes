@@ -8,14 +8,17 @@
 # Java class files
 *.class
 
+# Serialized Data
+*.data
+
 # generated files
 bin/
 gen/
+target/
 
 # Local configuration file (sdk path, etc)
 local.properties
 
-target/
 
 # Eclipse project files
 .classpath
@@ -23,12 +26,4 @@ target/
 /JPA_Prototype/dist/
 /nbproject/
 /build.xml
-/SAM_Server/build/
-/SAM_Server/dist/
-/SAM_FXClient/dist/
-/SAM_FXClient/build/
-/SAM_FXServer/build/
-/SAM_FXServer/dist/
-/Kassensystem/build/
-/SAM_TestClient/dist/
 /SAM_MainServer/target (copy)/
