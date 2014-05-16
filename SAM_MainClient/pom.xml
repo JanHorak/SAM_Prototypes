@@ -55,7 +55,7 @@
                 <version>1.1</version>
                 <executions>
                     <execution>
-                        <phase>test</phase>
+                        <phase>install</phase>
                         <goals>
                             <goal>run</goal>
                         </goals>
@@ -63,6 +63,15 @@
                             <tasks>
                                 <echo>Copying BuddyList.data...</echo>
                                 <copy file="buddyList.data" tofile="${basedir}/target/buddyList.data"/>
+                                <echo>Copying new Testclients...</echo>
+                                <copy todir="${basedir}/target/TestClient1">  
+                                    <fileset dir="${basedir}/target/"/>
+                                </copy>
+                                <copy todir="${basedir}/target/TestClient2">  
+                                    <fileset dir="${basedir}/target/">
+                                        <exclude name="**/TestClient1/**"/>
+                                    </fileset>
+                                </copy> 
                             </tasks>
                         </configuration>
                     </execution>
