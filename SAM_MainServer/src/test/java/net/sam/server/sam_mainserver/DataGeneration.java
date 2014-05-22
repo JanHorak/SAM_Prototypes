@@ -57,7 +57,7 @@ public class DataGeneration {
     @Test
     public void shouldAddAnImageForMediaStorage(){
         em.getTransaction().begin();
-        File image = new File("src/main/resources/graphics/AndroidLogo.png");
+        File image = new File("graphics/AndroidLogo.png");
         
         Member m = new Member();
         m.setUserID(2);
@@ -72,7 +72,6 @@ public class DataGeneration {
         } catch (IOException ex) {
             java.util.logging.Logger.getLogger(DataGeneration.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
         em.persist(ms);
         em.getTransaction().commit();
         

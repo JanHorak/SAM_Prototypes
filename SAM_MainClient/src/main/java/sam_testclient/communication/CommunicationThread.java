@@ -99,7 +99,7 @@ public class CommunicationThread extends Thread {
                 if (m.getMessageType() == EnumKindOfMessage.HANDSHAKE) {
                     if (m.getHandshake().getStatus() == EnumHandshakeStatus.START) {
                         area.append(Utilities.getLogTime() + "Server: Buddyrequest received\n");
-                        new BuddyRequestDialog(ui, m.getHandshake()).setVisible(true);
+                        new BuddyRequestDialog(ui, m).setVisible(true);
                     }
                     if (m.getHandshake().getStatus() == EnumHandshakeStatus.END) {
                         // If the message is not coming from server then it is from the buddy

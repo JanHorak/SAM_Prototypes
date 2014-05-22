@@ -18,8 +18,6 @@ import sam_testclient.enums.EnumKindOfMessage;
  *
  * @author janhorak
  */
-
-@Entity
 @sam_testclient.validation.Message
 public class Message extends TransportObject implements Serializable{
 
@@ -78,7 +76,7 @@ public class Message extends TransportObject implements Serializable{
     }
     
     public boolean isHandshake(){
-        return this.handshake != null;
+        return this.getMessageType() == EnumKindOfMessage.HANDSHAKE;
     }
 
     public void setHandshake(Handshake handshake) {
