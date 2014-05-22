@@ -18,7 +18,7 @@ import sam_testclient.sources.FileManager;
 public class UtilityHelperTest {
     
     @Test
-    public void generateEmptyBuddyList(){
+    public void generateEmptyBuddyListTest(){
         Map<Integer, String> buddyList = new HashMap<Integer, String>();
         FileManager.serialize(buddyList, "buddyList.data");
         buddyList = null;

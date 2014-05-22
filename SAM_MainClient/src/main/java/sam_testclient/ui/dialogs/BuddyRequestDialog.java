@@ -8,6 +8,7 @@ package sam_testclient.ui.dialogs;
 
 import sam_testclient.communication.Client;
 import sam_testclient.entities.Handshake;
+import sam_testclient.entities.Message;
 import sam_testclient.ui.main.MainUI;
 
 /**
@@ -21,13 +22,14 @@ public class BuddyRequestDialog extends javax.swing.JFrame {
      */
     
     MainUI ui;
-    Handshake hs;
-    public BuddyRequestDialog(MainUI ui, Handshake hs) {
+    Message m;
+    public BuddyRequestDialog(MainUI ui, Message m) {
+        System.out.println("BuddyDIALOG:\n Incoming Message: "+ m.toString());
         this.setTitle("New Buddy- Request");
         initComponents();
-        jLabel1.setText(hs.getContent() + " want to be your friend!");
+        jLabel1.setText(m.getContent() + " want to be your friend!");
         this.ui = ui;
-        this.hs = hs;
+        this.m = m;
     }
 
     /**
@@ -91,12 +93,12 @@ public class BuddyRequestDialog extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        ui.acceptBuddyRequest(hs);
+        ui.acceptBuddyRequest(m);
         dispose();
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        ui.denyBuddyRequest(hs);
+        ui.denyBuddyRequest(m);
         dispose();
     }//GEN-LAST:event_jButton2ActionPerformed
 

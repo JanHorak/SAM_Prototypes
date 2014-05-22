@@ -77,7 +77,7 @@ public class Message extends TransportObject implements Serializable{
     }
     
     public boolean isHandshake(){
-        return this.handshake != null;
+        return this.getMessageType() == EnumKindOfMessage.HANDSHAKE;
     }
 
     public void setHandshake(Handshake handshake) {

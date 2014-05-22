@@ -37,29 +37,27 @@ public class MainUI extends javax.swing.JFrame {
         
     }
     
-    public void acceptBuddyRequest(Handshake hs){
-        hs.setSenderID(this.client.getId());
-        hs.setReceiverID(hs.getSenderID());
-        hs.setAnswer(true);
-        hs.setStatus(EnumHandshakeStatus.END);
-        
-        Message handshake = new Message(hs);
+    public void acceptBuddyRequest(Message m){
+        m.getHandshake().setSenderID(this.client.getId());
+        m.getHandshake().setReceiverID(m.getHandshake().getSenderID());
+        m.getHandshake().setAnswer(true);
+        m.getHandshake().setStatus(EnumHandshakeStatus.END);
+
         try {
-            client.writeMessage(MessageWrapper.createJSON(handshake));
+            client.writeMessage(MessageWrapper.createJSON(m));
         } catch (IOException ex) {
             Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
-    public void denyBuddyRequest(Handshake hs){
-        hs.setReceiverID(hs.getSenderID());
-        hs.setSenderID(this.client.getId());
-        hs.setAnswer(false);
-        hs.setStatus(EnumHandshakeStatus.END);
+    public void denyBuddyRequest(Message m){
+        m.getHandshake().setReceiverID(m.getHandshake().getSenderID());
+        m.getHandshake().setSenderID(this.client.getId());
+        m.getHandshake().setAnswer(false);
+        m.getHandshake().setStatus(EnumHandshakeStatus.END);
 
-        Message handshake = new Message(hs);
         try {
-            client.writeMessage(MessageWrapper.createJSON(handshake));
+            client.writeMessage(MessageWrapper.createJSON(m));
         } catch (IOException ex) {
             Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
         }
