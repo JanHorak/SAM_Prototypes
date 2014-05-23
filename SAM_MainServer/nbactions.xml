@@ -4,6 +4,7 @@
             <actionName>CUSTOM-CreateTable</actionName>
             <displayName>CreateTable</displayName>
             <goals>
+                <goal>-e</goal>
                 <goal>hibernate3:hbm2ddl</goal>
             </goals>
         </action>
