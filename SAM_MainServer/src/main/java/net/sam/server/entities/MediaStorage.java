@@ -7,10 +7,15 @@
 package net.sam.server.entities;
 
 import java.io.Serializable;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import net.sam.server.enums.EnumMediaType;
@@ -21,7 +26,8 @@ import net.sam.server.enums.EnumMediaType;
  */
 @Entity
 @Table(name = "DataStorage")
-public class MediaStorage implements Serializable {
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+public abstract class MediaStorage implements Serializable {
     
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -39,16 +45,14 @@ public class MediaStorage implements Serializable {
     @NotNull
     private byte[] content;
     
-//    @OneToOne
-//    @MapsId
-    private Member memberId;
+    private Message message;
 
-    public Member getMemberId() {
-        return memberId;
+    public Message getMessage() {
+        return message;
     }
 
-    public void setMemberId(Member memberId) {
-        this.memberId = memberId;
+    public void setMessage(Message message) {
+        this.message = message;
     }
 
     public String getFileName() {

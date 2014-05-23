@@ -14,7 +14,10 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import net.sam.server.entities.MediaStorage;
+import net.sam.server.entities.MediaFile;
 import net.sam.server.entities.Member;
+import net.sam.server.entities.Message;
+import net.sam.server.enums.EnumKindOfMessage;
 import net.sam.server.enums.EnumMediaType;
 import org.junit.After;
 import org.junit.Before;
@@ -55,24 +58,23 @@ public class DataGeneration {
     }
     
     @Test
-    public void shouldAddAnImageForMediaStorage(){
+    public void shouldAddAnImageInMediaStorage(){
         em.getTransaction().begin();
         File image = new File("graphics/AndroidLogo.png");
         
-        Member m = new Member();
-        m.setUserID(2);
+        Message m = new Message(1, 3, EnumKindOfMessage.LOGIN, "Blaaa", "additional bla");
         
-        MediaStorage ms = new MediaStorage();
-        ms.setFileName("AndroidLogo.png");
-        ms.setDescription("Logo from Android");
-        ms.setType(EnumMediaType.IMAGE);
-        ms.setMemberId(m);
+        MediaFile mt = new MediaFile();
+        mt.setFileName("AndroidLogo.png");
+        mt.setDescription("Logo from Android");
+        mt.setType(EnumMediaType.IMAGE);
+        mt.setMessage(m);
         try {
-            ms.setContent(Files.readAllBytes(image.toPath()));
+            mt.setContent(Files.readAllBytes(image.toPath()));
         } catch (IOException ex) {
             java.util.logging.Logger.getLogger(DataGeneration.class.getName()).log(Level.SEVERE, null, ex);
         }
-        em.persist(ms);
+        em.persist(mt);
         em.getTransaction().commit();
         
     }

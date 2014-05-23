@@ -43,6 +43,16 @@ public class Message extends TransportObject implements Serializable{
         this.setTimestamp(new Date());
     }
     
+    public Message (Handshake hs, MediaFile mf){
+        this.handshake = hs;
+        this.setReceiverId(hs.getReceiverID());
+        this.setSenderId(hs.getSenderID());
+        this.setContent(hs.getContent());
+        this.setOthers("Not in use (because Handshake)");
+        this.setMessageType(EnumKindOfMessage.HANDSHAKE);
+        this.setTimestamp(new Date());
+    }
+    
     /**
      * This method is cleaning up the message which comes from the database.
      * Because the returning object is modified by the persistence provider
@@ -69,6 +79,9 @@ public class Message extends TransportObject implements Serializable{
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Handshake handshake;
     
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private MediaStorage mediaStorage;
+    
     public Handshake getHandshake(){
         if (isHandshake()){
             return this.handshake;
@@ -83,8 +96,15 @@ public class Message extends TransportObject implements Serializable{
     public void setHandshake(Handshake handshake) {
         this.handshake = handshake;
     }
-    
 
+    public MediaStorage getMediaStorage() {
+        return mediaStorage;
+    }
+
+    public void setMediaStorage(MediaStorage mediaStorage) {
+        this.mediaStorage = mediaStorage;
+    }
+    
     @Override
     public String toString() {
         // @TODO: Use Stringbuilder for building returning String!
