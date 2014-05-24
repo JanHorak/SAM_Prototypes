@@ -7,14 +7,13 @@ package sam_testclient.entities;
 
 import java.io.Serializable;
 import java.util.Date;
-import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import sam_testclient.enums.EnumKindOfMessage;
 
@@ -25,8 +24,6 @@ import sam_testclient.enums.EnumKindOfMessage;
  *
  * @author janhorak
  */
-@Entity
-@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public abstract class TransportObject implements Serializable {
 
     @Id
@@ -51,7 +48,7 @@ public abstract class TransportObject implements Serializable {
 
     //@TODO: @Temporal- annotation for timestamp adden
     //       maybe changes in the testdata- adden
-    @NotNull
+    @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
 
     public int getSenderId() {

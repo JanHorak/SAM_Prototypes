@@ -73,7 +73,18 @@ public class Message extends TransportObject implements Serializable{
         cleanedUpHs.setReceiverID(ms.getHandshake().getReceiverID());
         cleanedUpHs.setContent(ms.getHandshake().getContent());
         cleanedUpHs.setStatus(ms.getHandshake().getStatus());
-        return new Message(cleanedUpHs);
+        
+        Message m = new Message();
+        m.setHandshake(cleanedUpHs);
+        m.setContent(ms.getContent());
+        m.setMessageType(ms.getMessageType());
+        m.setOthers(ms.getOthers());
+        m.setContent(ms.getContent());
+        m.setReceiverId(ms.getReceiverId());
+        m.setSenderId(ms.getSenderId());
+        m.setTimestamp(ms.getTimestamp());
+        
+        return m;
     }
     
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)

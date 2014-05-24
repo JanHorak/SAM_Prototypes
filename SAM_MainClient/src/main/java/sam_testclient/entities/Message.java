@@ -8,7 +8,6 @@ package sam_testclient.entities;
 import java.io.Serializable;
 import java.util.Date;
 import javax.persistence.CascadeType;
-import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.OneToOne;
 import sam_testclient.enums.EnumKindOfMessage;
@@ -69,10 +68,7 @@ public class Message extends TransportObject implements Serializable{
     private Handshake handshake;
     
     public Handshake getHandshake(){
-        if (isHandshake()){
-            return this.handshake;
-        } 
-        return null;
+        return this.handshake;
     }
     
     public boolean isHandshake(){

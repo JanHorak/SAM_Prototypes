@@ -17,7 +17,6 @@ import net.sam.server.utilities.Utilities;
 public abstract class MessageWrapper {
 
     public static String createJSON(Message message) {
-        System.out.println(message.toString());
         if (ValidationManager.isValid(message)) {
             Gson gson = new Gson();
             return gson.toJson(message);
@@ -29,9 +28,7 @@ public abstract class MessageWrapper {
 
     public static Message JSON2Message(String json) {
         Gson gson = new Gson();
-        System.out.println(json);
         Message incoming = (Message) gson.fromJson(json, Message.class);
-        System.out.println(incoming.toString());
         if (ValidationManager.isValid(incoming)) {
             return incoming;
         } else {

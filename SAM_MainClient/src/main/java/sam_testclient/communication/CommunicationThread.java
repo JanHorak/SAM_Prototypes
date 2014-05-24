@@ -19,6 +19,7 @@ import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.JTextArea;
 import sam_testclient.entities.Message;
+import sam_testclient.enums.EnumHandshakeReason;
 import sam_testclient.enums.EnumHandshakeStatus;
 import sam_testclient.enums.EnumKindOfMessage;
 import sam_testclient.sources.FileManager;
@@ -97,22 +98,24 @@ public class CommunicationThread extends Thread {
                 }
 
                 if (m.getMessageType() == EnumKindOfMessage.HANDSHAKE) {
-                    if (m.getHandshake().getStatus() == EnumHandshakeStatus.START) {
-                        area.append(Utilities.getLogTime() + "Server: Buddyrequest received\n");
-                        new BuddyRequestDialog(ui, m).setVisible(true);
-                    }
-                    if (m.getHandshake().getStatus() == EnumHandshakeStatus.END) {
-                        // If the message is not coming from server then it is from the buddy
-                        if (m.getReceiverId() != 0 && m.getHandshake().isAnswer()) {
-                            this.buddyList.put(m.getReceiverId(), m.getHandshake().getContent());
-                            FileManager.serialize(this.buddyList, "buddyList.data");
-                            area.append(Utilities.getLogTime() + " " + m.getHandshake().getContent() + " is added to buddylist \n");
-                            sendStatusRequest();
-                        } else {
+                    if (m.getHandshake().getReason() == EnumHandshakeReason.BUDDY_REQUEST) {
+                        if (m.getHandshake().getStatus() == EnumHandshakeStatus.START) {
+                            area.append(Utilities.getLogTime() + "Server: Buddyrequest received\n");
+                            new BuddyRequestDialog(ui, m).setVisible(true);
+                        }
+                        if (m.getHandshake().getStatus() == EnumHandshakeStatus.END) {
+                            // If the message is not coming from server then it is from the buddy
+                            if (m.getReceiverId() != 0 && m.getHandshake().isAnswer()) {
+                                this.buddyList.put(m.getReceiverId(), m.getHandshake().getContent());
+                                FileManager.serialize(this.buddyList, "buddyList.data");
+                                area.append(Utilities.getLogTime() + " " + m.getHandshake().getContent() + " is added to buddylist \n");
+                                sendStatusRequest();
+                            } else {
 //                            // The client doesn't have to be noticed
 //                            area.append(Utilities.getLogTime() + " Server: " + "Client don't want to be your friend :P!\n");
-                        }
+                            }
 
+                        }
                     }
                     if (m.getHandshake().getStatus() == EnumHandshakeStatus.WAITING) {
 //                        // The client doesn't have to be noticed
