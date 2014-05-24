@@ -15,6 +15,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import net.sam.server.enums.EnumKindOfMessage;
 
@@ -50,7 +52,7 @@ public abstract class TransportObject implements Serializable {
 
     //@TODO: @Temporal- annotation for timestamp adden
     //       maybe changes in the testdata- adden
-    @NotNull
+    @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
 
     public int getSenderId() {
