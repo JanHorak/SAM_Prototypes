@@ -7,12 +7,15 @@
 package net.sam.server.entities;
 
 import java.io.Serializable;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToOne;
 import net.sam.server.enums.EnumHandshakeReason;
 import net.sam.server.enums.EnumHandshakeStatus;
 
@@ -29,10 +32,6 @@ import net.sam.server.enums.EnumHandshakeStatus;
  */
 @Entity
 public class Handshake implements Serializable{
-
-    private int senderID;
-    
-    private int receiverID;
     
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -44,25 +43,12 @@ public class Handshake implements Serializable{
     @Enumerated(EnumType.STRING)
     private EnumHandshakeReason reason;
     
+    @OneToOne(cascade = CascadeType.REMOVE, fetch = FetchType.LAZY, mappedBy = "handshake")
+    private Message owner;
+    
     private boolean answer;
     
     private String content;
-
-    public int getSenderID() {
-        return senderID;
-    }
-
-    public void setSenderID(int senderID) {
-        this.senderID = senderID;
-    }
-
-    public int getReceiverID() {
-        return receiverID;
-    }
-
-    public void setReceiverID(int receiverID) {
-        this.receiverID = receiverID;
-    }
 
     public EnumHandshakeStatus getStatus() {
         return status;
@@ -111,11 +97,9 @@ public class Handshake implements Serializable{
     
     @Override
     public String toString(){
-        return this.id + " " + this.reason + " " + this.senderID + " " + this.receiverID + " "+
+        return this.id + " " + this.reason + " " +
                 this.status + " " +this.answer+" "+ this.content;
     }
-    
-    
-    
+
 } 
 

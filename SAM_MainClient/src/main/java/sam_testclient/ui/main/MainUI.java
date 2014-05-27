@@ -14,6 +14,7 @@ import sam_testclient.entities.Message;
 import sam_testclient.enums.EnumHandshakeReason;
 import sam_testclient.enums.EnumHandshakeStatus;
 import sam_testclient.enums.EnumKindOfMessage;
+import sam_testclient.exceptions.NotAHandshakeException;
 import sam_testclient.sources.MessageWrapper;
 import sam_testclient.utilities.Utilities;
 
@@ -37,12 +38,14 @@ public class MainUI extends javax.swing.JFrame {
         
     }
     
-    public void acceptBuddyRequest(Message m){
-        m.getHandshake().setSenderID(this.client.getId());
-        m.getHandshake().setReceiverID(m.getHandshake().getSenderID());
+    public void acceptBuddyRequest(Message m) throws NotAHandshakeException{
+        Handshake hs = m.getHandshake();
         m.getHandshake().setAnswer(true);
         m.getHandshake().setStatus(EnumHandshakeStatus.END);
 
+        
+        m.setReceiverId(m.getSenderId());
+        m.setSenderId(this.client.getId()); 
         try {
             client.writeMessage(MessageWrapper.createJSON(m));
         } catch (IOException ex) {
@@ -50,12 +53,13 @@ public class MainUI extends javax.swing.JFrame {
         }
     }
     
-    public void denyBuddyRequest(Message m){
-        m.getHandshake().setReceiverID(m.getHandshake().getSenderID());
-        m.getHandshake().setSenderID(this.client.getId());
+    public void denyBuddyRequest(Message m) throws NotAHandshakeException{
+        Handshake hs = m.getHandshake();
         m.getHandshake().setAnswer(false);
         m.getHandshake().setStatus(EnumHandshakeStatus.END);
-
+        
+        m.setReceiverId(m.getSenderId());
+        m.setSenderId(this.client.getId());
         try {
             client.writeMessage(MessageWrapper.createJSON(m));
         } catch (IOException ex) {
@@ -330,15 +334,15 @@ public class MainUI extends javax.swing.JFrame {
     private void btn_searchFriendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_searchFriendActionPerformed
         Handshake hs = new Handshake();
         hs.setReason(EnumHandshakeReason.BUDDY_REQUEST);
-        hs.setSenderID(this.client.getId());
-        hs.setReceiverID(0);
         hs.setContent(jTextField1.getText());
         hs.setStatus(EnumHandshakeStatus.START);
         
-        Message handshake = new Message(hs);
-        handshake.setOthers("");
+        Message message = new Message(hs);
+        message.setSenderId(this.client.getId());
+        message.setReceiverId(0);
+        message.setOthers("");
         try {
-            client.writeMessage(MessageWrapper.createJSON(handshake));
+            client.writeMessage(MessageWrapper.createJSON(message));
             jTextArea1.append(Utilities.getLogTime() + " Buddyrequest sended\n");
             jTextField1.setText("");
         } catch (IOException ex) {

@@ -4,12 +4,18 @@
  * and open the template in the editor.
  */
 
-package net.sam.server.enums;
+package sam_testclient.entities;
+
+import javax.persistence.Entity;
 
 /**
  *
  * @author janhorak
  */
-public enum EnumHandshakeReason {
-    BUDDY_REQUEST, FILE_REQUEST
+@Entity
+public class MediaFile extends MediaStorage{
+    
+    
+    
+    
 }
