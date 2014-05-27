@@ -11,5 +11,5 @@ package net.sam.server.enums;
  * @author janhorak
  */
 public enum EnumHandshakeStatus {
-    END, START, WAITING, ERROR
+    END, START, ERROR
 }

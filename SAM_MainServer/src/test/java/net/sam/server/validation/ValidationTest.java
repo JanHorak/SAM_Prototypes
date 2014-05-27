@@ -48,13 +48,15 @@ public class ValidationTest {
         
         
         // Test for Handshakes
+        
+        // Please note: ValidationTest will print Validationmessage:
+        // One of the HandshakeValues is null!
+        // for *every* error
         Handshake hs = new Handshake();
         hs.setId(200);
         hs.setAnswer(true);
         hs.setContent("dasd");
-        hs.setReason(EnumHandshakeReason.SENDING_FILE);
-        hs.setReceiverID(4);
-        hs.setSenderID(3);
+        hs.setReason(EnumHandshakeReason.FILE_REQUEST);
         hs.setStatus(EnumHandshakeStatus.END);
         m = new Message(hs);
         assertTrue(ValidationManager.isValid(m));
@@ -64,8 +66,6 @@ public class ValidationTest {
         hs2.setAnswer(true);
         hs2.setContent(null); // Error
         hs2.setReason(null); // Error
-        hs2.setReceiverID(4);
-        hs2.setSenderID(3);
         hs2.setStatus(EnumHandshakeStatus.END);
         m2 = new Message(hs2);
         assertTrue(!ValidationManager.isValid(m2));
@@ -75,9 +75,7 @@ public class ValidationTest {
         hs3.setId(200);
         hs3.setAnswer(true);
         hs3.setContent("dasd");
-        hs3.setReason(EnumHandshakeReason.SENDING_FILE);
-        hs3.setReceiverID(4);
-        hs3.setSenderID(7);
+        hs3.setReason(EnumHandshakeReason.FILE_REQUEST);
         hs3.setStatus(EnumHandshakeStatus.END);
         m3 = new Message(hs3);
         assertTrue(ValidationManager.isValid(m3));
@@ -86,9 +84,7 @@ public class ValidationTest {
         hs4.setId(200);
         hs4.setAnswer(true);
         hs4.setContent("dasd");
-        hs4.setReason(EnumHandshakeReason.SENDING_FILE);
-        hs4.setReceiverID(4);
-        hs4.setSenderID(3);
+        hs4.setReason(EnumHandshakeReason.FILE_REQUEST);
         hs4.setStatus(null); // Error
         m4 = new Message(hs4);
         assertTrue(!ValidationManager.isValid(m4));
@@ -99,8 +95,6 @@ public class ValidationTest {
         hs5.setAnswer(true);
         hs5.setContent("dasd");
         hs5.setReason(null); // Error
-        hs5.setReceiverID(4);
-        hs5.setSenderID(3);
         hs5.setStatus(null); // Error
         m5 = new Message(hs5);
         assertTrue(!ValidationManager.isValid(m5));

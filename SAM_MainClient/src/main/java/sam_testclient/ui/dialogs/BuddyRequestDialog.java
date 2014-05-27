@@ -6,9 +6,12 @@
 
 package sam_testclient.ui.dialogs;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import sam_testclient.communication.Client;
 import sam_testclient.entities.Handshake;
 import sam_testclient.entities.Message;
+import sam_testclient.exceptions.NotAHandshakeException;
 import sam_testclient.ui.main.MainUI;
 
 /**
@@ -93,12 +96,20 @@ public class BuddyRequestDialog extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        ui.acceptBuddyRequest(m);
+        try {
+            ui.acceptBuddyRequest(m);
+        } catch (NotAHandshakeException ex) {
+            Logger.getLogger(BuddyRequestDialog.class.getName()).log(Level.SEVERE, null, ex);
+        }
         dispose();
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        ui.denyBuddyRequest(m);
+        try {
+            ui.denyBuddyRequest(m);
+        } catch (NotAHandshakeException ex) {
+            Logger.getLogger(BuddyRequestDialog.class.getName()).log(Level.SEVERE, null, ex);
+        }
         dispose();
     }//GEN-LAST:event_jButton2ActionPerformed
 

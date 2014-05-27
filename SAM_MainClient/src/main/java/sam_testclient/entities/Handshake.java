@@ -7,12 +7,6 @@
 package sam_testclient.entities;
 
 import java.io.Serializable;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 import sam_testclient.enums.EnumHandshakeReason;
 import sam_testclient.enums.EnumHandshakeStatus;
 
@@ -28,42 +22,19 @@ import sam_testclient.enums.EnumHandshakeStatus;
  * 
  * @author janhorak
  */
-@Entity
 public class Handshake implements Serializable{
-
-    private int senderID;
     
-    private int receiverID;
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
     
-    @Enumerated(EnumType.STRING)
     private EnumHandshakeStatus status;
     
-    @Enumerated(EnumType.STRING)
     private EnumHandshakeReason reason;
+    
+    private Message owner;
     
     private boolean answer;
     
     private String content;
-
-    public int getSenderID() {
-        return senderID;
-    }
-
-    public void setSenderID(int senderID) {
-        this.senderID = senderID;
-    }
-
-    public int getReceiverID() {
-        return receiverID;
-    }
-
-    public void setReceiverID(int receiverID) {
-        this.receiverID = receiverID;
-    }
 
     public EnumHandshakeStatus getStatus() {
         return status;
@@ -112,11 +83,9 @@ public class Handshake implements Serializable{
     
     @Override
     public String toString(){
-        return this.id + " " + this.reason + " " + this.senderID + " " + this.receiverID + " "+
+        return this.id + " " + this.reason + " " +
                 this.status + " " +this.answer+" "+ this.content;
     }
-    
-    
-    
+
 } 
 

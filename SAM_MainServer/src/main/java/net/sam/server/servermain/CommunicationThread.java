@@ -15,12 +15,14 @@ import java.util.List;
 import java.util.logging.Level;
 import javax.swing.JTextArea;
 import net.sam.server.beans.ServerMainBean;
+import net.sam.server.entities.Handshake;
 import net.sam.server.entities.Member;
 import net.sam.server.entities.Message;
 import net.sam.server.entities.MessageBuffer;
 import net.sam.server.enums.EnumHandshakeReason;
 import net.sam.server.enums.EnumHandshakeStatus;
 import net.sam.server.enums.EnumKindOfMessage;
+import net.sam.server.exceptions.NotAHandshakeException;
 import net.sam.server.manager.DataAccess;
 import net.sam.server.manager.MessageWrapper;
 import net.sam.server.utilities.Utilities;
@@ -33,20 +35,20 @@ import org.apache.log4j.Logger;
  * @author janhorak
  */
 public class CommunicationThread extends Thread {
-
+    
     private final Socket socket;
     private boolean live = true;
     private final JTextArea area;
     private ServerMainBean sb;
     private Logger logger;
-
+    
     public CommunicationThread(Socket socket, JTextArea area) {
         this.socket = socket;
         this.area = area;
         sb = ServerMainBean.getInstance();
         logger = Logger.getLogger(CommunicationThread.class);
     }
-
+    
     @Override
     public void run() {
         logger.info(Utilities.getLogTime() + " Client is connected at: " + socket.toString());
@@ -122,7 +124,7 @@ public class CommunicationThread extends Thread {
                     if (DataAccess.login(me)) {
                         Member member = DataAccess.getMemberByName(m.getContent());
                         sb.addMember_login(member, socket);
-
+                        
                         sendLoginResponseMessage(member);
                         area.append("\n" + Utilities.getLogTime() + " " + member.getName() + " logged in");
                         logger.info(Utilities.getLogTime() + " Member is logged in");
@@ -132,7 +134,7 @@ public class CommunicationThread extends Thread {
                         if (!messageBufferList.isEmpty()) {
                             for (MessageBuffer mw : messageBufferList) {
                                 Message message = mw.getMessage();
-
+                                
                                 if (message.isHandshake()) {
                                     message = Message.cleanUpHandshake(message);
                                 }
@@ -143,7 +145,7 @@ public class CommunicationThread extends Thread {
                         } else {
                             logger.info(Utilities.getLogTime() + " No Messages in Buffer for this Member");
                         }
-
+                        
                     } else {
                         area.append("\n" + Utilities.getLogTime() + " User logged tried to log in and failed:");
                         area.append("\n" + Utilities.getLogTime() + " " + m.toString());
@@ -212,39 +214,40 @@ public class CommunicationThread extends Thread {
                  */
                 /**
                  * This part defines the handling of HANDSHAKES.
-                 * 
-                 * Every Handshakehas two important states:
-                 * the START and the END.
-                 * In every kind of Handshake between the clients both states 
-                 * have to be implemented.
-                 * 
-                 * REQUESTKINDS
-                 * ------------
-                 * -> BUDDY_REQUEST
-                 * If the Server receives a START of a Buddy- Request Handshake
-                 * he has to find the ID of the requested user and modify the
-                 * data of the Handshake, too. Then the Handshake has to be 
-                 * forwarded.
-                 * In the END he has to handle if the response is positive or not.
+                 *
+                 * Every Handshakehas two important states: the START and the
+                 * END. In every kind of Handshake between the clients both
+                 * states have to be implemented.
+                 *
+                 * REQUESTKINDS ------------ -> BUDDY_REQUEST If the Server
+                 * receives a START of a Buddy- Request Handshake he has to find
+                 * the ID of the requested user and modify the data of the
+                 * Handshake, too. Then the Handshake has to be forwarded. In
+                 * the END he has to handle if the response is positive or not.
                  * If not the Server sends the response to the requesting client
                  * and replaces the sender-ID by the server-ID.
                  */
                 if (m.getMessageType() == EnumKindOfMessage.HANDSHAKE) {
+                    Handshake handshake = null;
+                    try {
+                        handshake = m.getHandshake();
+                    } catch (NotAHandshakeException ex) {
+                        logger.error("Error in received Handhake: " + ex);
+                    }
 
                     // Handshake for Buddy-Request
-                    if (m.getHandshake().getReason() == EnumHandshakeReason.BUDDY_REQUEST) {
+                    if (handshake.getReason() == EnumHandshakeReason.BUDDY_REQUEST) {
                         logger.info(Utilities.getLogTime() + " Handshake received");
                         logger.info(m.toString());
                         // If the status is Start
-                        if (m.getHandshake().getStatus() == EnumHandshakeStatus.START) {
+                        if (handshake.getStatus() == EnumHandshakeStatus.START) {
 
                             // Get unknwon ID of the receiver by requested Name
                             int recieverID = sb.getRegisteredMemberIdByName(m.getContent()).getUserID();
 
                             // Get name of Sender for UI of the Receiver
                             String senderName = sb.getLoggedInMemberNameById(m.getSenderId());
-                            m.getHandshake().setContent(senderName);
-                            m.getHandshake().setReceiverID(recieverID);
+                            handshake.setContent(senderName);
 
                             // Replace the ServerID with the real ID of the Receiver
                             m.setReceiverId(recieverID);
@@ -252,9 +255,9 @@ public class CommunicationThread extends Thread {
                             // Forwarding
                             forwardMessage(m);
                         }
-
-                        if (m.getHandshake().getStatus() == EnumHandshakeStatus.END) {
-                            if (m.getHandshake().isAnswer()) {
+                        
+                        if (handshake.getStatus() == EnumHandshakeStatus.END) {
+                            if (handshake.isAnswer()) {
                                 forwardMessage(m);
                             } else {
                                 m.setSenderId(0);
@@ -263,7 +266,7 @@ public class CommunicationThread extends Thread {
                         }
                     }
                 }
-
+                
                 try {
                     sleep(500);
                 } catch (InterruptedException ex) {
@@ -333,24 +336,24 @@ public class CommunicationThread extends Thread {
             logger.debug(Utilities.getLogTime() + " Message is saved in Buffer\n" + m.toString());
         }
     }
-
+    
     private void broadcast(Message m) {
         m.setContent(formatMessage("BroadCast", m.getContent()));
         for (Socket s : sb.getAllSockets()) {
             try {
                 writeMessage(s, MessageWrapper.createJSON(m));
-
+                
             } catch (IOException ex) {
                 java.util.logging.Logger.getLogger(CommunicationThread.class
                         .getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
-
+    
     private String formatMessage(String sender, String content) {
         return Utilities.getTime() + " " + sender + ": " + content;
     }
-
+    
     private void sendLoginResponseMessage(Member me) {
         // Get right MemberID
         Message m = new Message(0, me.getUserID(), EnumKindOfMessage.LOGIN_RESPONSE, String.valueOf(me.getUserID()), "");
@@ -361,5 +364,5 @@ public class CommunicationThread extends Thread {
             logger.error("Cannot send LoginResponse! " + ex);
         }
     }
-
+    
 }

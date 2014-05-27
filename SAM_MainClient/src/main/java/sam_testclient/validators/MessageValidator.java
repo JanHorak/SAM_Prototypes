@@ -5,10 +5,13 @@
  */
 package sam_testclient.validators;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-import sam_testclient.validation.Message;
 import sam_testclient.entities.Handshake;
+import sam_testclient.exceptions.NotAHandshakeException;
+import sam_testclient.validation.Message;
 
 
 /**
@@ -25,15 +28,21 @@ public class MessageValidator implements ConstraintValidator<Message, sam_testcl
     @Override
     public boolean isValid(sam_testclient.entities.Message value, ConstraintValidatorContext context) {
         boolean isValid = true;
-        if (value.isHandshake()) {
-            Handshake hs = value.getHandshake();
-            if (hs.getContent() == null
-                    || hs.getReason() == null
-                    || hs.getStatus() == null) {
-                isValid = false;
-                System.err.println("One of the HandshakeValues is null!");
+        Handshake handshake;
+        try {
+            if (value.isHandshake()) {
+                handshake = value.getHandshake();
+                if (handshake.getContent() == null
+                        || handshake.getReason() == null
+                        || handshake.getStatus() == null) {
+                    isValid = false;
+                    System.err.println("One of the HandshakeValues is null!");
+                }
             }
+        } catch (NotAHandshakeException ex) {
+            Logger.getLogger(MessageValidator.class.getName()).log(Level.SEVERE, null, ex);
         }
+
         return isValid;
     }
 

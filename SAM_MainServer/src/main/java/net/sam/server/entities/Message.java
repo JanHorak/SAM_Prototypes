@@ -12,18 +12,23 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.OneToOne;
 import net.sam.server.enums.EnumKindOfMessage;
+import net.sam.server.exceptions.NotAHandshakeException;
+import net.sam.server.servermain.ServerMainThread;
+import org.apache.log4j.Logger;
 
 /**
  *
  * @author janhorak
  */
-
 @Entity
 @net.sam.server.validation.Message
-public class Message extends TransportObject implements Serializable{
+public class Message extends TransportObject implements Serializable {
 
-    protected Message() {}
+    private static Logger logger = Logger.getLogger(ServerMainThread.class);
     
+    protected Message() {
+    }
+
     public Message(int senderId, int receiverId, EnumKindOfMessage kind, String content, String others) {
         this.setContent(content);
         this.setMessageType(kind);
@@ -35,47 +40,46 @@ public class Message extends TransportObject implements Serializable{
 
     public Message(Handshake hs) {
         this.handshake = hs;
-        this.setReceiverId(hs.getReceiverID());
-        this.setSenderId(hs.getSenderID());
         this.setContent(hs.getContent());
         this.setOthers("Not in use (because Handshake)");
         this.setMessageType(EnumKindOfMessage.HANDSHAKE);
         this.setTimestamp(new Date());
     }
-    
-    public Message (Handshake hs, MediaFile mf){
+
+    public Message(Handshake hs, MediaFile mf) {
         this.handshake = hs;
-        this.setReceiverId(hs.getReceiverID());
-        this.setSenderId(hs.getSenderID());
         this.setContent(hs.getContent());
         this.setOthers("Not in use (because Handshake)");
         this.setMessageType(EnumKindOfMessage.HANDSHAKE);
         this.setTimestamp(new Date());
     }
-    
+
     /**
      * This method is cleaning up the message which comes from the database.
      * Because the returning object is modified by the persistence provider
-     * which adds some additional informations it is not possible to map
-     * the plain returning object to the used JSON- Format.
-     * 
-     * This method creates a new {@link Handshake} Object, copies the 
-     * important values and returns a new clean {@link Message} Object.
+     * which adds some additional informations it is not possible to map the
+     * plain returning object to the used JSON- Format.
+     *
+     * This method creates a new {@link Handshake} Object, copies the important
+     * values and returns a new clean {@link Message} Object.
+     *
      * @param ms
      * @return Cleaned up Message
      */
-    public static Message cleanUpHandshake(Message ms){
-        Handshake cleanedUpHs = new Handshake();
-        cleanedUpHs.setId(ms.getHandshake().getId());
-        cleanedUpHs.setAnswer(ms.getHandshake().isAnswer());
-        cleanedUpHs.setReason(ms.getHandshake().getReason());
-        cleanedUpHs.setSenderID(ms.getHandshake().getSenderID());
-        cleanedUpHs.setReceiverID(ms.getHandshake().getReceiverID());
-        cleanedUpHs.setContent(ms.getHandshake().getContent());
-        cleanedUpHs.setStatus(ms.getHandshake().getStatus());
-        
+    public static Message cleanUpHandshake(Message ms) {
         Message m = new Message();
-        m.setHandshake(cleanedUpHs);
+        try {
+            Handshake cleanedUpHs = new Handshake();
+            cleanedUpHs.setId(ms.getHandshake().getId());
+            cleanedUpHs.setAnswer(ms.getHandshake().isAnswer());
+            cleanedUpHs.setReason(ms.getHandshake().getReason());
+            cleanedUpHs.setContent(ms.getHandshake().getContent());
+            cleanedUpHs.setStatus(ms.getHandshake().getStatus());
+            m.setHandshake(cleanedUpHs);
+        } catch (NotAHandshakeException ex) {
+            logger.error("Error in Message-Class: " + ex);
+        }
+
         m.setContent(ms.getContent());
         m.setMessageType(ms.getMessageType());
         m.setOthers(ms.getOthers());
@@ -83,25 +87,28 @@ public class Message extends TransportObject implements Serializable{
         m.setReceiverId(ms.getReceiverId());
         m.setSenderId(ms.getSenderId());
         m.setTimestamp(ms.getTimestamp());
-        
+
         return m;
+
     }
-    
+
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Handshake handshake;
-    
+
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private MediaStorage mediaStorage;
-    
-    public Handshake getHandshake(){
-        if (isHandshake()){
+
+    public Handshake getHandshake() throws NotAHandshakeException {
+        if (isHandshake()) {
             return this.handshake;
-        } 
-        return null;
+        } else {
+            throw new NotAHandshakeException("This Message is not a Handshake", "1000");
+        }
     }
-    
-    public boolean isHandshake(){
-        return this.getMessageType() == EnumKindOfMessage.HANDSHAKE;
+
+    public boolean isHandshake() {
+        return this.getMessageType() == EnumKindOfMessage.HANDSHAKE
+                && this.handshake != null;
     }
 
     public void setHandshake(Handshake handshake) {
@@ -119,10 +126,10 @@ public class Message extends TransportObject implements Serializable{
     @Override
     public String toString() {
         // @TODO: Use Stringbuilder for building returning String!
-        
+
         if (this.getMessageType() == EnumKindOfMessage.HANDSHAKE) {
-            return this.getTimestamp() + " Handshake: " + this.handshake.getSenderID() + " to " + this.handshake.getReceiverID() + 
-                    " in Status: "+ this.handshake.getStatus() + " for Request: " + this.handshake.getReason() + " "
+            return this.getTimestamp() + " Handshake: "
+                    + " in Status: " + this.handshake.getStatus() + " for Request: " + this.handshake.getReason() + " "
                     + this.handshake.getContent();
         } else {
             return this.getTimestamp() + ": " + this.getSenderId() + " to " + this.getReceiverId() + " "
@@ -132,5 +139,5 @@ public class Message extends TransportObject implements Serializable{
         }
 
     }
-    
+
 }
