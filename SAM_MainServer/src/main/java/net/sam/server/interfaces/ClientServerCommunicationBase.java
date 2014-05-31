@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package net.sam.server.servermain;
+package net.sam.server.interfaces;
 
 /**
  *

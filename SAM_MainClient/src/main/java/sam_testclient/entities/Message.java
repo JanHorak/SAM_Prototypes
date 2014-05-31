@@ -16,7 +16,6 @@ import sam_testclient.exceptions.NotAHandshakeException;
  *
  * @author janhorak
  */
-@sam_testclient.validation.Message
 public class Message extends TransportObject implements Serializable {
 
     private static Logger logger = Logger.getLogger(Message.class);
@@ -30,14 +29,6 @@ public class Message extends TransportObject implements Serializable {
         this.setReceiverId(receiverId);
         this.setSenderId(senderId);
         this.setOthers(others);
-        this.setTimestamp(new Date());
-    }
-
-    public Message(Handshake hs) {
-        this.handshake = hs;
-        this.setContent(hs.getContent());
-        this.setOthers("Not in use (because Handshake)");
-        this.setMessageType(EnumKindOfMessage.HANDSHAKE);
         this.setTimestamp(new Date());
     }
 
@@ -63,25 +54,26 @@ public class Message extends TransportObject implements Serializable {
      */
     public static Message cleanUpHandshake(Message ms) {
         Message m = new Message();
-        try {
-            Handshake cleanedUpHs = new Handshake();
-            cleanedUpHs.setId(ms.getHandshake().getId());
-            cleanedUpHs.setAnswer(ms.getHandshake().isAnswer());
-            cleanedUpHs.setReason(ms.getHandshake().getReason());
-            cleanedUpHs.setContent(ms.getHandshake().getContent());
-            cleanedUpHs.setStatus(ms.getHandshake().getStatus());
-            m.setHandshake(cleanedUpHs);
-        } catch (NotAHandshakeException ex) {
-            logger.error("Error in Message-Class: " + ex);
-        }
-
-        m.setContent(ms.getContent());
-        m.setMessageType(ms.getMessageType());
-        m.setOthers(ms.getOthers());
-        m.setContent(ms.getContent());
-        m.setReceiverId(ms.getReceiverId());
-        m.setSenderId(ms.getSenderId());
-        m.setTimestamp(ms.getTimestamp());
+//        try {
+////            Handshake cleanedUpHs = new Handshake(ms.getHandshake().getId(),
+////                                                    );
+//            cleanedUpHs.setId(ms.getHandshake().getId());
+//            cleanedUpHs.setAnswer(ms.getHandshake().isAnswer());
+//            cleanedUpHs.setReason(ms.getHandshake().getReason());
+//            cleanedUpHs.setContent(ms.getHandshake().getContent());
+//            cleanedUpHs.setStatus(ms.getHandshake().getStatus());
+//            m.setHandshake(cleanedUpHs);
+//        } catch (NotAHandshakeException ex) {
+//            logger.error("Error in Message-Class: " + ex);
+//        }
+//
+//        m.setContent(ms.getContent());
+//        m.setMessageType(ms.getMessageType());
+//        m.setOthers(ms.getOthers());
+//        m.setContent(ms.getContent());
+//        m.setReceiverId(ms.getReceiverId());
+//        m.setSenderId(ms.getSenderId());
+//        m.setTimestamp(ms.getTimestamp());
 
         return m;
 
@@ -105,6 +97,7 @@ public class Message extends TransportObject implements Serializable {
     }
 
     public void setHandshake(Handshake handshake) {
+        this.setMessageType(EnumKindOfMessage.HANDSHAKE);
         this.handshake = handshake;
     }
 
@@ -127,7 +120,7 @@ public class Message extends TransportObject implements Serializable {
         // @TODO: Use Stringbuilder for building returning String!
 
         if (this.getMessageType() == EnumKindOfMessage.HANDSHAKE) {
-            return this.getTimestamp() + " Handshake: "
+            return this.getTimestamp() + " Handshake: From " + this.getSenderId()+ " to " + this.getReceiverId() 
                     + " in Status: " + this.handshake.getStatus() + " for Request: " + this.handshake.getReason() + " "
                     + this.handshake.getContent();
         } else {

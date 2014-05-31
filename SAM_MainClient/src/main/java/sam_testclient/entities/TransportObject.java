@@ -26,8 +26,8 @@ import sam_testclient.enums.EnumKindOfMessage;
  */
 public abstract class TransportObject implements Serializable {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+//    @Id
+//    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     @Enumerated(EnumType.STRING)

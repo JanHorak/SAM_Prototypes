@@ -16,6 +16,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
+import javax.validation.constraints.NotNull;
 import net.sam.server.enums.EnumHandshakeReason;
 import net.sam.server.enums.EnumHandshakeStatus;
 
@@ -37,17 +38,21 @@ public class Handshake implements Serializable{
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
     
+    @NotNull
     @Enumerated(EnumType.STRING)
     private EnumHandshakeStatus status;
     
+    @NotNull
     @Enumerated(EnumType.STRING)
     private EnumHandshakeReason reason;
     
     @OneToOne(cascade = CascadeType.REMOVE, fetch = FetchType.LAZY, mappedBy = "handshake")
     private Message owner;
     
+    @NotNull
     private boolean answer;
     
+    @NotNull
     private String content;
 
     public EnumHandshakeStatus getStatus() {
@@ -101,5 +106,12 @@ public class Handshake implements Serializable{
                 this.status + " " +this.answer+" "+ this.content;
     }
 
+    public void setOwner(Message owner) {
+        this.owner = owner;
+    }
+    
+    public Message getOwner(){
+        return this.owner;
+    }
 } 
 

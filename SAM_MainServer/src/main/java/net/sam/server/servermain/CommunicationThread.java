@@ -12,6 +12,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import javax.swing.JTextArea;
 import net.sam.server.beans.ServerMainBean;
@@ -25,6 +26,7 @@ import net.sam.server.enums.EnumKindOfMessage;
 import net.sam.server.exceptions.NotAHandshakeException;
 import net.sam.server.manager.DataAccess;
 import net.sam.server.manager.MessageWrapper;
+import net.sam.server.security.DoSGuard;
 import net.sam.server.utilities.Utilities;
 import org.apache.log4j.Logger;
 
@@ -35,248 +37,288 @@ import org.apache.log4j.Logger;
  * @author janhorak
  */
 public class CommunicationThread extends Thread {
-    
+
     private final Socket socket;
     private boolean live = true;
     private final JTextArea area;
     private ServerMainBean sb;
     private Logger logger;
-    
+    private DoSGuard guard_dos;
+
     public CommunicationThread(Socket socket, JTextArea area) {
         this.socket = socket;
         this.area = area;
         sb = ServerMainBean.getInstance();
+        guard_dos = DoSGuard.getInstance();
         logger = Logger.getLogger(CommunicationThread.class);
     }
-    
+
     @Override
     public void run() {
         logger.info(Utilities.getLogTime() + " Client is connected at: " + socket.toString());
-        while (live) {
-            if (!this.socket.isClosed()) {
-                Message m = null;
-                try {
-                    // JSON handling
-                    m = MessageWrapper.JSON2Message(readMessage());
-                } catch (IOException ex) {
-                    logger.error(Utilities.getLogTime() + " Error at MessageWrapper");
-                }
 
-                // Cases for EnumKinds --------------------
-                /*
-                 ====================== REGISTER =====================
-                 */
-                /**
-                 * This part defines the Register- Action.
-                 *
-                 * If the received Message contains the RESGISTER- Flag and have
-                 * the Sender- ID 0 (On the one hand is the 0 the serverID, on
-                 * the other an indicator for not registered, or not logged in
-                 * clients), the server has to try to register the client.
-                 *
-                 * The content is the name of the client, the other- part is the
-                 * hashed password. The server tests if a client is already
-                 * registered with the incoming name and adds the client to the
-                 * registered- List (internal for quick access). Else the server
-                 * saves the new client.
-                 */
-                // @TODO: Improvement of REGISTER- Part
-                if (m.getMessageType() == EnumKindOfMessage.REGISTER) {
-                    Member newMember = new Member();
-                    if (m.getSenderId() == 0) {
-                        newMember.setName(m.getContent());
-                        newMember.setPassword(m.getOthers());
-                        newMember.setActive(true);
-                        System.out.println(m.toString());
-                        logger.info(Utilities.getLogTime() + " New Member registered");
-                        logger.info(Utilities.getLogTime() + " " + newMember.toString());
+        if (guard_dos.isConnectedSocketHarmless(socket.getInetAddress())) {
+            while (live) {
+                if (!this.socket.isClosed()) {
+                    Message m = null;
+                    try {
+                        // JSON handling
+                        m = MessageWrapper.JSON2Message(readMessage());
+                    } catch (IOException ex) {
+                        logger.error(Utilities.getLogTime() + " Error at MessageWrapper");
                     }
-                    DataAccess.registerUser(newMember);
-                    area.append("\n" + Utilities.getLogTime() + " User registered:");
-                    area.append("\n" + Utilities.getLogTime() + " " + newMember.toString());
-                    area.append("\n");
-                    sb.addMember_registered(newMember);
-                }
 
+                    // Cases for EnumKinds --------------------
                 /*
-                 ====================== LOGIN =====================
-                 */
-                /**
-                 * This part defines the Login- Action.
-                 *
-                 * If the server gets a JSON with LOGIN- Flag he tests if a
-                 * member exists and test the password. The Name of the user is
-                 * send in the content- and the password in the other- part.
-                 *
-                 * If the login was ok, the server adds the member to the logged
-                 * in- List (in ServerMainBean) with the corresponding socket.
-                 *
-                 * After this the server looking for the right MemberId in the
-                 * Database and send the Login- Response with the id back to the
-                 * client which applies the id.
-                 *
-                 * The Server has to test, if there are Messages for the client.
-                 * If there are messages the server get them from the database,
-                 * send them to the client and delete them from the buffer.
-                 */
-                if (m.getMessageType() == EnumKindOfMessage.LOGIN) {
-                    Member me = DataAccess.getMemberByName(m.getContent());
-                    if (DataAccess.login(me)) {
-                        Member member = DataAccess.getMemberByName(m.getContent());
-                        sb.addMember_login(member, socket);
-                        
-                        sendLoginResponseMessage(member);
-                        area.append("\n" + Utilities.getLogTime() + " " + member.getName() + " logged in");
-                        logger.info(Utilities.getLogTime() + " Member is logged in");
-
-                        // Get data from Buffer
-                        List<MessageBuffer> messageBufferList = DataAccess.getAllMessagesFromBuffer(member.getUserID());
-                        if (!messageBufferList.isEmpty()) {
-                            for (MessageBuffer mw : messageBufferList) {
-                                Message message = mw.getMessage();
-                                
-                                if (message.isHandshake()) {
-                                    message = Message.cleanUpHandshake(message);
-                                }
-                                logger.debug("Message from Buffer for User " + m.getSenderId() + ": " + message.toString());
-                                forwardMessage(message);
-                            }
-                            DataAccess.dropMessagesFromBuffer(member.getUserID());
-                        } else {
-                            logger.info(Utilities.getLogTime() + " No Messages in Buffer for this Member");
+                     ====================== REGISTER =====================
+                     */
+                    /**
+                     * This part defines the Register- Action.
+                     *
+                     * If the received Message contains the RESGISTER- Flag and
+                     * have the Sender- ID 0 (On the one hand is the 0 the
+                     * serverID, on the other an indicator for not registered,
+                     * or not logged in clients), the server has to try to
+                     * register the client.
+                     *
+                     * The content is the name of the client, the other- part is
+                     * the hashed password. The server tests if a client is
+                     * already registered with the incoming name and adds the
+                     * client to the registered- List (internal for quick
+                     * access). Else the server saves the new client.
+                     */
+                    // @TODO: Improvement of REGISTER- Part
+                    if (m.getMessageType() == EnumKindOfMessage.REGISTER) {
+                        Member newMember = new Member();
+                        if (m.getSenderId() == 0) {
+                            newMember.setName(m.getContent());
+                            newMember.setPassword(m.getOthers());
+                            newMember.setActive(true);
+                            System.out.println(m.toString());
+                            logger.info(Utilities.getLogTime() + " New Member registered");
+                            logger.info(Utilities.getLogTime() + " " + newMember.toString());
                         }
-                        
-                    } else {
-                        area.append("\n" + Utilities.getLogTime() + " User logged tried to log in and failed:");
+                        DataAccess.registerUser(newMember);
+                        area.append("\n" + Utilities.getLogTime() + " User registered:");
+                        area.append("\n" + Utilities.getLogTime() + " " + newMember.toString());
+                        area.append("\n");
+                        sb.addMember_registered(newMember);
+                    }
+
+                    /*
+                     ====================== LOGIN =====================
+                     */
+                    /**
+                     * This part defines the Login- Action.
+                     *
+                     * If the server gets a JSON with LOGIN- Flag he tests if a
+                     * member exists and test the password. The Name of the user
+                     * is send in the content- and the password in the other-
+                     * part.
+                     *
+                     * If the login was ok, the server adds the member to the
+                     * logged in- List (in ServerMainBean) with the
+                     * corresponding socket.
+                     *
+                     * After this the server looking for the right MemberId in
+                     * the Database and send the Login- Response with the id
+                     * back to the client which applies the id.
+                     *
+                     * The Server has to test, if there are Messages for the
+                     * client. If there are messages the server get them from
+                     * the database, send them to the client and delete them
+                     * from the buffer.
+                     */
+                    if (m.getMessageType() == EnumKindOfMessage.LOGIN) {
+                        // Check if the user is not already online
+                        if (!sb.isMemberOnline(m.getContent())) {
+                            // Check login- data
+                            Member me = DataAccess.getMemberByName(m.getContent());
+                            if (DataAccess.login(me)) {
+                                Member member = DataAccess.getMemberByName(m.getContent());
+                                sb.addMember_login(member, socket);
+
+                                sendLoginResponseMessage(member);
+                                area.append("\n" + Utilities.getLogTime() + " " + member.getName() + " logged in");
+                                logger.info(Utilities.getLogTime() + " Member is logged in");
+
+                                // Get data from Buffer
+                                List<MessageBuffer> messageBufferList = DataAccess.getAllMessagesFromBuffer(member.getUserID());
+                                if (!messageBufferList.isEmpty()) {
+                                    for (MessageBuffer mw : messageBufferList) {
+                                        Message message = mw.getMessage();
+
+                                        if (message.isHandshake()) {
+                                            message = Message.cleanUpHandshake(message);
+                                        }
+                                        logger.debug("Message from Buffer for User " + m.getSenderId() + ": " + message.toString());
+                                        forwardMessage(message);
+                                    }
+                                    DataAccess.dropMessagesFromBuffer(member.getUserID());
+                                } else {
+                                    logger.info(Utilities.getLogTime() + " No Messages in Buffer for this Member");
+                                }
+
+                            } else {
+                                area.append("\n" + Utilities.getLogTime() + " User logged tried to log in and failed:");
+                                area.append("\n" + Utilities.getLogTime() + " " + m.toString());
+                                area.append("\n");
+                            }
+
+                            // Member is already logged in 
+                        } else {
+                            Message hint = new Message(0, m.getSenderId(), EnumKindOfMessage.SYSTEM, "Login failed (1001)", "");
+                            try {
+                                guard_dos.increaseLevelForSocket(socket.getInetAddress());
+                                this.writeMessage(socket, MessageWrapper.createJSON(hint));
+                                socket.close();
+                                this.live = false;
+                            } catch (IOException ex) {
+                                logger.error("IO Exception: " + ex);
+                            }
+                        }
+
+                    }
+
+                    /*
+                     ====================== LOGOUT =====================
+                     */
+                    /**
+                     * This part defines the LOGOUT- part of the client.
+                     *
+                     * If the Signal for the logout is received, the server has
+                     * to clean up the own quick- Memory (logoutMember(Member m)
+                     * -> See for more Info)
+                     *
+                     */
+                    // @TODO: Improvement!!
+                    if (m.getMessageType() == EnumKindOfMessage.LOGOUT) {
+                        area.append("\n" + Utilities.getLogTime() + " Logoutsignal recieved!");
                         area.append("\n" + Utilities.getLogTime() + " " + m.toString());
                         area.append("\n");
-                    }
-                }
-
-                /*
-                 ====================== LOGOUT =====================
-                 */
-                /**
-                 * This part defines the LOGOUT- part of the client.
-                 *
-                 * If the Signal for the logout is received, the server has to
-                 * clean up the own quick- Memory (logoutMember(Member m) -> See
-                 * for more Info)
-                 *
-                 */
-                // @TODO: Improvement!!
-                if (m.getMessageType() == EnumKindOfMessage.LOGOUT) {
-                    area.append("\n" + Utilities.getLogTime() + " Logoutsignal recieved!");
-                    area.append("\n" + Utilities.getLogTime() + " " + m.toString());
-                    area.append("\n");
-                    Member me = new Member();
-                    me.setName(m.getContent());
-                    sb.logoutMember(me);
-                    try {
-                        this.socket.close();
-                    } catch (IOException ex) {
-                        logger.error("Error at closing client-Socket: " + ex);
-                    }
-                }
-
-
-                /*
-                 ====================== SIMPLE MESSAGE =====================
-                 */
-                /**
-                 * This part defines the SIMPLE MESSAGE from the client.
-                 *
-                 * The incoming Message can be divided into two kinds: -> with
-                 * server as receiver -> with other client as receiver
-                 *
-                 * If the server is the receiver it will has the id 0 and will
-                 * be printed at the textarea in the UI.
-                 *
-                 * If the server is not the receiver it will be forwarded to
-                 * other clients. [Hint: if the message has to be written in the
-                 * messagebuffer, because the client is not online, is placed in
-                 * the forward- method]
-                 *
-                 */
-                if (m.getMessageType() == EnumKindOfMessage.MESSAGE) {
-                    logger.info(Utilities.getLogTime() + " Message received");
-                    // 0 indicates message to server
-                    if (m.getReceiverId() == 0) {
-                        area.append(m.getContent());
-                    } else {
-                        logger.info(Utilities.getLogTime() + " Message not for server");
-                        forwardMessage(m);
-                    }
-                }
-
-                /*
-                 ====================== HANDSHAKES =====================
-                 */
-                /**
-                 * This part defines the handling of HANDSHAKES.
-                 *
-                 * Every Handshakehas two important states: the START and the
-                 * END. In every kind of Handshake between the clients both
-                 * states have to be implemented.
-                 *
-                 * REQUESTKINDS ------------ -> BUDDY_REQUEST If the Server
-                 * receives a START of a Buddy- Request Handshake he has to find
-                 * the ID of the requested user and modify the data of the
-                 * Handshake, too. Then the Handshake has to be forwarded. In
-                 * the END he has to handle if the response is positive or not.
-                 * If not the Server sends the response to the requesting client
-                 * and replaces the sender-ID by the server-ID.
-                 */
-                if (m.getMessageType() == EnumKindOfMessage.HANDSHAKE) {
-                    Handshake handshake = null;
-                    try {
-                        handshake = m.getHandshake();
-                    } catch (NotAHandshakeException ex) {
-                        logger.error("Error in received Handhake: " + ex);
-                    }
-
-                    // Handshake for Buddy-Request
-                    if (handshake.getReason() == EnumHandshakeReason.BUDDY_REQUEST) {
-                        logger.info(Utilities.getLogTime() + " Handshake received");
-                        logger.info(m.toString());
-                        // If the status is Start
-                        if (handshake.getStatus() == EnumHandshakeStatus.START) {
-
-                            // Get unknwon ID of the receiver by requested Name
-                            int recieverID = sb.getRegisteredMemberIdByName(m.getContent()).getUserID();
-
-                            // Get name of Sender for UI of the Receiver
-                            String senderName = sb.getLoggedInMemberNameById(m.getSenderId());
-                            handshake.setContent(senderName);
-
-                            // Replace the ServerID with the real ID of the Receiver
-                            m.setReceiverId(recieverID);
-
-                            // Forwarding
-                            forwardMessage(m);
+                        Member me = new Member();
+                        me.setName(m.getContent());
+                        sb.logoutMember(me);
+                        try {
+                            this.socket.close();
+                        } catch (IOException ex) {
+                            logger.error("Error at closing client-Socket: " + ex);
                         }
-                        
-                        if (handshake.getStatus() == EnumHandshakeStatus.END) {
-                            if (handshake.isAnswer()) {
-                                forwardMessage(m);
-                            } else {
-                                m.setSenderId(0);
-                                forwardMessage(m);
+                    }
+
+                    // Paste commet from github
+                    if (m.getMessageType() == EnumKindOfMessage.STATUS_REQUEST) {
+                        logger.info(Utilities.getLogTime() + " Status Request from User " + m.getSenderId() + " received");
+                        if (!m.getContent().isEmpty()) {
+                            String[] requestList = m.getContent().split(" ");
+                            Map< Integer, Boolean> buddy_online_Response = sb.getOnlineStatusOfMemberById(requestList);
+                            Message statusResponse = new Message(0, m.getSenderId(), EnumKindOfMessage.STATUS_RESPONSE, buddy_online_Response.toString(), "");
+                            try {
+                                this.writeMessage(sb.returnCommnunicationChannel(m.getSenderId()), MessageWrapper.createJSON(statusResponse));
+                            } catch (IOException ex) {
+                                logger.error("Error @ Status-Response: " + ex);
                             }
                         }
                     }
+
+                    /*
+                     ====================== SIMPLE MESSAGE =====================
+                     */
+                    /**
+                     * This part defines the SIMPLE MESSAGE from the client.
+                     *
+                     * The incoming Message can be divided into two kinds: ->
+                     * with server as receiver -> with other client as receiver
+                     *
+                     * If the server is the receiver it will has the id 0 and
+                     * will be printed at the textarea in the UI.
+                     *
+                     * If the server is not the receiver it will be forwarded to
+                     * other clients. [Hint: if the message has to be written in
+                     * the messagebuffer, because the client is not online, is
+                     * placed in the forward- method]
+                     *
+                     */
+                    if (m.getMessageType() == EnumKindOfMessage.MESSAGE) {
+                        logger.info(Utilities.getLogTime() + " Message received");
+                        // 0 indicates message to server
+                        if (m.getReceiverId() == 0) {
+                            area.append(m.getContent());
+                        } else {
+                            logger.info(Utilities.getLogTime() + " Message not for server");
+                            forwardMessage(m);
+                        }
+                    }
+
+                    /*
+                     ====================== HANDSHAKES =====================
+                     */
+                    /**
+                     * This part defines the handling of HANDSHAKES.
+                     *
+                     * Every Handshakehas two important states: the START and
+                     * the END. In every kind of Handshake between the clients
+                     * both states have to be implemented.
+                     *
+                     * REQUESTKINDS ------------ -> BUDDY_REQUEST If the Server
+                     * receives a START of a Buddy- Request Handshake he has to
+                     * find the ID of the requested user and modify the data of
+                     * the Handshake, too. Then the Handshake has to be
+                     * forwarded. In the END he has to handle if the response is
+                     * positive or not. If not the Server sends the response to
+                     * the requesting client and replaces the sender-ID by the
+                     * server-ID.
+                     */
+                    if (m.getMessageType() == EnumKindOfMessage.HANDSHAKE) {
+                        Handshake handshake = null;
+                        try {
+                            handshake = m.getHandshake();
+                        } catch (NotAHandshakeException ex) {
+                            logger.error("Error in received Handhake: " + ex);
+                        }
+
+                        // Handshake for Buddy-Request
+                        if (handshake.getReason() == EnumHandshakeReason.BUDDY_REQUEST) {
+                            logger.info(Utilities.getLogTime() + " Handshake received");
+                            logger.info(m.toString());
+                            // If the status is Start
+                            if (handshake.getStatus() == EnumHandshakeStatus.START) {
+
+                                // Get unknwon ID of the receiver by requested Name
+                                int recieverID = sb.getRegisteredMemberIdByName(handshake.getContent()).getUserID();
+
+                                // Replace the ServerID with the real ID of the Receiver
+                                m.setReceiverId(recieverID);
+
+                                // Forwarding
+                                forwardMessage(m);
+                            }
+
+                            if (handshake.getStatus() == EnumHandshakeStatus.END) {
+                                if (handshake.isAnswer()) {
+                                    forwardMessage(m);
+                                } else {
+                                    m.setSenderId(0);
+                                    forwardMessage(m);
+                                }
+                            }
+                        }
+                    }
+
+                    try {
+                        sleep(500);
+                    } catch (InterruptedException ex) {
+                        logger.error(Utilities.getLogTime() + " Thread is interrupted! " + ex);
+                    }
+                } else {
+                    logger.info(Utilities.getLogTime() + " Socket of Client is closed!");
+                    live = false;
                 }
-                
-                try {
-                    sleep(500);
-                } catch (InterruptedException ex) {
-                    logger.error(Utilities.getLogTime() + " Thread is interrupted! " + ex);
-                }
-            } else {
-                logger.info(Utilities.getLogTime() + " Socket of Client is closed!");
-                live = false;
             }
+        } else {
+            logger.warn(Utilities.getLogTime() + " Socket is classified as threat! Connection refused!");
         }
+
     }
 
     /**
@@ -336,24 +378,24 @@ public class CommunicationThread extends Thread {
             logger.debug(Utilities.getLogTime() + " Message is saved in Buffer\n" + m.toString());
         }
     }
-    
+
     private void broadcast(Message m) {
         m.setContent(formatMessage("BroadCast", m.getContent()));
         for (Socket s : sb.getAllSockets()) {
             try {
                 writeMessage(s, MessageWrapper.createJSON(m));
-                
+
             } catch (IOException ex) {
                 java.util.logging.Logger.getLogger(CommunicationThread.class
                         .getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
-    
+
     private String formatMessage(String sender, String content) {
         return Utilities.getTime() + " " + sender + ": " + content;
     }
-    
+
     private void sendLoginResponseMessage(Member me) {
         // Get right MemberID
         Message m = new Message(0, me.getUserID(), EnumKindOfMessage.LOGIN_RESPONSE, String.valueOf(me.getUserID()), "");
@@ -364,5 +406,5 @@ public class CommunicationThread extends Thread {
             logger.error("Cannot send LoginResponse! " + ex);
         }
     }
-    
+
 }

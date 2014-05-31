@@ -6,6 +6,7 @@
 
 package net.sam.server.servermain;
 
+import net.sam.server.interfaces.ClientServerCommunicationBase;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
@@ -45,8 +46,6 @@ public class Server implements ClientServerCommunicationBase{
         this.serverSocket = new ServerSocket(PORT);
         this.serverSocket.setSoTimeout(0); // Timeout of 0 -> infinite
                                            // Use Timeout from Base, normally
-        System.out.println("Port registered...");
-        System.out.println("waiting for Client...");
         waiting4Clients(serverSocket);
     }
     

@@ -21,11 +21,10 @@ import org.apache.log4j.Logger;
  * @author janhorak
  */
 @Entity
-@net.sam.server.validation.Message
 public class Message extends TransportObject implements Serializable {
 
     private static Logger logger = Logger.getLogger(ServerMainThread.class);
-    
+
     protected Message() {
     }
 
@@ -38,18 +37,10 @@ public class Message extends TransportObject implements Serializable {
         this.setTimestamp(new Date());
     }
 
-    public Message(Handshake hs) {
-        this.handshake = hs;
-        this.setContent(hs.getContent());
-        this.setOthers("Not in use (because Handshake)");
-        this.setMessageType(EnumKindOfMessage.HANDSHAKE);
-        this.setTimestamp(new Date());
-    }
-
     public Message(Handshake hs, MediaFile mf) {
         this.handshake = hs;
         this.setContent(hs.getContent());
-        this.setOthers("Not in use (because Handshake)");
+        this.setOthers("");
         this.setMessageType(EnumKindOfMessage.HANDSHAKE);
         this.setTimestamp(new Date());
     }
@@ -112,6 +103,7 @@ public class Message extends TransportObject implements Serializable {
     }
 
     public void setHandshake(Handshake handshake) {
+        this.setMessageType(EnumKindOfMessage.HANDSHAKE);
         this.handshake = handshake;
     }
 
@@ -122,13 +114,13 @@ public class Message extends TransportObject implements Serializable {
     public void setMediaStorage(MediaStorage mediaStorage) {
         this.mediaStorage = mediaStorage;
     }
-    
+
     @Override
     public String toString() {
         // @TODO: Use Stringbuilder for building returning String!
 
         if (this.getMessageType() == EnumKindOfMessage.HANDSHAKE) {
-            return this.getTimestamp() + " Handshake: "
+            return this.getTimestamp() + " Handshake: From " + this.getSenderId() + " to " + this.getReceiverId()
                     + " in Status: " + this.handshake.getStatus() + " for Request: " + this.handshake.getReason() + " "
                     + this.handshake.getContent();
         } else {
