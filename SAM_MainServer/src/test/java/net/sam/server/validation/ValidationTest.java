@@ -58,8 +58,9 @@ public class ValidationTest {
         hs.setContent("dasd");
         hs.setReason(EnumHandshakeReason.FILE_REQUEST);
         hs.setStatus(EnumHandshakeStatus.END);
-        m = new Message(hs);
-        assertTrue(ValidationManager.isValid(m));
+        m = new Message(0, 1, EnumKindOfMessage.LOGIN, "d", "ddd");
+        hs.setOwner(m);
+        assertTrue(ValidationManager.isValid(hs));
         
         Handshake hs2 = new Handshake();
         hs2.setId(200);
@@ -67,9 +68,11 @@ public class ValidationTest {
         hs2.setContent(null); // Error
         hs2.setReason(null); // Error
         hs2.setStatus(EnumHandshakeStatus.END);
-        m2 = new Message(hs2);
-        assertTrue(!ValidationManager.isValid(m2));
-        assertTrue(ValidationManager.returnAmountOfInvalidFields(m2).size() == 2);
+        m2 = new Message(0, 1, EnumKindOfMessage.LOGIN, "d", "ddd");
+        m2.setHandshake(hs2);
+        hs2.setOwner(m2);
+        assertTrue(!ValidationManager.isValid(hs2));
+        assertTrue(ValidationManager.returnAmountOfInvalidFields(hs2).size() == 2);
         
         Handshake hs3 = new Handshake();
         hs3.setId(200);
@@ -77,8 +80,9 @@ public class ValidationTest {
         hs3.setContent("dasd");
         hs3.setReason(EnumHandshakeReason.FILE_REQUEST);
         hs3.setStatus(EnumHandshakeStatus.END);
-        m3 = new Message(hs3);
-        assertTrue(ValidationManager.isValid(m3));
+        m3 = new Message(0, 1, EnumKindOfMessage.LOGIN, "d", "ddd");
+        hs3.setOwner(m3);
+        assertTrue(ValidationManager.isValid(hs3));
         
         Handshake hs4 = new Handshake();
         hs4.setId(200);
@@ -86,9 +90,10 @@ public class ValidationTest {
         hs4.setContent("dasd");
         hs4.setReason(EnumHandshakeReason.FILE_REQUEST);
         hs4.setStatus(null); // Error
-        m4 = new Message(hs4);
-        assertTrue(!ValidationManager.isValid(m4));
-        assertTrue(ValidationManager.returnAmountOfInvalidFields(m4).size() == 1);
+        m3 = new Message(0, 1, EnumKindOfMessage.LOGIN, "d", "ddd");
+        hs4.setOwner(m4);
+        assertTrue(!ValidationManager.isValid(hs4));
+        assertTrue(ValidationManager.returnAmountOfInvalidFields(hs4).size() == 1);
         
         Handshake hs5 = new Handshake();
         hs5.setId(200);
@@ -96,9 +101,10 @@ public class ValidationTest {
         hs5.setContent("dasd");
         hs5.setReason(null); // Error
         hs5.setStatus(null); // Error
-        m5 = new Message(hs5);
-        assertTrue(!ValidationManager.isValid(m5));
-        assertTrue(ValidationManager.returnAmountOfInvalidFields(m5).size() == 1);
+        m5 = new Message(0, 1, EnumKindOfMessage.LOGIN, "d", "ddd");
+        hs5.setOwner(m5);
+        assertTrue(!ValidationManager.isValid(hs5));
+        assertTrue(ValidationManager.returnAmountOfInvalidFields(hs5).size() == 2);
         
     }
 }

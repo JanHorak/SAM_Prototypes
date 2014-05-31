@@ -13,6 +13,7 @@ import java.util.List;
 import javax.swing.JTextArea;
 import net.sam.server.beans.ServerMainBean;
 import net.sam.server.entities.Member;
+import net.sam.server.security.SecurityThread;
 import net.sam.server.utilities.Utilities;
 import org.apache.log4j.Logger;
 
@@ -35,6 +36,7 @@ public class ServerMainThread extends Thread {
     private boolean live = true;
     private JTextArea area;
     private Logger logger;
+    private SecurityThread sct;
 
     public ServerMainThread(Server server, int maxUsers, List<Member> userList, boolean active, JTextArea area) {
         this.maxUsers = maxUsers;
@@ -44,6 +46,8 @@ public class ServerMainThread extends Thread {
         this.area = area;
         serverMainBean = ServerMainBean.getInstance();
         logger = Logger.getLogger(ServerMainThread.class);
+        sct = new SecurityThread();
+        sct.start();
     }
 
     @Override

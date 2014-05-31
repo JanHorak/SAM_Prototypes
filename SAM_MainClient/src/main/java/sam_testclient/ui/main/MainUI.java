@@ -7,6 +7,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JList;
 import javax.swing.JTextArea;
+import sam_testclient.beans.ClientMainBean;
 import sam_testclient.communication.Client;
 import sam_testclient.communication.CommunicationThread;
 import sam_testclient.entities.Handshake;
@@ -25,9 +26,11 @@ import sam_testclient.utilities.Utilities;
 public class MainUI extends javax.swing.JFrame {
 
     private Client client;
-
+    private ClientMainBean cmb;
+    
     public MainUI() {
         initComponents();
+        cmb = ClientMainBean.getInstance();
     }
 
     private void prepareUI() {
@@ -39,14 +42,14 @@ public class MainUI extends javax.swing.JFrame {
     }
     
     public void acceptBuddyRequest(Message m) throws NotAHandshakeException{
-        Handshake hs = m.getHandshake();
         m.getHandshake().setAnswer(true);
         m.getHandshake().setStatus(EnumHandshakeStatus.END);
 
-        
         m.setReceiverId(m.getSenderId());
         m.setSenderId(this.client.getId()); 
         try {
+            cmb.getBuddyList().put(m.getSenderId(), m.getContent());
+            client.sendStatusRequest();
             client.writeMessage(MessageWrapper.createJSON(m));
         } catch (IOException ex) {
             Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
@@ -54,7 +57,6 @@ public class MainUI extends javax.swing.JFrame {
     }
     
     public void denyBuddyRequest(Message m) throws NotAHandshakeException{
-        Handshake hs = m.getHandshake();
         m.getHandshake().setAnswer(false);
         m.getHandshake().setStatus(EnumHandshakeStatus.END);
         
@@ -332,15 +334,10 @@ public class MainUI extends javax.swing.JFrame {
     }//GEN-LAST:event_tgl_loginActionPerformed
 
     private void btn_searchFriendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_searchFriendActionPerformed
-        Handshake hs = new Handshake();
-        hs.setReason(EnumHandshakeReason.BUDDY_REQUEST);
-        hs.setContent(jTextField1.getText());
-        hs.setStatus(EnumHandshakeStatus.START);
-        
-        Message message = new Message(hs);
-        message.setSenderId(this.client.getId());
-        message.setReceiverId(0);
-        message.setOthers("");
+        // Handshake- content: Name of searched buddy, message-content: own name
+        Handshake hs = new Handshake(0, EnumHandshakeStatus.START, EnumHandshakeReason.BUDDY_REQUEST, false, jTextField1.getText());
+        Message message = new Message(this.client.getId(), 0, EnumKindOfMessage.HANDSHAKE, tf_memberName.getText(), "bla");
+        message.setHandshake(hs);
         try {
             client.writeMessage(MessageWrapper.createJSON(message));
             jTextArea1.append(Utilities.getLogTime() + " Buddyrequest sended\n");

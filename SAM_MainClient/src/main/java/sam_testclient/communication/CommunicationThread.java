@@ -10,14 +10,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.JTextArea;
+import sam_testclient.beans.ClientMainBean;
 import sam_testclient.entities.Handshake;
 import sam_testclient.entities.Message;
 import sam_testclient.enums.EnumHandshakeReason;
@@ -42,10 +41,9 @@ public class CommunicationThread extends Thread {
     private final JTextArea area;
     private int id;
     private Client client;
-    private Map<Integer, String> buddyList;
-    private Map<Integer, Boolean> buddy_statusList;
     private JList list_buddies;
     private MainUI ui;
+    private ClientMainBean cmb;
 
     public CommunicationThread(Client c, MainUI ui, int id) {
         this.ui = ui;
@@ -53,9 +51,8 @@ public class CommunicationThread extends Thread {
         this.area = ui.getArea();
         this.id = id;
         this.list_buddies = ui.getBuddyList();
-        buddyList = (Map<Integer, String>) FileManager.deserialize("buddyList.data");
-        buddy_statusList = new HashMap<Integer, Boolean>();
-        c.setBuddyList(buddyList);
+        cmb = ClientMainBean.getInstance();
+//        c.setBuddyList(cmb.getBuddyList());
     }
 
     /**
@@ -85,17 +82,18 @@ public class CommunicationThread extends Thread {
                 }
                 if (m.getMessageType() == EnumKindOfMessage.LOGIN_RESPONSE) {
                     client.setId(Integer.decode(m.getContent()));
-                    sendStatusRequest();
+                    client.sendStatusRequest();
                     area.append(Utilities.getLogTime() + " logged in\n");
                 }
                 if (m.getMessageType() == EnumKindOfMessage.BUDDY_RESPONSE) {
                     // Buddy founded
 
-                    buddyList.put(Integer.parseInt(m.getContent()), m.getOthers());
+                    cmb.getBuddyList().put(Integer.parseInt(m.getContent()), m.getOthers());
                     // Asking for Status of Buddies
-                    sendStatusRequest();
+                    client.sendStatusRequest();
                     // Save the new buddy
-                    FileManager.serialize(buddyList, "buddyList.data");
+                    FileManager.serialize(cmb.getBuddyList(), "buddyList.data");
+                    this.client.setBuddyList(cmb.getBuddyList());
                     area.append("\n" + new SimpleDateFormat("HH:mm").format(new Date()) + " Server: Buddy added!");
                 }
 
@@ -114,10 +112,10 @@ public class CommunicationThread extends Thread {
                         if (handshake.getStatus() == EnumHandshakeStatus.END) {
                             // If the message is not coming from server then it is from the buddy
                             if (m.getReceiverId() != 0 && handshake.isAnswer()) {
-                                this.buddyList.put(m.getReceiverId(), handshake.getContent());
-                                FileManager.serialize(this.buddyList, "buddyList.data");
+                                cmb.getBuddyList().put(m.getSenderId(), handshake.getContent());
+                                FileManager.serialize(cmb.getBuddyList(), "buddyList.data");
                                 area.append(Utilities.getLogTime() + " " + handshake.getContent() + " is added to buddylist \n");
-                                sendStatusRequest();
+                                client.sendStatusRequest();
                             } else {
 //                            // The client doesn't have to be noticed
 //                            area.append(Utilities.getLogTime() + " Server: " + "Client don't want to be your friend :P!\n");
@@ -133,7 +131,7 @@ public class CommunicationThread extends Thread {
                 }
 
                 if (m.getMessageType() == EnumKindOfMessage.STATUS_RESPONSE) {
-                    buddy_statusList = Utilities.getOnlineMap(m.getContent());
+                    cmb.setBuddy_statusList(Utilities.getOnlineMap(m.getContent()));
                     updateUI();
                 }
 
@@ -179,45 +177,17 @@ public class CommunicationThread extends Thread {
     //@TODO: Has to be outsourced!!
     public void updateUI() {
         DefaultListModel lm = new DefaultListModel();
-        if (!this.buddyList.isEmpty()) {
-            Iterator it = buddyList.keySet().iterator();
+        if (!this.cmb.getBuddyList().isEmpty()) {
+            Iterator it = cmb.getBuddyList().keySet().iterator();
             while (it.hasNext()) {
                 int number = (int) it.next();
                 System.out.println(number);
-                String status = buddy_statusList.get(number) ? "online" : "offline";
-                lm.addElement(status + ": " + buddyList.get(number));
+                String status = cmb.getBuddy_statusList().get(number) ? "online" : "offline";
+                lm.addElement(status + ": " + cmb.getBuddyList().get(number));
             }
         } else {
             lm.addElement("You have no Buddies!!\nPoor!");
         }
         this.list_buddies.setModel(lm);
     }
-
-    //@TODO: Has to be outsourced!!
-    /**
-     * Returns the formated String of IDs for the Status request. The String is
-     * the content of the Request message Like 1 3 For the Ids of Friends in the
-     * own buddyList
-     *
-     * @return
-     */
-    private String formatStatusRequest() {
-        String result = "";
-        for (Object k : buddyList.keySet().toArray()) {
-            result += k.toString() + " ";
-        }
-        return result;
-    }
-
-    private void sendStatusRequest() {
-        Message buddy_status = new Message(client.getId(), 0, EnumKindOfMessage.STATUS_REQUEST, formatStatusRequest(), "");
-        String buddy_status_request = MessageWrapper.createJSON(buddy_status);
-        try {
-            client.writeMessage(buddy_status_request);
-        } catch (IOException ex) {
-            Logger.getLogger(CommunicationThread.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-    }
-
 }

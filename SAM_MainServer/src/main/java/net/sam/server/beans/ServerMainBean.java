@@ -11,8 +11,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import net.sam.server.entities.Member;
-import net.sam.server.servermain.ClientServerCommunicationBase;
+import net.sam.server.interfaces.ClientServerCommunicationBase;
 import net.sam.server.utilities.Utilities;
 import org.apache.log4j.Logger;
 
@@ -27,7 +28,7 @@ public class ServerMainBean implements ClientServerCommunicationBase{
     private ServerMainBean(){
         this.loggedInuserList = new ArrayList<Member>();
         this.registeredUserList = new ArrayList<Member>();
-        this.socketMap = new HashMap<Integer, Socket>();
+        this.socketMap = new ConcurrentHashMap<Integer, Socket>();
         
         logger = org.apache.log4j.Logger.getLogger(ServerMainBean.class);
     }
@@ -53,11 +54,21 @@ public class ServerMainBean implements ClientServerCommunicationBase{
     private List<Member> registeredUserList;
     
     private Map<Integer, Socket> socketMap;
-    
+      
     private int maxUsers;
     
     public boolean isMemberOnline(int id){
         return socketMap.containsKey(id);
+    }
+    
+    public boolean isMemberOnline(String membername){
+        boolean isOnline = true;
+        for (Member me : this.loggedInuserList){
+            if (me.getName().equals(membername)){
+                return isOnline;
+            }
+        }
+        return !isOnline;
     }
     
     public Socket returnCommnunicationChannel(int id){
@@ -161,9 +172,12 @@ public class ServerMainBean implements ClientServerCommunicationBase{
             for (Member m : loggedInuserList){
                 if (m.getUserID() == id){
                     buddy_online_Response.put(id,Boolean.TRUE);
-                }else {
-                    buddy_online_Response.put(id,Boolean.FALSE);
                 }
+            }
+        }
+        for (Boolean b : buddy_online_Response.values()){
+            if (b == null){
+                b = Boolean.FALSE;
             }
         }
         return buddy_online_Response;

@@ -7,6 +7,8 @@
 package sam_testclient.entities;
 
 import java.io.Serializable;
+
+import javax.validation.constraints.NotNull;
 import sam_testclient.enums.EnumHandshakeReason;
 import sam_testclient.enums.EnumHandshakeStatus;
 
@@ -24,16 +26,29 @@ import sam_testclient.enums.EnumHandshakeStatus;
  */
 public class Handshake implements Serializable{
     
+    public Handshake(long id, EnumHandshakeStatus status, EnumHandshakeReason reason,
+            boolean answer, String content){
+        this.id = id;
+        this.status = status;
+        this.reason = reason;
+        this.answer = answer;
+        this.content = content;
+    }
+    
     private long id;
     
+    @NotNull
     private EnumHandshakeStatus status;
     
+    @NotNull
     private EnumHandshakeReason reason;
+    
+    @NotNull
+    private boolean answer;
     
     private Message owner;
     
-    private boolean answer;
-    
+    @NotNull
     private String content;
 
     public EnumHandshakeStatus getStatus() {
@@ -87,5 +102,12 @@ public class Handshake implements Serializable{
                 this.status + " " +this.answer+" "+ this.content;
     }
 
+    public Message getOwner() {
+        return owner;
+    }
+
+    public void setOwner(Message owner) {
+        this.owner = owner;
+    }
 } 
 
