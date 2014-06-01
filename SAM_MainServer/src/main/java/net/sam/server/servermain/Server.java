@@ -6,13 +6,17 @@
 
 package net.sam.server.servermain;
 
-import net.sam.server.interfaces.ClientServerCommunicationBase;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.swing.JTextArea;
 import net.sam.server.entities.Member;
+import net.sam.server.interfaces.ClientServerCommunicationBase;
+import net.sam.server.utilities.Utilities;
+import org.apache.log4j.Logger;
 
 
 
@@ -32,7 +36,13 @@ public class Server implements ClientServerCommunicationBase{
     
     private JTextArea messageArea;
     
+    private ExecutorService executorPool;
+    private ExecutorService serverMainPool;
+    
+    private Logger logger;
+    
     public Server(JTextArea messageArea){
+        logger = Logger.getLogger(Server.class);
         this.messageArea = messageArea;
  	try {
             userList = new ArrayList<Member>(MAXUSERS);
@@ -46,12 +56,14 @@ public class Server implements ClientServerCommunicationBase{
         this.serverSocket = new ServerSocket(PORT);
         this.serverSocket.setSoTimeout(0); // Timeout of 0 -> infinite
                                            // Use Timeout from Base, normally
+        executorPool = Executors.newSingleThreadExecutor();
+        serverMainPool = Executors.newFixedThreadPool(MAXUSERS);
         waiting4Clients(serverSocket);
     }
     
     private void waiting4Clients(ServerSocket serverSocket) {
- 	smt = new ServerMainThread(this, MAXUSERS, userList, true, messageArea);
-        smt.start();
+ 	smt = new ServerMainThread(this, MAXUSERS, userList, true, messageArea, serverMainPool);
+        executorPool.execute(smt);
     }
     
     public ServerSocket getServerSocket(){
@@ -67,7 +79,12 @@ public class Server implements ClientServerCommunicationBase{
     }
     
     public void shutDown() throws IOException{
-        smt.kill();
+        logger.warn(Utilities.getLogTime() + " Shutdown intitiated...");
+        smt.interrupt();
+        executorPool.shutdownNow();
+        serverMainPool.shutdownNow();
+        serverSocket.close();
+        logger.info(Utilities.getLogTime() + " Shutdown completed");
     }
     
     public List<Member> getUserList(){
