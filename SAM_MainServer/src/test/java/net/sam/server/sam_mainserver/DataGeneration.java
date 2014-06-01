@@ -9,11 +9,11 @@ package net.sam.server.sam_mainserver;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.List;
 import java.util.logging.Level;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
-import net.sam.server.entities.MediaStorage;
 import net.sam.server.entities.MediaFile;
 import net.sam.server.entities.Member;
 import net.sam.server.entities.Message;
@@ -77,6 +77,16 @@ public class DataGeneration {
         em.persist(mt);
         em.getTransaction().commit();
         
+    }
+    
+    @Test
+    public void postDelete(){
+        em.getTransaction().begin();
+        List<MediaFile> mfList = em.createQuery("SELECT m FROM MediaFile m").getResultList();
+        for (MediaFile mf : mfList){
+            em.remove(mf);
+        }
+        em.getTransaction().commit();
     }
     
     @After

@@ -438,7 +438,7 @@ public class ServerMainUI extends javax.swing.JFrame {
         
         if (tgl_StartServer.isSelected()) {
             server = new Server(ta_messanges);
-            ta_messanges.append(Utilities.getLogTime() + " Server started...");
+            ta_messanges.append("\n"+Utilities.getLogTime() + " Server started...");
             tgl_StartServer.setText("Stop Server");
         } else {
             try {
