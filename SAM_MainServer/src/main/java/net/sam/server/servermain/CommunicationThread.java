@@ -337,6 +337,12 @@ public class CommunicationThread extends Thread {
                                     }
                                 }
                             }
+                            if (handshake.getReason() == EnumHandshakeReason.FILE_REQUEST){
+                                logger.info(Utilities.getLogTime() + " Handshake received");
+                                logger.info(m.toString());
+                                // If the status is Start
+                                forwardMessage(m);
+                            }
                         }
                     } else {
                         socketIsClosedHandler();

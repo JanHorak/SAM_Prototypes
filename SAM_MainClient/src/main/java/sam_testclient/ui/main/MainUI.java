@@ -1,21 +1,28 @@
 package sam_testclient.ui.main;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JFileChooser;
 import javax.swing.JList;
 import javax.swing.JTextArea;
 import sam_testclient.beans.ClientMainBean;
 import sam_testclient.communication.Client;
 import sam_testclient.communication.CommunicationThread;
 import sam_testclient.entities.Handshake;
+import sam_testclient.entities.MediaFile;
 import sam_testclient.entities.Message;
 import sam_testclient.enums.EnumHandshakeReason;
 import sam_testclient.enums.EnumHandshakeStatus;
 import sam_testclient.enums.EnumKindOfMessage;
 import sam_testclient.exceptions.NotAHandshakeException;
+import sam_testclient.sources.FileManager;
 import sam_testclient.sources.MessageWrapper;
 import sam_testclient.utilities.Utilities;
 
@@ -27,7 +34,7 @@ public class MainUI extends javax.swing.JFrame {
 
     private Client client;
     private ClientMainBean cmb;
-    
+
     public MainUI() {
         initComponents();
         cmb = ClientMainBean.getInstance();
@@ -38,28 +45,28 @@ public class MainUI extends javax.swing.JFrame {
         tf_password.setEnabled(false);
         btn_send.setEnabled(true);
         btn_register.setEnabled(false);
-        
+
     }
-    
-    public void acceptBuddyRequest(Message m) throws NotAHandshakeException{
+
+    public void acceptBuddyRequest(Message m) throws NotAHandshakeException {
         m.getHandshake().setAnswer(true);
         m.getHandshake().setStatus(EnumHandshakeStatus.END);
 
         m.setReceiverId(m.getSenderId());
-        m.setSenderId(this.client.getId()); 
+        m.setSenderId(this.client.getId());
         try {
-            cmb.getBuddyList().put(m.getSenderId(), m.getContent());
+            cmb.getBuddyList().put(m.getReceiverId(), m.getContent());
             client.sendStatusRequest();
             client.writeMessage(MessageWrapper.createJSON(m));
         } catch (IOException ex) {
             Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-    public void denyBuddyRequest(Message m) throws NotAHandshakeException{
+
+    public void denyBuddyRequest(Message m) throws NotAHandshakeException {
         m.getHandshake().setAnswer(false);
         m.getHandshake().setStatus(EnumHandshakeStatus.END);
-        
+
         m.setReceiverId(m.getSenderId());
         m.setSenderId(this.client.getId());
         try {
@@ -68,12 +75,67 @@ public class MainUI extends javax.swing.JFrame {
             Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-    public JTextArea getArea(){
+
+    public void acceptFileRequest(Message m) throws NotAHandshakeException {
+        m.getHandshake().setAnswer(true);
+        m.getHandshake().setStatus(EnumHandshakeStatus.END);
+
+        m.setReceiverId(m.getSenderId());
+        m.setSenderId(this.client.getId());
+        try {
+            client.writeMessage(MessageWrapper.createJSON(m));
+        } catch (IOException ex) {
+            Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+
+    public void denyFileRequest(Message m) throws NotAHandshakeException {
+        m.getHandshake().setAnswer(false);
+        m.getHandshake().setStatus(EnumHandshakeStatus.END);
+
+        m.setReceiverId(m.getSenderId());
+        m.setSenderId(this.client.getId());
+        try {
+            client.writeMessage(MessageWrapper.createJSON(m));
+        } catch (IOException ex) {
+            Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+
+    public void showSaveDialog(Message m) {
+        JFileChooser chooser = new JFileChooser();
+        int returnValue = chooser.showSaveDialog(null);
+        if (returnValue == JFileChooser.APPROVE_OPTION) {
+            FileOutputStream fos = null;
+            try {
+                fos = new FileOutputStream(chooser.getSelectedFile() + File.pathSeparator + m.getMediaStorage().getFileName());
+                fos.write(m.getMediaStorage().getContent());
+                fos.close();
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
+            } finally {
+                try {
+                    fos.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+    }
+
+    private int returnSelectedIDFromBuddy() {
+        return client.getIdFromBuddy(list_buddies.getSelectedValue().toString().split(": ")[1]);
+    }
+
+    public JTextArea getArea() {
         return this.jTextArea1;
     }
-    
-    public JList getBuddyList(){
+
+    public JList getBuddyList() {
         return this.list_buddies;
     }
 
@@ -100,6 +162,7 @@ public class MainUI extends javax.swing.JFrame {
         jScrollPane3 = new javax.swing.JScrollPane();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTextArea1 = new javax.swing.JTextArea();
+        btn_sendFile = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -200,7 +263,7 @@ public class MainUI extends javax.swing.JFrame {
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btn_register)
                     .addComponent(tgl_login))
-                .addGap(0, 6, Short.MAX_VALUE))
+                .addGap(0, 2, Short.MAX_VALUE))
         );
 
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Messages"));
@@ -222,6 +285,14 @@ public class MainUI extends javax.swing.JFrame {
             .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 112, Short.MAX_VALUE)
         );
 
+        btn_sendFile.setText("Send a File");
+        btn_sendFile.setEnabled(false);
+        btn_sendFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btn_sendFileActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -239,11 +310,13 @@ public class MainUI extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(jLabel1)
-                        .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 159, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(btn_searchFriend))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel1)
+                            .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 159, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(btn_searchFriend))
+                    .addComponent(btn_sendFile))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -253,7 +326,7 @@ public class MainUI extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 8, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 12, Short.MAX_VALUE)
                         .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -268,7 +341,9 @@ public class MainUI extends javax.swing.JFrame {
                 .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btn_searchFriend)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(btn_sendFile)
+                .addGap(20, 20, 20))
         );
 
         pack();
@@ -279,7 +354,7 @@ public class MainUI extends javax.swing.JFrame {
         try {
             client.connect();
             prepareUI();
-            new CommunicationThread(this.client, this ,client.getId()).start();
+            new CommunicationThread(this.client, this, client.getId()).start();
             jTextArea1.append(Utilities.getLogTime() + " Try to register...\n");
         } catch (IOException ex) {
             Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
@@ -297,7 +372,7 @@ public class MainUI extends javax.swing.JFrame {
         Message m = new Message(client.getId(), receiverID, EnumKindOfMessage.MESSAGE, tf_message.getText(), "");
         try {
             client.writeMessage(MessageWrapper.createJSON(m));
-            jTextArea1.append("\n"+new SimpleDateFormat("HH:mm").format(new Date()).toString() + " Me: " + m.getContent());
+            jTextArea1.append("\n" + new SimpleDateFormat("HH:mm").format(new Date()).toString() + " Me: " + m.getContent());
             tf_message.setText("");
         } catch (IOException ex) {
             Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
@@ -336,7 +411,7 @@ public class MainUI extends javax.swing.JFrame {
     private void btn_searchFriendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_searchFriendActionPerformed
         // Handshake- content: Name of searched buddy, message-content: own name
         Handshake hs = new Handshake(0, EnumHandshakeStatus.START, EnumHandshakeReason.BUDDY_REQUEST, false, jTextField1.getText());
-        Message message = new Message(this.client.getId(), 0, EnumKindOfMessage.HANDSHAKE, tf_memberName.getText(), "bla");
+        Message message = new Message(this.client.getId(), 0, EnumKindOfMessage.HANDSHAKE, tf_memberName.getText(), "");
         message.setHandshake(hs);
         try {
             client.writeMessage(MessageWrapper.createJSON(message));
@@ -348,12 +423,45 @@ public class MainUI extends javax.swing.JFrame {
     }//GEN-LAST:event_btn_searchFriendActionPerformed
 
     private void list_buddiesValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_list_buddiesValueChanged
-        if (list_buddies.getSelectedValue() == null){
+        if (list_buddies.getSelectedValue() == null) {
             btn_send.setEnabled(false);
-        }else {
+            btn_sendFile.setEnabled(false);
+        } else {
             btn_send.setEnabled(true);
+            btn_sendFile.setEnabled(true);
         }
     }//GEN-LAST:event_list_buddiesValueChanged
+
+    private void btn_sendFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_sendFileActionPerformed
+        JFileChooser chooser = new JFileChooser();
+        int returnValue = chooser.showOpenDialog(null);
+        if (returnValue == JFileChooser.APPROVE_OPTION) {
+            File sendFile = chooser.getSelectedFile();
+            byte[] content = FileManager.returnBytesOfFile(sendFile);
+            String name = sendFile.getName();
+
+            MediaFile mf = new MediaFile();
+            mf.setFileName(name);
+            mf.setContent(content);
+            mf.setType(MediaFile.getEnumTypeOfFile(sendFile));
+            mf.setDescription("FileTest");
+            cmb.setLastFile(mf);
+
+            Message request = new Message(this.client.getId(), returnSelectedIDFromBuddy(), EnumKindOfMessage.HANDSHAKE, "", "");
+            Handshake hs = new Handshake(1, EnumHandshakeStatus.START, EnumHandshakeReason.FILE_REQUEST, false, mf.getFileName());
+            request.setHandshake(hs);
+
+            try {
+                this.client.writeMessage(MessageWrapper.createJSON(request));
+            } catch (IOException ex) {
+                Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        if (returnValue == JFileChooser.CANCEL_OPTION) {
+            chooser.cancelSelection();
+        }
+
+    }//GEN-LAST:event_btn_sendFileActionPerformed
 
     /**
      * @param args the command line arguments
@@ -394,6 +502,7 @@ public class MainUI extends javax.swing.JFrame {
     private javax.swing.JButton btn_register;
     private javax.swing.JButton btn_searchFriend;
     private javax.swing.JButton btn_send;
+    private javax.swing.JButton btn_sendFile;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;

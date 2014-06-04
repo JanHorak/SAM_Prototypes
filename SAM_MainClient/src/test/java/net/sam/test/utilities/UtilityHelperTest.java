@@ -8,6 +8,9 @@ package net.sam.test.utilities;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.junit.Assert;
 import org.junit.Test;
 import sam_testclient.sources.FileManager;
 
@@ -25,4 +28,12 @@ public class UtilityHelperTest {
         buddyList = (Map<Integer, String>) FileManager.deserialize("buddyList.data");
         System.out.println(buddyList.toString());
     }
+    
+    @Test
+    public void regExTest(){
+        Pattern pattern = Pattern.compile("([^\\s]+(\\.(?i)(jpg|png|gif|bmp))$)");
+        Matcher matcher = pattern.matcher("Test.bmp");
+        Assert.assertTrue(matcher.matches());
+    }
+    
 }
