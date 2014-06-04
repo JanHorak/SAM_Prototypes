@@ -175,9 +175,9 @@ public class ServerMainBean implements ClientServerCommunicationBase{
                 }
             }
         }
-        for (Boolean b : buddy_online_Response.values()){
-            if (b == null){
-                b = Boolean.FALSE;
+        for (int id : idList){
+            if (!buddy_online_Response.containsKey(id)){
+                buddy_online_Response.put(id,Boolean.FALSE);
             }
         }
         return buddy_online_Response;

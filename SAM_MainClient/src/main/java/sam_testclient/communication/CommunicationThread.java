@@ -26,6 +26,7 @@ import sam_testclient.exceptions.NotAHandshakeException;
 import sam_testclient.sources.FileManager;
 import sam_testclient.sources.MessageWrapper;
 import sam_testclient.ui.dialogs.BuddyRequestDialog;
+import sam_testclient.ui.dialogs.FileRequestDialog;
 import sam_testclient.ui.main.MainUI;
 import sam_testclient.utilities.Utilities;
 
@@ -122,6 +123,32 @@ public class CommunicationThread extends Thread {
                             }
 
                         }
+                    }
+                    if (handshake.getReason() == EnumHandshakeReason.FILE_REQUEST) {
+                        System.out.println("RECEIVED: " + m.toString());
+                        if (handshake.getStatus() == EnumHandshakeStatus.START) {
+                            area.append(Utilities.getLogTime() + "Server: Buddyrequest received\n");
+                            new FileRequestDialog(ui, m).setVisible(true);
+                        }
+                        if (handshake.getStatus() == EnumHandshakeStatus.END) {
+                            if (handshake.isAnswer() && !m.hasFile()) {
+                                Message me = new Message(handshake, cmb.getLastFile());
+                                me.setSenderId(this.client.getId());
+                                me.setReceiverId(m.getSenderId());
+                                try {
+                                    client.writeMessage(MessageWrapper.createJSON(me));
+                                } catch (IOException ex) {
+                                    Logger.getLogger(CommunicationThread.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                            }
+                            if (handshake.isAnswer() && m.hasFile()) {
+                                ui.showSaveDialog(m);
+                            }
+                            if (!handshake.isAnswer()) {
+                                area.append(Utilities.getLogTime() + "File-request denied\n");
+                            }
+                        }
+
                     }
                     if (handshake.getStatus() == EnumHandshakeStatus.WAITING) {
 //                        // The client doesn't have to be noticed

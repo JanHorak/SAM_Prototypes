@@ -5,14 +5,14 @@
  */
 package sam_testclient.sources;
 
-import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.nio.file.Path;
+import java.nio.file.Files;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -69,5 +69,14 @@ public class FileManager {
             }
         }
         return result;
+    }
+    
+    public static byte[] returnBytesOfFile(File file){
+        try {
+            return Files.readAllBytes(file.toPath());
+        } catch (IOException ex) {
+            Logger.getLogger(FileManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 }

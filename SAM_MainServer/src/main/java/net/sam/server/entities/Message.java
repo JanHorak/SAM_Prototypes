@@ -6,7 +6,9 @@
 package net.sam.server.entities;
 
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.logging.Level;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -34,7 +36,7 @@ public class Message extends TransportObject implements Serializable {
         this.setReceiverId(receiverId);
         this.setSenderId(senderId);
         this.setOthers(others);
-        this.setTimestamp(new Date());
+        this.setTimestamp(new SimpleDateFormat("yyyy-MM-dd' 'HH:mm:ss").format(new Date()));
     }
 
     public Message(Handshake hs, MediaFile mf) {
@@ -42,7 +44,7 @@ public class Message extends TransportObject implements Serializable {
         this.setContent(hs.getContent());
         this.setOthers("");
         this.setMessageType(EnumKindOfMessage.HANDSHAKE);
-        this.setTimestamp(new Date());
+        this.setTimestamp(new SimpleDateFormat("yyyy-MM-dd' 'HH:mm:ss").format(new Date()));
     }
 
     /**
@@ -98,9 +100,13 @@ public class Message extends TransportObject implements Serializable {
     }
 
     public boolean isHandshake() {
-        return this.getMessageType() == EnumKindOfMessage.HANDSHAKE
-                && this.handshake != null;
+        return this.getMessageType() == EnumKindOfMessage.HANDSHAKE;
     }
+    
+    public boolean hasFile(){
+        return this.mediaStorage != null;
+    }
+
 
     public void setHandshake(Handshake handshake) {
         this.setMessageType(EnumKindOfMessage.HANDSHAKE);
@@ -117,19 +123,29 @@ public class Message extends TransportObject implements Serializable {
 
     @Override
     public String toString() {
-        // @TODO: Use Stringbuilder for building returning String!
-
-        if (this.getMessageType() == EnumKindOfMessage.HANDSHAKE) {
-            return this.getTimestamp() + " Handshake: From " + this.getSenderId() + " to " + this.getReceiverId()
-                    + " in Status: " + this.handshake.getStatus() + " for Request: " + this.handshake.getReason() + " "
-                    + this.handshake.getContent();
-        } else {
-            return this.getTimestamp() + ": " + this.getSenderId() + " to " + this.getReceiverId() + " "
-                    + this.getMessageType() + " "
-                    + this.getContent() + " "
-                    + this.getOthers();
+        StringBuilder sb = new StringBuilder();
+        sb.append(this.getTimestamp()).append(": ")
+                .append(this.getSenderId())
+                .append(" to ").append(this.getReceiverId())
+                .append(" Type: ").append(this.getMessageType())
+                .append(" Content: ").append(this.getContent())
+                .append(" Others: ").append(this.getOthers())
+                .append(" Handshake: ").append(this.isHandshake());
+        if (this.isHandshake()) {
+            Handshake hs = null;
+            try {
+                hs = this.getHandshake();
+            } catch (NotAHandshakeException ex) {
+                logger.error("Fatal" + ex);
+            }
+            sb.append(" Id: ").append(hs.getId())
+                    .append(" Reason: ")
+                    .append(hs.getReason())
+                    .append(" Status: ").append(hs.getStatus())
+                    .append(" Content: ").append(hs.getContent())
+                    .append(" Owner: ").append(hs.getOwner());
         }
-
+        return sb.toString();
     }
 
 }

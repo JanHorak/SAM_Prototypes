@@ -50,7 +50,7 @@ public class ValidationTest {
         // Please note: ValidationTest will print Validationmessage:
         // One of the HandshakeValues is null!
         // for *every* error
-        Handshake hs = new Handshake(0, EnumHandshakeStatus.END, EnumHandshakeReason.SENDING_FILE, true, "ff");
+        Handshake hs = new Handshake(0, EnumHandshakeStatus.END, EnumHandshakeReason.FILE_REQUEST, true, "ff");
         m = new Message(0, 1, EnumKindOfMessage.LOGIN, "d", "ddd");
         m.setHandshake(hs);
         hs.setOwner(m);
@@ -63,13 +63,13 @@ public class ValidationTest {
         assertTrue(!ValidationManager.isValid(hs2));
         assertTrue(ValidationManager.returnAmountOfInvalidFields(hs2).size() == 2);
         
-        Handshake hs3 = new Handshake(0, EnumHandshakeStatus.END, EnumHandshakeReason.SENDING_FILE, true, "eaw");
+        Handshake hs3 = new Handshake(0, EnumHandshakeStatus.END, EnumHandshakeReason.FILE_REQUEST, true, "eaw");
         m3 = new Message(0, 1, EnumKindOfMessage.LOGIN, "d", "ddd");
         m3.setHandshake(hs3);
         hs3.setOwner(m3);
         assertTrue(ValidationManager.isValid(hs3));
         
-        Handshake hs4 = new Handshake(0, null, EnumHandshakeReason.SENDING_FILE, true, "dasd");
+        Handshake hs4 = new Handshake(0, null, EnumHandshakeReason.FILE_REQUEST, true, "dasd");
         m4 = new Message(0, 1, EnumKindOfMessage.LOGIN, "d", "ddd");
         m4.setHandshake(hs4);
         hs4.setOwner(m4);

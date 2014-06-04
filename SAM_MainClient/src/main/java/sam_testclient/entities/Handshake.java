@@ -26,6 +26,10 @@ import sam_testclient.enums.EnumHandshakeStatus;
  */
 public class Handshake implements Serializable{
     
+    public Handshake(){
+        
+    }
+    
     public Handshake(long id, EnumHandshakeStatus status, EnumHandshakeReason reason,
             boolean answer, String content){
         this.id = id;

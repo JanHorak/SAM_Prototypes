@@ -50,10 +50,8 @@ public abstract class TransportObject implements Serializable {
     @NotNull
     private String others;
 
-    //@TODO: @Temporal- annotation for timestamp adden
-    //       maybe changes in the testdata- adden
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date timestamp;
+    @NotNull
+    private String timestamp;
 
     public int getSenderId() {
         return this.senderId;
@@ -95,11 +93,11 @@ public abstract class TransportObject implements Serializable {
         this.content = content;
     }
 
-    public Date getTimestamp() {
-        return this.timestamp;
+    public String getTimestamp() {
+        return timestamp;
     }
 
-    public void setTimestamp(Date timestamp) {
+    public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }
 
