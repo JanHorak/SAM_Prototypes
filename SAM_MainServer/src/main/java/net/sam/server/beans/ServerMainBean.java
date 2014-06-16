@@ -12,9 +12,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.annotation.PostConstruct;
+import javax.inject.Singleton;
 import net.sam.server.entities.Member;
-import net.sam.server.interfaces.ClientServerCommunicationBase;
-import net.sam.server.utilities.Utilities;
 import org.apache.log4j.Logger;
 
 
@@ -22,31 +22,18 @@ import org.apache.log4j.Logger;
  *
  * @author janhorak
  */
-
-public class ServerMainBean implements ClientServerCommunicationBase{
+@Singleton
+public class ServerMainBean {
     
-    private ServerMainBean(){
+    @PostConstruct
+    public void init(){
         this.loggedInuserList = new ArrayList<Member>();
         this.registeredUserList = new ArrayList<Member>();
         this.socketMap = new ConcurrentHashMap<Integer, Socket>();
         
         logger = org.apache.log4j.Logger.getLogger(ServerMainBean.class);
     }
-    
-    /**
-     * Singleton- Pattern
-     * [@TODO: Maybe it should be replaced by CDI]
-     */
-    private static ServerMainBean instance = null;
-    
-    public static ServerMainBean getInstance() {
-        if (instance == null) {
-            instance = new ServerMainBean();
-            logger.info(Utilities.getLogTime()+" Singleton instantiated successfully");
-        }
-        return instance;
-    }
-    
+
     private static Logger logger;
     
     private List<Member> loggedInuserList;

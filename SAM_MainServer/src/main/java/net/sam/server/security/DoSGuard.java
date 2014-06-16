@@ -9,6 +9,7 @@ import java.net.InetAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import net.sam.server.beans.ServerMainBean;
+import net.sam.server.services.ContainerService;
 import net.sam.server.utilities.Utilities;
 import org.apache.log4j.Logger;
 
@@ -26,7 +27,7 @@ public class DoSGuard extends Guard {
 
     private DoSGuard() {
         logger = Logger.getLogger(DoSGuard.class);
-        smb = ServerMainBean.getInstance();
+        smb = ContainerService.getBean(ServerMainBean.class);
         this.threatLevelPerSocket = new ConcurrentHashMap<>();
         this.live = true;
     }

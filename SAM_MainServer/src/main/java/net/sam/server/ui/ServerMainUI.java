@@ -9,6 +9,7 @@ import javax.swing.ImageIcon;
 import net.sam.server.beans.ServerMainBean;
 import net.sam.server.manager.FileManager;
 import net.sam.server.servermain.Server;
+import net.sam.server.services.ContainerService;
 import net.sam.server.utilities.Utilities;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
@@ -32,9 +33,11 @@ public class ServerMainUI extends javax.swing.JFrame {
         this.setTitle("SAM - SecureAndroidMessenger - Server");
         lb_logo.setIcon(new ImageIcon("graphics/simpleLogoSAM.png"));
         loadConfig();
-        
-        serverMainBean = ServerMainBean.getInstance();
 
+        container = new ContainerService();
+        container.startContainer();
+        serverMainBean = ContainerService.getBean(ServerMainBean.class);
+        
         // Loading of the UIThread
         uiThread = new UIUpdateThread(list_members);
         uiThread.start();
@@ -54,6 +57,8 @@ public class ServerMainUI extends javax.swing.JFrame {
 
     // ---------- Variables ----------------
     private Server server;
+    
+    private ContainerService container;
 
     private ServerMainBean serverMainBean;
 
@@ -457,6 +462,7 @@ public class ServerMainUI extends javax.swing.JFrame {
 
     private void radio_membersOnlineActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_radio_membersOnlineActionPerformed
         DefaultListModel lm = new DefaultListModel();
+        serverMainBean = ContainerService.getBean(ServerMainBean.class);
         if (!serverMainBean.getloggedInMembers().isEmpty()) {
             List<String> loggedInFormatted = ServerMainBean.wrapForUI(serverMainBean.getloggedInMembers());
             for (String s : loggedInFormatted) {
@@ -470,6 +476,7 @@ public class ServerMainUI extends javax.swing.JFrame {
 
     private void radio_membersRegisteredActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_radio_membersRegisteredActionPerformed
         DefaultListModel lm = new DefaultListModel();
+        serverMainBean = ContainerService.getBean(ServerMainBean.class);
         if (!serverMainBean.getRegisteredMembers().isEmpty()) {
             List<String> loggedInFormatted = ServerMainBean.wrapForUI(serverMainBean.getRegisteredMembers());
             for (String s : loggedInFormatted) {
