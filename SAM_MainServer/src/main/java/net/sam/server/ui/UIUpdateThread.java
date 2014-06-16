@@ -8,6 +8,7 @@ package net.sam.server.ui;
 import javax.swing.JList;
 import net.sam.server.beans.ServerMainBean;
 import net.sam.server.manager.DataAccess;
+import net.sam.server.services.ContainerService;
 import net.sam.server.utilities.Utilities;
 import org.apache.log4j.Logger;
 
@@ -26,7 +27,7 @@ public class UIUpdateThread extends Thread {
     public UIUpdateThread(JList loggedInList) {
         logger = Logger.getLogger(UIUpdateThread.class);
         this.ui_userList = loggedInList;
-        sb = ServerMainBean.getInstance();
+        sb = ContainerService.getBean(ServerMainBean.class);
         sb.setRegisteredMembers(DataAccess.getAllRegisteredMembers());
     }
 

@@ -15,6 +15,7 @@ import javax.swing.JTextArea;
 import net.sam.server.beans.ServerMainBean;
 import net.sam.server.entities.Member;
 import net.sam.server.security.SecurityThread;
+import net.sam.server.services.ContainerService;
 import net.sam.server.utilities.Utilities;
 import org.apache.log4j.Logger;
 
@@ -48,7 +49,7 @@ public class ServerMainThread implements Runnable{
         this.server = server;
         this.area = area;
         this.commList = new ArrayList<>();
-        serverMainBean = ServerMainBean.getInstance();
+        serverMainBean = ContainerService.getBean(ServerMainBean.class);
         logger = Logger.getLogger(ServerMainThread.class);
         sct = new SecurityThread();
         executorPool.execute(sct);
