@@ -27,7 +27,7 @@ public class UIUpdateThread extends Thread {
     public UIUpdateThread(JList loggedInList) {
         logger = Logger.getLogger(UIUpdateThread.class);
         this.ui_userList = loggedInList;
-        sb = ContainerService.getBean(ServerMainBean.class);
+        sb = ServerMainBean.getInstance();
         sb.setRegisteredMembers(DataAccess.getAllRegisteredMembers());
     }
 

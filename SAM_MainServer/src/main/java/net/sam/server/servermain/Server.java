@@ -38,7 +38,6 @@ public class Server implements ClientServerCommunicationBase {
     
     private ExecutorService executorPool;
     private ExecutorService serverMainPool;
-    
     private Logger logger;
 
     public Server(JTextArea messageArea) {

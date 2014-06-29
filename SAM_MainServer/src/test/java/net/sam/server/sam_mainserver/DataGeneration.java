@@ -60,7 +60,7 @@ public class DataGeneration {
     @Test
     public void shouldAddAnImageInMediaStorage(){
         em.getTransaction().begin();
-        File image = new File("graphics/AndroidLogo.png");
+        File image = new File("resources/graphics/AndroidLogo.png");
         
         Message m = new Message(1, 3, EnumKindOfMessage.LOGIN, "Blaaa", "additional bla");
         

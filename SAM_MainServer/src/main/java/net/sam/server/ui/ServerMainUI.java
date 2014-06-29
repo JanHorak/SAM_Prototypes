@@ -14,8 +14,6 @@ import net.sam.server.utilities.Utilities;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 
-
-
 /**
  *
  * @author janhorak
@@ -29,15 +27,15 @@ public class ServerMainUI extends javax.swing.JFrame {
         initComponents();
         BasicConfigurator.configure();
         logger = Logger.getLogger(ServerMainUI.class);
-        
+
         this.setTitle("SAM - SecureAndroidMessenger - Server");
-        lb_logo.setIcon(new ImageIcon("graphics/simpleLogoSAM.png"));
+        lb_logo.setIcon(new ImageIcon(SAMLOGO));
         loadConfig();
 
         container = new ContainerService();
         container.startContainer();
-        serverMainBean = ContainerService.getBean(ServerMainBean.class);
-        
+        serverMainBean = ServerMainBean.getInstance();
+
         // Loading of the UIThread
         uiThread = new UIUpdateThread(list_members);
         uiThread.start();
@@ -52,12 +50,13 @@ public class ServerMainUI extends javax.swing.JFrame {
         bg.add(radio_membersRegistered);
 
         radio_membersRegistered.doClick();
-        logger.info(Utilities.getLogTime()+" UI loaded successfully");
+        logger.info(Utilities.getLogTime() + " UI loaded successfully");
+
     }
 
     // ---------- Variables ----------------
     private Server server;
-    
+
     private ContainerService container;
 
     private ServerMainBean serverMainBean;
@@ -69,10 +68,12 @@ public class ServerMainUI extends javax.swing.JFrame {
     private List<String> ui_registeredInUsers;
 
     private Logger logger;
+
+    private static final String SERVERPROPERTIES = "resources/properties/server.properties";
+
+    private static final String LOGGINGPROPERTIES = "resources/properties/log4j.properties";
     
-    private static final String SERVERPROPERTIES = "properties/server.properties";
-    
-    private static final String LOGGINGPROPERTIES = "properties/log4j.properties";
+    private static final String SAMLOGO = "resources/graphics/simpleLogoSAM.png";
 
     // ---------- ---------- ----------------
     @SuppressWarnings("unchecked")
@@ -108,6 +109,8 @@ public class ServerMainUI extends javax.swing.JFrame {
         list_members = new javax.swing.JList();
         radio_membersOnline = new javax.swing.JRadioButton();
         radio_membersRegistered = new javax.swing.JRadioButton();
+        lb_registerPW = new javax.swing.JLabel();
+        pwf_register = new javax.swing.JPasswordField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -156,6 +159,7 @@ public class ServerMainUI extends javax.swing.JFrame {
         });
 
         tgl_StartServer.setText("Start Server");
+        tgl_StartServer.setEnabled(false);
         tgl_StartServer.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 tgl_StartServerActionPerformed(evt);
@@ -176,7 +180,9 @@ public class ServerMainUI extends javax.swing.JFrame {
         );
         pnl_messangesLayout.setVerticalGroup(
             pnl_messangesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 124, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnl_messangesLayout.createSequentialGroup()
+                .addGap(0, 6, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         btn_send.setText("Send");
@@ -245,7 +251,7 @@ public class ServerMainUI extends javax.swing.JFrame {
                     .addComponent(spr_daysKeyPair, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(chk_memberListPublic)
-                .addContainerGap(26, Short.MAX_VALUE))
+                .addContainerGap(22, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Settings", jPanel1);
@@ -293,10 +299,18 @@ public class ServerMainUI extends javax.swing.JFrame {
                 .addComponent(radio_membersRegistered)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(radio_membersOnline)
-                .addContainerGap(90, Short.MAX_VALUE))
+                .addContainerGap(86, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Users", jPanel2);
+
+        lb_registerPW.setText("Register-password:");
+
+        pwf_register.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                pwf_registerKeyTyped(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -311,32 +325,35 @@ public class ServerMainUI extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btn_send, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(lb_logo)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(tgl_StartServer))
-                            .addComponent(jSeparator1)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addComponent(lb_serverMAXCON)
-                                .addGroup(layout.createSequentialGroup()
-                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addComponent(lb_serverIP)
-                                        .addComponent(lb_serverPORT))
-                                    .addGap(103, 103, 103)
-                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addGroup(layout.createSequentialGroup()
-                                            .addComponent(tf_serverIP, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                            .addGap(18, 18, 18)
-                                            .addComponent(chk_defaultIP))
-                                        .addGroup(layout.createSequentialGroup()
-                                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                                .addComponent(tf_serverPORT, javax.swing.GroupLayout.DEFAULT_SIZE, 94, Short.MAX_VALUE)
-                                                .addComponent(spr_serverMAXCON))
-                                            .addGap(18, 18, 18)
-                                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                                .addComponent(chk_defaultMAXCON)
-                                                .addComponent(chk_defaultPORT)))))))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                    .addComponent(lb_logo, javax.swing.GroupLayout.PREFERRED_SIZE, 169, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(tgl_StartServer))
+                                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(lb_serverMAXCON)
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(lb_serverIP)
+                                            .addComponent(lb_serverPORT))
+                                        .addGap(103, 103, 103)
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addGroup(layout.createSequentialGroup()
+                                                .addComponent(tf_serverIP, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addGap(18, 18, 18)
+                                                .addComponent(chk_defaultIP))
+                                            .addGroup(layout.createSequentialGroup()
+                                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                                    .addComponent(tf_serverPORT, javax.swing.GroupLayout.DEFAULT_SIZE, 94, Short.MAX_VALUE)
+                                                    .addComponent(spr_serverMAXCON))
+                                                .addGap(18, 18, 18)
+                                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                    .addComponent(chk_defaultMAXCON)
+                                                    .addComponent(chk_defaultPORT)))
+                                            .addComponent(pwf_register, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                            .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 371, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(lb_registerPW))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jTabbedPane1)))
                 .addContainerGap())
@@ -361,15 +378,18 @@ public class ServerMainUI extends javax.swing.JFrame {
                             .addComponent(lb_serverMAXCON)
                             .addComponent(chk_defaultMAXCON)
                             .addComponent(spr_serverMAXCON, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 6, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(tgl_StartServer)
-                            .addComponent(lb_logo))
-                        .addGap(0, 0, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(lb_registerPW)
+                            .addComponent(pwf_register, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jTabbedPane1))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(2, 2, 2)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(lb_logo, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(tgl_StartServer))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(pnl_messanges, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -383,13 +403,10 @@ public class ServerMainUI extends javax.swing.JFrame {
 
     // ---------- Methods -----------------
     //@TODO: Refactoring of the Radio- buttons!!
-    
-    
-    
     /**
-     * This method loads the Data from the server.properties and parses
-     * the values to the UI- components.
-     * 
+     * This method loads the Data from the server.properties and parses the
+     * values to the UI- components.
+     *
      */
     private void loadConfig(){
         Properties serverprops = FileManager.initProperties(SERVERPROPERTIES);
@@ -397,7 +414,7 @@ public class ServerMainUI extends javax.swing.JFrame {
         chk_memberListPublic.setSelected(Boolean.parseBoolean(serverprops.getProperty("MEMBERLISTISPUBLIC")));
         chk_saveMessages.setSelected(Boolean.parseBoolean(serverprops.getProperty("SAVEMESSAGESINBUFFER")));
     }
-    
+
     // -------------------------------------
 
     private void chk_defaultPORTActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chk_defaultPORTActionPerformed
@@ -438,12 +455,16 @@ public class ServerMainUI extends javax.swing.JFrame {
     }//GEN-LAST:event_spr_serverMAXCONStateChanged
 
     private void tgl_StartServerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tgl_StartServerActionPerformed
+        // Get MD5- Hash from Serverpassword
+        String md5 = Utilities.getHash(pwf_register.getText());
+        serverMainBean.setServerPassword(md5);
+
         // Save the settings for key-recreation
         FileManager.storeValueInPropertiesFile(SERVERPROPERTIES, "DAYSFORKEYRECREATION", String.valueOf(spr_daysKeyPair.getValue()));
-        
+
         if (tgl_StartServer.isSelected()) {
             server = new Server(ta_messanges);
-            ta_messanges.append("\n"+Utilities.getLogTime() + " Server started...");
+            ta_messanges.append("\n" + Utilities.getLogTime() + " Server started...");
             tgl_StartServer.setText("Stop Server");
         } else {
             try {
@@ -457,12 +478,12 @@ public class ServerMainUI extends javax.swing.JFrame {
     }//GEN-LAST:event_tgl_StartServerActionPerformed
 
     private void btn_sendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_sendActionPerformed
-        
+
     }//GEN-LAST:event_btn_sendActionPerformed
 
     private void radio_membersOnlineActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_radio_membersOnlineActionPerformed
         DefaultListModel lm = new DefaultListModel();
-        serverMainBean = ContainerService.getBean(ServerMainBean.class);
+        serverMainBean = ServerMainBean.getInstance();
         if (!serverMainBean.getloggedInMembers().isEmpty()) {
             List<String> loggedInFormatted = ServerMainBean.wrapForUI(serverMainBean.getloggedInMembers());
             for (String s : loggedInFormatted) {
@@ -476,7 +497,7 @@ public class ServerMainUI extends javax.swing.JFrame {
 
     private void radio_membersRegisteredActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_radio_membersRegisteredActionPerformed
         DefaultListModel lm = new DefaultListModel();
-        serverMainBean = ContainerService.getBean(ServerMainBean.class);
+        serverMainBean = ServerMainBean.getInstance();
         if (!serverMainBean.getRegisteredMembers().isEmpty()) {
             List<String> loggedInFormatted = ServerMainBean.wrapForUI(serverMainBean.getRegisteredMembers());
             for (String s : loggedInFormatted) {
@@ -499,26 +520,34 @@ public class ServerMainUI extends javax.swing.JFrame {
     }//GEN-LAST:event_chk_loggingActionPerformed
 
     private void chk_memberListPublicActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chk_memberListPublicActionPerformed
-        if (chk_memberListPublic.isSelected()){
-            FileManager.storeValueInPropertiesFile(SERVERPROPERTIES, "MEMBERLISTISPUBLIC", "true");
-        } else {
-            FileManager.storeValueInPropertiesFile(SERVERPROPERTIES, "MEMBERLISTISPUBLIC", "false");
-        }
+//        if (chk_memberListPublic.isSelected()) {
+//            FileManager.storeValueInPropertiesFile(serverproperties, "MEMBERLISTISPUBLIC", "true");
+//        } else {
+//            FileManager.storeValueInPropertiesFile(serverproperties, "MEMBERLISTISPUBLIC", "false");
+//        }
     }//GEN-LAST:event_chk_memberListPublicActionPerformed
 
     private void chk_saveMessagesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chk_saveMessagesActionPerformed
-        if (chk_saveMessages.isSelected()){
-            FileManager.storeValueInPropertiesFile(SERVERPROPERTIES, "SAVEMESSAGESINBUFFER", "true");
-        }else {
-            FileManager.storeValueInPropertiesFile(SERVERPROPERTIES, "SAVEMESSAGESINBUFFER", "false");
-        }
+//        if (chk_saveMessages.isSelected()) {
+//            FileManager.storeValueInPropertiesFile(serverproperties, "SAVEMESSAGESINBUFFER", "true");
+//        } else {
+//            FileManager.storeValueInPropertiesFile(serverproperties, "SAVEMESSAGESINBUFFER", "false");
+//        }
     }//GEN-LAST:event_chk_saveMessagesActionPerformed
 
     private void spr_daysKeyPairStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spr_daysKeyPairStateChanged
-        if ((int)spr_daysKeyPair.getValue() < 0){
+        if ((int) spr_daysKeyPair.getValue() < 0) {
             spr_daysKeyPair.setValue(0);
         }
     }//GEN-LAST:event_spr_daysKeyPairStateChanged
+
+    private void pwf_registerKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_pwf_registerKeyTyped
+        if (pwf_register.getPassword().length > 0) {
+            tgl_StartServer.setEnabled(true);
+        } else {
+            tgl_StartServer.setEnabled(false);
+        }
+    }//GEN-LAST:event_pwf_registerKeyTyped
 
     /**
      * @param args the command line arguments
@@ -562,12 +591,14 @@ public class ServerMainUI extends javax.swing.JFrame {
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JLabel lb_logo;
+    private javax.swing.JLabel lb_registerPW;
     private javax.swing.JLabel lb_serverIP;
     private javax.swing.JLabel lb_serverMAXCON;
     private javax.swing.JLabel lb_serverPORT;
     private javax.swing.JLabel lb_settingKeypair;
     private javax.swing.JList list_members;
     private javax.swing.JPanel pnl_messanges;
+    private javax.swing.JPasswordField pwf_register;
     private javax.swing.JRadioButton radio_membersOnline;
     private javax.swing.JRadioButton radio_membersRegistered;
     private javax.swing.JSpinner spr_daysKeyPair;

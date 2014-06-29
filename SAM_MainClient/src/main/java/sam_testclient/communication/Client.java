@@ -16,6 +16,7 @@ import sam_testclient.beans.ClientMainBean;
 import sam_testclient.entities.Message;
 import sam_testclient.enums.EnumKindOfMessage;
 import sam_testclient.sources.MessageWrapper;
+import sam_testclient.utilities.Utilities;
 
 /**
  *
@@ -25,7 +26,7 @@ public class Client extends ClientServerCommunicationBase {
 
     private Socket serverSocket;
 
-    private int ownID = 99999;
+    private int ownID = Utilities.generateRandomNumberBetween(9999, 9999999);
 
     private Map<Integer, String> buddyList;
     

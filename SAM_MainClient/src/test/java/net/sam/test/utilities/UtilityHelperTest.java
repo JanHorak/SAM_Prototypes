@@ -23,9 +23,9 @@ public class UtilityHelperTest {
     @Test
     public void generateEmptyBuddyListTest(){
         Map<Integer, String> buddyList = new HashMap<Integer, String>();
-        FileManager.serialize(buddyList, "buddyList.data");
+        FileManager.serialize(buddyList, "resources/buddyList.data");
         buddyList = null;
-        buddyList = (Map<Integer, String>) FileManager.deserialize("buddyList.data");
+        buddyList = (Map<Integer, String>) FileManager.deserialize("resources/buddyList.data");
         System.out.println(buddyList.toString());
     }
     

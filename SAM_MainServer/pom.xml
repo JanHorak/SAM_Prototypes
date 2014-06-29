@@ -190,6 +190,31 @@
     <build>
         <plugins>
             <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.3</version>
+                <executions>
+                    <execution>
+                        <id>copy-dev-resources</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <overwrite>true</overwrite>
+                            <outputDirectory>${basedir}/target/resources</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/resources</directory>
+                                    <excludes>
+                                        <exclude>META-INF/**</exclude>
+                                    </excludes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.3.2</version>
@@ -246,13 +271,13 @@
                         <configuration>
                             <tasks>
                                 <echo>Copying Properties- Files...</echo>
-                                <copy file="properties/server.properties" tofile="${basedir}/target/properties/server.properties"/>
-                                <copy file="properties/log4j.properties" tofile="${basedir}/target/properties/log4j.properties"/>
+                                <copy file="resources/properties/server.properties" tofile="${basedir}/target/resources/properties/server.properties"/>
+                                <copy file="resources/properties/log4j.properties" tofile="${basedir}/target/resources/properties/log4j.properties"/>
                                 <echo>Copying Log- Files...</echo>
-                                <copy file="logs/Server.log" tofile="${basedir}/target/logs/Server.log"/>
+                                <copy file="resources/logs/Server.log" tofile="${basedir}/target/resources/logs/Server.log"/>
                                 <echo>Copying Graphic- Files...</echo>
-                                <copy file="graphics/AndroidLogo.png" tofile="${basedir}/target/graphics/AndroidLogo.png"/>
-                                <copy file="graphics/simpleLogoSAM.png" tofile="${basedir}/target/graphics/simpleLogoSAM.png"/>
+                                <copy file="resources/graphics/AndroidLogo.png" tofile="${basedir}/target/resources/graphics/AndroidLogo.png"/>
+                                <copy file="resources/graphics/simpleLogoSAM.png" tofile="${basedir}/target/resources/graphics/simpleLogoSAM.png"/>
                             </tasks>
                         </configuration>
                     </execution>

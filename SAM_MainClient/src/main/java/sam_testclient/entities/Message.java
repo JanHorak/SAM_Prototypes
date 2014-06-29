@@ -8,7 +8,6 @@ package sam_testclient.entities;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
 import org.apache.log4j.Logger;
 import sam_testclient.enums.EnumKindOfMessage;
 import sam_testclient.exceptions.NotAHandshakeException;
@@ -80,7 +79,7 @@ public class Message extends TransportObject implements Serializable {
         this.setSenderId(this.getReceiverId());
         this.setReceiverId(buffer);
     }
-
+    
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

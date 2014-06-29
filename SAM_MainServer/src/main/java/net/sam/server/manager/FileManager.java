@@ -10,6 +10,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -99,6 +100,7 @@ public class FileManager {
      * @param path
      * @return Properties in path
      */
+    @Deprecated
     public static Properties initProperties(String path){
         initLogger();
         Reader r = null;
@@ -106,6 +108,25 @@ public class FileManager {
         try {
             property = new Properties();
             r = new InputStreamReader(new FileInputStream(new File(path)), "UTF-8");
+            property.load(r);
+        } catch (UnsupportedEncodingException ex) {
+            logger.error(Utilities.getLogTime() + " EncodingError");
+        } catch (FileNotFoundException ex) {
+            logger.error(Utilities.getLogTime() + " FileNotFound");
+        } catch (IOException ex) {
+            logger.error(Utilities.getLogTime() + " IO");
+        }
+        logger.info(Utilities.getLogTime() + " Properties are loaded");
+        return property;
+    }
+    
+    public static Properties initProperties(InputStream stream){
+        initLogger();
+        Reader r = null;
+        Properties property = null;
+        try {
+            property = new Properties();
+            r = new InputStreamReader(stream, "UTF-8");
             property.load(r);
         } catch (UnsupportedEncodingException ex) {
             logger.error(Utilities.getLogTime() + " EncodingError");

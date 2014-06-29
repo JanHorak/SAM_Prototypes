@@ -49,7 +49,7 @@ public class ServerMainThread implements Runnable{
         this.server = server;
         this.area = area;
         this.commList = new ArrayList<>();
-        serverMainBean = ContainerService.getBean(ServerMainBean.class);
+        serverMainBean = ServerMainBean.getInstance();
         logger = Logger.getLogger(ServerMainThread.class);
         sct = new SecurityThread();
         executorPool.execute(sct);
