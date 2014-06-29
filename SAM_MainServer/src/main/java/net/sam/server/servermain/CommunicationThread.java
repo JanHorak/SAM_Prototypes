@@ -13,6 +13,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Level;
 import javax.swing.JTextArea;
 import net.sam.server.beans.ServerMainBean;
@@ -49,7 +50,7 @@ public class CommunicationThread extends Thread {
     public CommunicationThread(Socket socket, JTextArea area) {
         this.socket = socket;
         this.area = area;
-        sb = ContainerService.getBean(ServerMainBean.class);
+        sb = ServerMainBean.getInstance();
         guard_dos = DoSGuard.getInstance();
         logger = Logger.getLogger(CommunicationThread.class);
     }
@@ -213,15 +214,14 @@ public class CommunicationThread extends Thread {
                                 logger.error("Error at closing client-Socket: " + ex);
                             }
                         }
-                        
+
                         /*
                          ====================== STATUS- REQUEST =====================
                          */
-
                         /**
-                         * This defines the behavior of the Status- Requests of the
-                         * Client.
-                         * 
+                         * This defines the behavior of the Status- Requests of
+                         * the Client.
+                         *
                          * Because the request can be send after the first login
                          * (with no buddies) the status can be empty. So it has
                          * to be verified that the content is not empty - in
@@ -312,6 +312,66 @@ public class CommunicationThread extends Thread {
                                 logger.error("Error in received Handhake: " + ex);
                             }
 
+                            if (handshake.getReason() == EnumHandshakeReason.REGISTER) {
+                                logger.info(Utilities.getLogTime() + " Handshake received");
+                                logger.info(m.toString());
+                                // If the status is Start
+                                if (handshake.getStatus() == EnumHandshakeStatus.START) {
+                                    // Check if Password is the same
+                                    if (handshake.getContent().equals(sb.getServerPassword())) {
+                                        // Add client to unsafe- List
+                                        sb.addToUnsafeList(m.getSenderId(), socket);
+                                        // Calculate UUID
+                                        UUID uuid = Utilities.generateRandomUUID();
+
+                                        // Create random Number
+                                        int random = Utilities.generateRandomNumberBetween(5, 100);
+
+                                        // Concat
+                                        String secret = uuid.toString() + " " + String.valueOf(random);
+                                        sb.addToSecretBuffer(m.getSenderId(), secret);
+
+                                        m.setReceiverId(m.getSenderId());
+                                        m.setSenderId(0);
+                                        m.setContent(secret);
+                                        handshake.setContent("");
+
+                                        forwardToUnsafeClient(m);
+                                    }
+                                }
+                                if (handshake.getStatus() == EnumHandshakeStatus.END) {
+                                    boolean success = false;
+                                    String resultFromClient = handshake.getContent();
+                                    String ownResult = Utilities.calculateSecret(sb.getSecretById(m.getSenderId()));
+                                    if (resultFromClient.equals(ownResult)) {
+                                        // Register Member
+                                        Member newMember = new Member();
+                                        newMember.setName(m.getContent());
+                                        newMember.setPassword(m.getOthers());
+                                        newMember.setActive(true);
+                                        DataAccess.registerUser(newMember);
+                                        area.append("\n" + Utilities.getLogTime() + " User registered:");
+                                        area.append("\n" + Utilities.getLogTime() + " " + newMember.toString());
+                                        area.append("\n");
+                                        sb.addMember_registered(newMember);
+
+                                        success = true;
+                                    }
+                                    Message result = new Message(0, m.getSenderId(), EnumKindOfMessage.SYSTEM, Utilities.getLogTime(), "");
+                                    if (success) {
+                                        result.setContent(result.getContent().concat(": Registration succeded"));
+                                    } else {
+                                        result.setContent(result.getContent().concat(": Registration failed"));
+                                    }
+                                    
+                                    forwardToUnsafeClient(result);
+                                    logger.info("Resultmessage is sent");
+                                    // Cleanup
+                                    sb.deleteFromSecretBuffer(m.getSenderId());
+                                    sb.deleteFromUnsafe(m.getSenderId());
+                                }
+                            }
+
                             // Handshake for Buddy-Request
                             if (handshake.getReason() == EnumHandshakeReason.BUDDY_REQUEST) {
                                 logger.info(Utilities.getLogTime() + " Handshake received");
@@ -338,7 +398,7 @@ public class CommunicationThread extends Thread {
                                     }
                                 }
                             }
-                            if (handshake.getReason() == EnumHandshakeReason.FILE_REQUEST){
+                            if (handshake.getReason() == EnumHandshakeReason.FILE_REQUEST) {
                                 logger.info(Utilities.getLogTime() + " Handshake received");
                                 logger.info(m.toString());
                                 // If the status is Start
@@ -425,6 +485,16 @@ public class CommunicationThread extends Thread {
             logger.warn("Member is not online - Save Message in Buffer!");
             DataAccess.saveMessageInBuffer(m);
             logger.debug(Utilities.getLogTime() + " Message is saved in Buffer\n" + m.toString());
+        }
+    }
+
+    private void forwardToUnsafeClient(Message m) {
+        String json = MessageWrapper.createJSON(m);
+        try {
+            writeMessage(sb.returnUnsafeCommucationChannel(m.getReceiverId()),
+                    json);
+        } catch (IOException ex) {
+            logger.error("Cannot get Communicationchannel! " + ex);
         }
     }
 

@@ -105,6 +105,23 @@ public class CommunicationThread extends Thread {
                     } catch (NotAHandshakeException ex) {
                         Logger.getLogger(CommunicationThread.class.getName()).log(Level.SEVERE, null, ex);
                     }
+                    
+                    if (handshake.getReason() == EnumHandshakeReason.REGISTER){
+                        if (handshake.getStatus() == EnumHandshakeStatus.START){
+                            String secret = m.getContent();
+                            String result = Utilities.calculateSecret(secret);
+                            Message message = new Message(this.client.getId(), 0, EnumKindOfMessage.REGISTER, ui.getName(), ui.getPW());
+                            Handshake hs = new Handshake(500, EnumHandshakeStatus.END, EnumHandshakeReason.REGISTER, live, result);
+                            message.setHandshake(hs);
+                            try {
+                                client.writeMessage(MessageWrapper.createJSON(message));
+                            } catch (IOException ex) {
+                                Logger.getLogger(CommunicationThread.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+                    }
+                    
+                    
                     if (handshake.getReason() == EnumHandshakeReason.BUDDY_REQUEST) {
                         if (handshake.getStatus() == EnumHandshakeStatus.START) {
                             area.append(Utilities.getLogTime() + "Server: Buddyrequest received\n");

@@ -11,5 +11,5 @@ package sam_testclient.enums;
  * @author janhorak
  */
 public enum EnumHandshakeReason {
-    BUDDY_REQUEST, FILE_REQUEST
+    BUDDY_REQUEST, FILE_REQUEST, REGISTER
 }

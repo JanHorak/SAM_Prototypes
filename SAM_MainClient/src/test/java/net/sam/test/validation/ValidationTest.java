@@ -5,14 +5,19 @@
  */
 package net.sam.test.validation;
 
-import org.junit.Test;
+import java.io.File;
+import javax.swing.ImageIcon;
 import static org.junit.Assert.*;
+import org.junit.Test;
+import sam_testclient.entities.AvatarImage;
 import sam_testclient.entities.Handshake;
 import sam_testclient.entities.Message;
 import sam_testclient.enums.EnumHandshakeReason;
 import sam_testclient.enums.EnumHandshakeStatus;
 import sam_testclient.enums.EnumKindOfMessage;
 import sam_testclient.sources.ValidationManager;
+import sam_testclient.validations.Avatar;
+
 
 /**
  *
@@ -20,7 +25,7 @@ import sam_testclient.sources.ValidationManager;
  */
 public class ValidationTest {
 
-    public ValidationTest() {
+    public ValidationTest() { 
     }
 
     /**
@@ -46,10 +51,7 @@ public class ValidationTest {
         assertTrue(ValidationManager.returnAmountOfInvalidFields(m5).size() == 3);
 
         // Test for Handshakes
-        
-        // Please note: ValidationTest will print Validationmessage:
-        // One of the HandshakeValues is null!
-        // for *every* error
+
         Handshake hs = new Handshake(0, EnumHandshakeStatus.END, EnumHandshakeReason.FILE_REQUEST, true, "ff");
         m = new Message(0, 1, EnumKindOfMessage.LOGIN, "d", "ddd");
         m.setHandshake(hs);
@@ -83,5 +85,20 @@ public class ValidationTest {
         assertTrue(!ValidationManager.isValid(hs5));
         assertTrue(ValidationManager.returnAmountOfInvalidFields(hs5).size() == 2);
         
+    }
+    
+   
+    
+    @Test
+    public void avatarTest(){
+        AvatarImage avatar;
+        File file = new File("resources/graphics/testImage_buntesBild.png");
+        File file2 = new File("resources/graphics/testImage_shouldFail.png");
+
+        avatar = new AvatarImage(file.getAbsolutePath());
+        assertTrue(ValidationManager.isValid(avatar));
+        
+        avatar = new AvatarImage(file2.getAbsolutePath());
+        assertTrue(!ValidationManager.isValid(avatar));
     }
 }

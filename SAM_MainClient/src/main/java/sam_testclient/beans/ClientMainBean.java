@@ -26,7 +26,7 @@ public class ClientMainBean {
     
     private ClientMainBean(){
         logger = Logger.getLogger(ClientMainBean.class);
-        this.buddyList = (Map<Integer, String>) FileManager.deserialize("buddyList.data");
+        this.buddyList = (Map<Integer, String>) FileManager.deserialize("resources/buddyList.data");
         this.buddy_statusList = new HashMap<Integer, Boolean>();
     }
     

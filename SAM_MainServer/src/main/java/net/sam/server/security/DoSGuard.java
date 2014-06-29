@@ -27,7 +27,7 @@ public class DoSGuard extends Guard {
 
     private DoSGuard() {
         logger = Logger.getLogger(DoSGuard.class);
-        smb = ContainerService.getBean(ServerMainBean.class);
+        smb = ServerMainBean.getInstance();
         this.threatLevelPerSocket = new ConcurrentHashMap<>();
         this.live = true;
     }

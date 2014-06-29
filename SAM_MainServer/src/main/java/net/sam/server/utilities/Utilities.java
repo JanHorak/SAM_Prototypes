@@ -10,6 +10,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.UUID;
 
 /**
  *
@@ -46,5 +47,59 @@ public class Utilities {
     public static String getTime(){
         SimpleDateFormat sm = new SimpleDateFormat("HH:mm");
         return sm.format(new Date()).toString();
+    }
+    
+    /**
+     * Generates a random UUID for the Secret
+     * @return UUID
+     */
+    public static UUID generateRandomUUID(){
+        return UUID.randomUUID();
+    }
+    
+    /**
+     * Generates a random UUID and returns the cleaned String.
+     * Removes all letters and sonder symbols from the UUID
+     * @return cleaned UUID
+     */
+    public static String generateNewCleanedUUID(){
+        return generateRandomUUID().toString().replaceAll("[^\\d.]", "");
+    }
+    
+    /**
+     * Returns a incoming String from letters and sonder symbols.
+     * 
+     * @param uuid (Type String)
+     * @return cleaned String
+     */
+    public static String generateCleanedUUID(String uuid){
+        return uuid.replaceAll("[^\\d.]", "");
+    }
+    
+    /**
+     * Returns a random int in a passed range
+     * @param min
+     * @param max
+     * @return random int in range
+     */
+    public static int generateRandomNumberBetween(int min, int max){
+        return (int)(min + (Math.random() * (max - min)));
+    }
+    
+    /**
+     * Calculates the Secret.
+     * @param secret
+     * @return Result of the calculation
+     */
+    public static String calculateSecret(String secret){
+        String cleaned[] = secret.split(" ");
+        String cleanedUUID = generateCleanedUUID(cleaned[0]);
+        String result = "";
+        String number = cleaned[1];
+        for (int i = 0; i < cleanedUUID.length(); i++) {
+                int c = cleanedUUID.charAt(i);
+                result += String.valueOf(c % Integer.valueOf(number));
+            }
+        return result;
     }
 }

@@ -93,8 +93,31 @@
     <build>
         <plugins>
             <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.3</version>
+                <executions>
+                    <execution>
+                        <id>copy-dev-resources</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <overwrite>true</overwrite>
+                            <outputDirectory>${basedir}/target/resources</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/resources</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
+                <version>2.3</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -138,7 +161,17 @@
                         <configuration>
                             <tasks>
                                 <echo>Copying BuddyList.data...</echo>
-                                <copy file="buddyList.data" tofile="${basedir}/target/buddyList.data"/>
+                                <copy file="resources/buddyList.data" tofile="${basedir}/target/resources/buddyList.data"/>
+                                
+                                <echo>Copying Properties...</echo>
+                                <copy file="resources/properties/client.properties" tofile="${basedir}/target/resources/properties/client.properties"/>
+                                
+                                <echo>Copying Images...</echo>
+                                <copy file="resources/graphics/testImage_buntesBild.png" tofile="${basedir}/target/resources/graphics/testImage_buntesBild.png"/>
+                                <copy file="resources/graphics/testImage_buntesBildII.png" tofile="${basedir}/target/resources/graphics/testImage_buntesBildII.png"/>
+                                <copy file="resources/graphics/testImage_shouldFail.png" tofile="${basedir}/target/resources/graphics/testImage_shouldFail.png"/>
+                                <copy file="resources/graphics/unknown.png" tofile="${basedir}/target/resources/graphics/unknown.png"/>
+                                
                                 <echo>Copying new Testclients...</echo>
                                 <copy todir="${basedir}/target/TestClient1">  
                                     <fileset dir="${basedir}/target/"/>
