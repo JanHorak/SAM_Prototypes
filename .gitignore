@@ -23,7 +23,13 @@ local.properties
 # Eclipse project files
 .classpath
 .project
-/JPA_Prototype/dist/
-/nbproject/
 /build.xml
-/SAM_MainServer/target (copy)/
+
+# NetBeans
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+nbactions.xml
+nb-configuration.xml
