@@ -470,10 +470,6 @@ public class CommunicationThread extends Thread {
      */
     private void forwardMessage(Message m) {
         if (sb.isMemberOnline(m.getReceiverId())) {
-            if (m.getMessageType() == EnumKindOfMessage.MESSAGE) {
-                Member sender = sb.getLoggedInMemberById(m.getSenderId());
-                m.setContent(formatMessage(sender.getName(), m.getContent()));
-            }
             String json = MessageWrapper.createJSON(m);
             try {
                 writeMessage(sb.returnCommnunicationChannel(m.getReceiverId()),
@@ -498,8 +494,8 @@ public class CommunicationThread extends Thread {
         }
     }
 
+    @Deprecated
     private void broadcast(Message m) {
-        m.setContent(formatMessage("BroadCast", m.getContent()));
         for (Socket s : sb.getAllSockets()) {
             try {
                 writeMessage(s, MessageWrapper.createJSON(m));
@@ -510,11 +506,7 @@ public class CommunicationThread extends Thread {
             }
         }
     }
-
-    private String formatMessage(String sender, String content) {
-        return Utilities.getTime() + " " + sender + ": " + content;
-    }
-
+    
     private void sendLoginResponseMessage(Member me) {
         // Get right MemberID
         Message m = new Message(0, me.getUserID(), EnumKindOfMessage.LOGIN_RESPONSE, String.valueOf(me.getUserID()), "");

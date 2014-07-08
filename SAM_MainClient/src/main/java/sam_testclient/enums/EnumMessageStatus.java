@@ -8,8 +8,8 @@ package sam_testclient.enums;
 
 /**
  *
- * @author janhorak
+ * @author Jan
  */
-public enum EnumMemberSettings {
-    
+public enum EnumMessageStatus {
+    SENT, RECEIVED, WAITING
 }

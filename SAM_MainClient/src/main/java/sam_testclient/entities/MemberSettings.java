@@ -39,6 +39,18 @@ public class MemberSettings {
 
     private boolean saveLocaleHistory;
     
+    @NotNull
+    private String histBorder;
+
+    public String getHistBorder() {
+        return histBorder;
+    }
+
+    public void setHistBorder(String histBorder) {
+        this.histBorder = histBorder;
+    }
+    
+    
     public enum RecreationEnum {
         AT_LOGIN, BY_DAYS, AT_SERVER
     }

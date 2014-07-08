@@ -5,7 +5,7 @@
  */
 package net.sam.server.services;
 
-import annotations.FileResource;
+import net.sam.server.annotations.FileResource;
 import java.util.Properties;
 import javax.swing.ImageIcon;
 
