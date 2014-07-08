@@ -485,7 +485,8 @@ public class SettingsFrame extends javax.swing.JInternalFrame {
 
     private void formInternalFrameClosing(javax.swing.event.InternalFrameEvent evt) {//GEN-FIRST:event_formInternalFrameClosing
         FileManager.storeValueInPropertiesFile(CLIENTPROPERTIES, "recreationDays", spn_days.getValue().toString());
-        FileManager.storeValueInPropertiesFile(CLIENTPROPERTIES, "histBorder", spn_KByte.getValue().toString());
+        String borderForSaving = String.valueOf((int)spn_KByte.getValue()*1000);
+        FileManager.storeValueInPropertiesFile(CLIENTPROPERTIES, "histBorder", borderForSaving);
     }//GEN-LAST:event_formInternalFrameClosing
 
     private void chk_allowWebClientsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chk_allowWebClientsActionPerformed
