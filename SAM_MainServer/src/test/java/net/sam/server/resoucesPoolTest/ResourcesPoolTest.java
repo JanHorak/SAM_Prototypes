@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package resoucesPoolTest;
+package net.sam.server.resoucesPoolTest;
 
 import java.util.Properties;
 import javax.swing.ImageIcon;

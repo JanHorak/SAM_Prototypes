@@ -6,11 +6,14 @@
 package sam_testclient.communication;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
@@ -23,6 +26,7 @@ import sam_testclient.enums.EnumHandshakeReason;
 import sam_testclient.enums.EnumHandshakeStatus;
 import sam_testclient.enums.EnumKindOfMessage;
 import sam_testclient.exceptions.NotAHandshakeException;
+import sam_testclient.services.HistoricizationService;
 import sam_testclient.sources.FileManager;
 import sam_testclient.sources.MessageWrapper;
 import sam_testclient.ui.dialogs.BuddyRequestDialog;
@@ -80,6 +84,9 @@ public class CommunicationThread extends Thread {
                 if (m.getMessageType() == EnumKindOfMessage.MESSAGE
                         || m.getMessageType() == EnumKindOfMessage.SYSTEM) {
                     area.append("\n" + m.getContent());
+                    if (cmb.getSettings().isSaveLocaleHistory()){
+                        HistoricizationService.historizeMessage(m, false);
+                    }
                 }
                 if (m.getMessageType() == EnumKindOfMessage.LOGIN_RESPONSE) {
                     client.setId(Integer.decode(m.getContent()));
@@ -131,6 +138,7 @@ public class CommunicationThread extends Thread {
                             // If the message is not coming from server then it is from the buddy
                             if (m.getReceiverId() != 0 && handshake.isAnswer()) {
                                 cmb.getBuddyList().put(m.getSenderId(), handshake.getContent());
+                                client.createBuddyDir(handshake.getContent());
                                 FileManager.serialize(cmb.getBuddyList(), "buddyList.data");
                                 area.append(Utilities.getLogTime() + " " + handshake.getContent() + " is added to buddylist \n");
                                 client.sendStatusRequest();

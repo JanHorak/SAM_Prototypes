@@ -6,7 +6,7 @@
 
 package net.sam.server.exceptions;
 
-import annotations.FileResource;
+import net.sam.server.annotations.FileResource;
 
 /**
  *

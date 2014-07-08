@@ -5,8 +5,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ButtonGroup;
@@ -25,6 +23,7 @@ import sam_testclient.enums.EnumHandshakeReason;
 import sam_testclient.enums.EnumHandshakeStatus;
 import sam_testclient.enums.EnumKindOfMessage;
 import sam_testclient.exceptions.NotAHandshakeException;
+import sam_testclient.services.HistoricizationService;
 import sam_testclient.sources.FileManager;
 import static sam_testclient.sources.FileManager.storeValueInPropertiesFile;
 import sam_testclient.sources.MessageWrapper;
@@ -40,8 +39,8 @@ public class MainUI extends javax.swing.JFrame {
 
     private Client client;
     private ClientMainBean cmb;
-    
-    public String getPW(){
+
+    public String getPW() {
         return this.tf_password.getText();
     }
 
@@ -49,7 +48,7 @@ public class MainUI extends javax.swing.JFrame {
     SettingsFrame sf;
 
     public MainUI() {
-        sf = new SettingsFrame(client, this, jTextField1, jTextArea1);
+        sf = new SettingsFrame(client, this, jTextField1, messageArea);
         this.add(sf);
         initComponents();
 
@@ -63,7 +62,7 @@ public class MainUI extends javax.swing.JFrame {
     }
 
     public void updateAvatar() {
-    lb_avatar.setIcon(new ImageIcon(FileManager.getValueOfPropertyByKey(CLIENTPROPERTIES, "avatar")));
+        lb_avatar.setIcon(new ImageIcon(FileManager.getValueOfPropertyByKey(CLIENTPROPERTIES, "avatar")));
     }
 
     private void prepareUI() {
@@ -82,6 +81,7 @@ public class MainUI extends javax.swing.JFrame {
         m.setSenderId(this.client.getId());
         try {
             cmb.getBuddyList().put(m.getReceiverId(), m.getContent());
+            client.createBuddyDir(m.getContent());
             client.sendStatusRequest();
             client.writeMessage(MessageWrapper.createJSON(m));
         } catch (IOException ex) {
@@ -143,7 +143,7 @@ public class MainUI extends javax.swing.JFrame {
             if (ValidationManager.isValid(avatar)) {
                 storeValueInPropertiesFile(pathOfProperties, "avatar", f.getAbsolutePath());
             } else {
-                jTextArea1.append(Utilities.getLogTime() + "Error: The selected Avatar is not valid\n");
+                messageArea.append(Utilities.getLogTime() + "Error: The selected Avatar is not valid\n");
             }
         }
     }
@@ -177,7 +177,7 @@ public class MainUI extends javax.swing.JFrame {
     }
 
     public JTextArea getArea() {
-        return this.jTextArea1;
+        return this.messageArea;
     }
 
     public JList getBuddyList() {
@@ -209,7 +209,7 @@ public class MainUI extends javax.swing.JFrame {
         jPanel3 = new javax.swing.JPanel();
         jScrollPane3 = new javax.swing.JScrollPane();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTextArea1 = new javax.swing.JTextArea();
+        messageArea = new javax.swing.JTextArea();
         jPanel4 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jTextField1 = new javax.swing.JTextField();
@@ -367,9 +367,9 @@ public class MainUI extends javax.swing.JFrame {
 
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Messages"));
 
-        jTextArea1.setColumns(20);
-        jTextArea1.setRows(5);
-        jScrollPane1.setViewportView(jTextArea1);
+        messageArea.setColumns(20);
+        messageArea.setRows(5);
+        jScrollPane1.setViewportView(messageArea);
 
         jScrollPane3.setViewportView(jScrollPane1);
 
@@ -550,7 +550,7 @@ public class MainUI extends javax.swing.JFrame {
             client.connect();
             prepareUI();
             new CommunicationThread(this.client, this, client.getId()).start();
-            jTextArea1.append(Utilities.getLogTime() + " Try to register...\n");
+            messageArea.append(Utilities.getLogTime() + " Try to register...\n");
         } catch (IOException ex) {
             Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -567,10 +567,17 @@ public class MainUI extends javax.swing.JFrame {
     private void btn_sendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_sendActionPerformed
         int receiverID = client.getIdFromBuddy(list_buddies.getSelectedValue().toString().split(": ")[1]);
         Message m = new Message(client.getId(), receiverID, EnumKindOfMessage.MESSAGE, tf_message.getText(), "");
+        String formattedMessage_forMe = Utilities.getTime() + " " + list_buddies.getSelectedValue().toString().split(": ")[1] + ": " + m.getContent(); // contains Name of otherMember
+        String formattedMessage_forOther = Utilities.getTime() + " " + tf_memberName.getText() + ": " + m.getContent(); // contains my Name
         try {
+            m.setContent(formattedMessage_forOther);
             client.writeMessage(MessageWrapper.createJSON(m));
-            jTextArea1.append("\n" + new SimpleDateFormat("HH:mm").format(new Date()).toString() + " Me: " + m.getContent());
+            messageArea.append("\n" + formattedMessage_forOther);
             tf_message.setText("");
+            if (cmb.getSettings().isSaveLocaleHistory()) {
+                m.setContent(formattedMessage_forMe);
+                HistoricizationService.historizeMessage(m, true);
+            }
         } catch (IOException ex) {
             Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -580,7 +587,7 @@ public class MainUI extends javax.swing.JFrame {
         if (tgl_login.isSelected()) {
             client = new Client();
             try {
-                jTextArea1.append(Utilities.getLogTime() + " Try to login...\n");
+                messageArea.append(Utilities.getLogTime() + " Try to login...\n");
                 client.connect();
                 prepareUI();
                 new CommunicationThread(this.client, this, client.getId()).start();
@@ -612,7 +619,7 @@ public class MainUI extends javax.swing.JFrame {
         message.setHandshake(hs);
         try {
             client.writeMessage(MessageWrapper.createJSON(message));
-            jTextArea1.append(Utilities.getLogTime() + " Buddyrequest sended\n");
+            messageArea.append(Utilities.getLogTime() + " Buddyrequest sended\n");
             jTextField1.setText("");
         } catch (IOException ex) {
             Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
@@ -750,13 +757,13 @@ public class MainUI extends javax.swing.JFrame {
     private javax.swing.JSeparator jSeparator4;
     private javax.swing.JSeparator jSeparator5;
     private javax.swing.JSeparator jSeparator6;
-    public javax.swing.JTextArea jTextArea1;
     private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField jTextField2;
     private javax.swing.JLabel lb_avatar;
     private javax.swing.JLabel lb_name;
     private javax.swing.JLabel lb_password;
     private javax.swing.JList list_buddies;
+    public javax.swing.JTextArea messageArea;
     private javax.swing.JTextField tf_memberName;
     private javax.swing.JTextField tf_message;
     private javax.swing.JPasswordField tf_password;

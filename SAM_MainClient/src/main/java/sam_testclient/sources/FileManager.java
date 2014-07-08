@@ -165,6 +165,7 @@ public class FileManager {
         settings.setValidFor(MemberSettings.ValidFor.valueOf(props.getProperty("validFor")));
         settings.setRecreationDays(Integer.parseInt(props.getProperty("recreationDays")));
         settings.setAvatarPath(props.getProperty("avatar"));
+        settings.setHistBorder(props.getProperty("histBorder"));
         
         if (!ValidationManager.isValid(settings)){
             throw new InvalidSettingsException("Settings are not valid!", "54125");

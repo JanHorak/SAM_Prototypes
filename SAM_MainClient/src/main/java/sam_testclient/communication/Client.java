@@ -5,10 +5,13 @@
  */
 package sam_testclient.communication;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -104,5 +107,21 @@ public class Client extends ClientServerCommunicationBase {
             Logger.getLogger(CommunicationThread.class.getName()).log(Level.SEVERE, null, ex);
         }
 
+    }
+    
+    public void createBuddyDir(String buddyName){
+        String mainDir = "resources/buddies/"+buddyName;
+        String media = mainDir+"/media";
+        File videos = new File(media+"/videos");
+        File images = new File(media+"/images");
+        File history = new File(mainDir+"/history");
+        List<File> folderList = new ArrayList<>();
+        folderList.add(videos);
+        folderList.add(images);
+        folderList.add(history);
+        for (File folder : folderList){
+            folder.mkdirs();
+        }
+        System.out.println("Folders for new Buddy created.");
     }
 }

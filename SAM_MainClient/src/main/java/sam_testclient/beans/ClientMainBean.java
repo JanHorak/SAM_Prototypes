@@ -8,8 +8,11 @@ package sam_testclient.beans;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import org.apache.log4j.Logger;
 import sam_testclient.entities.MediaFile;
+import sam_testclient.entities.MemberSettings;
+import sam_testclient.exceptions.InvalidSettingsException;
 import sam_testclient.sources.FileManager;
 import sam_testclient.utilities.Utilities;
 
@@ -24,10 +27,17 @@ public class ClientMainBean {
     private Map<Integer, Boolean> buddy_statusList;
     private MediaFile lastFile;
     
+    private MemberSettings settings;
+    
     private ClientMainBean(){
         logger = Logger.getLogger(ClientMainBean.class);
         this.buddyList = (Map<Integer, String>) FileManager.deserialize("resources/buddyList.data");
         this.buddy_statusList = new HashMap<Integer, Boolean>();
+        try {
+            this.settings = FileManager.getMemberSettings("resources/properties/client.properties");
+        } catch (InvalidSettingsException ex) {
+            logger.error("Bean wasnt able to load settings");
+        }
     }
     
     /**
@@ -69,7 +79,9 @@ public class ClientMainBean {
         this.lastFile = lastFile;
     }
     
-    
+    public MemberSettings getSettings(){
+        return this.settings;
+    }
     
     
     
