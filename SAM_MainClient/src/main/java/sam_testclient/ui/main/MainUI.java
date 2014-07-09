@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ButtonGroup;
@@ -51,7 +52,6 @@ public class MainUI extends javax.swing.JFrame {
         sf = new SettingsFrame(client, this, jTextField1, messageArea);
         this.add(sf);
         initComponents();
-
         cmb = ClientMainBean.getInstance();
         ButtonGroup bg = new ButtonGroup();
         bg.add(jRadioButton1);
@@ -59,6 +59,11 @@ public class MainUI extends javax.swing.JFrame {
         jRadioButton1.doClick();
         updateAvatar();
         jTextField2.setText(FileManager.getValueOfPropertyByKey(CLIENTPROPERTIES, "announcementName"));
+
+        UIUpdateThread uiThread = new UIUpdateThread(this);
+        uiThread.start();
+
+        initTabPane(cmb.getBuddyList());
     }
 
     public void updateAvatar() {
@@ -70,7 +75,37 @@ public class MainUI extends javax.swing.JFrame {
         tf_password.setEnabled(false);
         btn_send.setEnabled(true);
         btn_register.setEnabled(false);
+    }
 
+    /**
+     * mapps the buddylist to the tabs of the UI
+     *
+     * @param buddyList
+     */
+    public void initTabPane(Map<Integer, String> buddyList) {
+        tab_messages.removeAll();
+        for (String buddyName : buddyList.values()) {
+            JTextArea area = new JTextArea();
+            String content = Utilities.getContentOfLastLogFileByBuddyName(buddyName);
+            area.append(content);
+            tab_messages.addTab(buddyName, area);
+        }
+        tab_messages.addTab("System", messageArea);
+        tab_messages.setSelectedIndex(0);
+    }
+
+    public void distributeMessageToAreas(String content) {
+        String buddyName = content.split(":")[1];
+        buddyName = buddyName.split(" ")[1];
+        int buddyIndex = tab_messages.indexOfTab(buddyName);
+
+        tab_messages.setIconAt(buddyIndex, new ImageIcon("resources/graphics/notice.gif"));
+        Utilities.playSound("resources/sounds/notice.wav");
+        ((JTextArea) tab_messages.getComponentAt(buddyIndex)).append(content);
+    }
+
+    private void addMyMessageToMessageArea(String buddyName, String content) {
+        ((JTextArea) tab_messages.getComponentAt(tab_messages.indexOfTab(buddyName))).append(content);
     }
 
     public void acceptBuddyRequest(Message m) throws NotAHandshakeException {
@@ -81,6 +116,7 @@ public class MainUI extends javax.swing.JFrame {
         m.setSenderId(this.client.getId());
         try {
             cmb.getBuddyList().put(m.getReceiverId(), m.getContent());
+            FileManager.serialize(cmb.getBuddyList(), "resources/buddyList.data");
             client.createBuddyDir(m.getContent());
             client.sendStatusRequest();
             client.writeMessage(MessageWrapper.createJSON(m));
@@ -206,10 +242,6 @@ public class MainUI extends javax.swing.JFrame {
         jRadioButton2 = new javax.swing.JRadioButton();
         jSeparator1 = new javax.swing.JSeparator();
         jButton2 = new javax.swing.JButton();
-        jPanel3 = new javax.swing.JPanel();
-        jScrollPane3 = new javax.swing.JScrollPane();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        messageArea = new javax.swing.JTextArea();
         jPanel4 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jTextField1 = new javax.swing.JTextField();
@@ -226,6 +258,10 @@ public class MainUI extends javax.swing.JFrame {
         jLabel5 = new javax.swing.JLabel();
         jTextField2 = new javax.swing.JTextField();
         jSeparator6 = new javax.swing.JSeparator();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        tab_messages = new javax.swing.JTabbedPane();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        messageArea = new javax.swing.JTextArea();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -255,11 +291,11 @@ public class MainUI extends javax.swing.JFrame {
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 138, Short.MAX_VALUE)
+            .addComponent(jScrollPane2)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+            .addComponent(jScrollPane2)
         );
 
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Register and Login"));
@@ -345,7 +381,7 @@ public class MainUI extends javax.swing.JFrame {
                     .addComponent(jRadioButton2))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 8, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(lb_name)
                     .addComponent(tf_memberName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -363,25 +399,6 @@ public class MainUI extends javax.swing.JFrame {
                     .addComponent(btn_register)
                     .addComponent(jButton2))
                 .addContainerGap())
-        );
-
-        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Messages"));
-
-        messageArea.setColumns(20);
-        messageArea.setRows(5);
-        jScrollPane1.setViewportView(messageArea);
-
-        jScrollPane3.setViewportView(jScrollPane1);
-
-        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
-        jPanel3.setLayout(jPanel3Layout);
-        jPanel3Layout.setHorizontalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane3)
-        );
-        jPanel3Layout.setVerticalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 110, Short.MAX_VALUE)
         );
 
         jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Settings"));
@@ -500,6 +517,23 @@ public class MainUI extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
+        tab_messages.setAutoscrolls(true);
+        tab_messages.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                tab_messagesStateChanged(evt);
+            }
+        });
+
+        jScrollPane1.setAutoscrolls(true);
+
+        messageArea.setColumns(20);
+        messageArea.setRows(5);
+        jScrollPane1.setViewportView(messageArea);
+
+        tab_messages.addTab("System", jScrollPane1);
+
+        jScrollPane3.setViewportView(tab_messages);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -507,16 +541,18 @@ public class MainUI extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                            .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(jScrollPane3)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(tf_message, javax.swing.GroupLayout.PREFERRED_SIZE, 450, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btn_send, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(tf_message, javax.swing.GroupLayout.PREFERRED_SIZE, 450, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(btn_send, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
@@ -532,7 +568,7 @@ public class MainUI extends javax.swing.JFrame {
                             .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 133, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(tf_message, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -567,12 +603,15 @@ public class MainUI extends javax.swing.JFrame {
     private void btn_sendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_sendActionPerformed
         int receiverID = client.getIdFromBuddy(list_buddies.getSelectedValue().toString().split(": ")[1]);
         Message m = new Message(client.getId(), receiverID, EnumKindOfMessage.MESSAGE, tf_message.getText(), "");
-        String formattedMessage_forMe = Utilities.getTime() + " " + list_buddies.getSelectedValue().toString().split(": ")[1] + ": " + m.getContent(); // contains Name of otherMember
-        String formattedMessage_forOther = Utilities.getTime() + " " + tf_memberName.getText() + ": " + m.getContent(); // contains my Name
+        String buddyName = list_buddies.getSelectedValue().toString().split(": ")[1];
+
+        String formattedMessage_forMe = "\n" + Utilities.getTime() + " " + buddyName + ": \t" + m.getContent(); // contains Name of otherMember
+        String formattedMessage_forOther = "\n" + Utilities.getTime() + " " + tf_memberName.getText() + ": \t" + m.getContent(); // contains my Name
+
         try {
             m.setContent(formattedMessage_forOther);
             client.writeMessage(MessageWrapper.createJSON(m));
-            messageArea.append("\n" + formattedMessage_forOther);
+            addMyMessageToMessageArea(buddyName, formattedMessage_forOther);
             tf_message.setText("");
             if (cmb.getSettings().isSaveLocaleHistory()) {
                 m.setContent(formattedMessage_forMe);
@@ -694,6 +733,13 @@ public class MainUI extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jButton2ActionPerformed
 
+    private void tab_messagesStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_tab_messagesStateChanged
+        int index = tab_messages.getSelectedIndex();
+        if (index >= 0) {
+            tab_messages.setIconAt(index, new ImageIcon());
+        }
+    }//GEN-LAST:event_tab_messagesStateChanged
+
     /**
      * @param args the command line arguments
      */
@@ -743,7 +789,6 @@ public class MainUI extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel5;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPasswordField jPasswordField1;
     private javax.swing.JRadioButton jRadioButton1;
@@ -764,7 +809,8 @@ public class MainUI extends javax.swing.JFrame {
     private javax.swing.JLabel lb_password;
     private javax.swing.JList list_buddies;
     public javax.swing.JTextArea messageArea;
-    private javax.swing.JTextField tf_memberName;
+    public javax.swing.JTabbedPane tab_messages;
+    public javax.swing.JTextField tf_memberName;
     private javax.swing.JTextField tf_message;
     private javax.swing.JPasswordField tf_password;
     private javax.swing.JToggleButton tgl_login;

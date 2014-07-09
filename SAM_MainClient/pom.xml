@@ -177,7 +177,13 @@
                                 <copy file="resources/graphics/testImage_buntesBildII.png" tofile="${basedir}/target/resources/graphics/testImage_buntesBildII.png"/>
                                 <copy file="resources/graphics/testImage_shouldFail.png" tofile="${basedir}/target/resources/graphics/testImage_shouldFail.png"/>
                                 <copy file="resources/graphics/unknown.png" tofile="${basedir}/target/resources/graphics/unknown.png"/>
+                                <copy file="resources/graphics/notice.gif" tofile="${basedir}/target/resources/graphics/notice.gif"/>
+                                <copy file="resources/graphics/notice.png" tofile="${basedir}/target/resources/graphics/notice.png"/>
                                 
+                                <echo>Copying Sounds...</echo>
+                                <copy file="resources/sounds/notice.mp3" tofile="${basedir}/target/resources/sounds/notice.mp3"/>
+                                <copy file="resources/sounds/notice.wav" tofile="${basedir}/target/resources/sounds/notice.wav"/>
+
                                 <echo>Copying new Testclients...</echo>
                                 <copy todir="${basedir}/target/TestClient1">  
                                     <fileset dir="${basedir}/target/"/>

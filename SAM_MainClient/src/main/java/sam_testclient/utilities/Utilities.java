@@ -14,6 +14,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.LineNumberReader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -28,6 +29,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 import org.apache.log4j.Logger;
+import sun.audio.AudioPlayer;
+import sun.audio.AudioStream;
 
 /**
  *
@@ -143,7 +146,7 @@ public class Utilities {
 
     /**
      * Compression of a List of Pathes.
-     * 
+     *
      * @param pathOfZip Path of the outcoming Zip- File
      * @param filePathes List of pathes of files
      */
@@ -197,12 +200,12 @@ public class Utilities {
             logger.error("Utilities: generateZip- Cannot close Streams (MainStreams):", ex);
         }
     }
-    
+
     /**
      * Decompression of passed zipfile.
-     * 
+     *
      * @param zipFile
-     * @param pathForUnzip 
+     * @param pathForUnzip
      */
     public static void decompressZip(File zipFile, String pathForUnzip) {
         byte[] buffer = new byte[1024];
@@ -241,10 +244,12 @@ public class Utilities {
 
     /**
      * Writes a passed content to a file at the passed path.
+     *
      * @param path path of File
-     * @param content 
-     * @param append if append is true, the will put the content and the end of the file.
-     * if append is false, it will replace the whole content of the aimed file.
+     * @param content
+     * @param append if append is true, the will put the content and the end of
+     * the file. if append is false, it will replace the whole content of the
+     * aimed file.
      */
     public static void writeContentToFile(String path, String content, boolean append) {
         File file = new File(path);
@@ -273,27 +278,43 @@ public class Utilities {
             java.util.logging.Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     /**
      * Returns the logfile in a list of files
+     *
      * @param folder
      * @param endsWithFilterRegEx
      * @return logfile
      */
-    public static File getlogFileFromFolder(File[] folder, final String endsWithFilterRegEx) {
+    public static String getlogFileFromFolder(File[] folder, final String endsWithFilterRegEx) {
         File result = null;
         for (int i = 0; i < folder.length; i++) {
             File f = folder[i];
             if (f.getAbsolutePath().endsWith("log")) {
                 result = f;
-                break;
+                return result.getAbsolutePath();
             }
         }
-        return result;
+        return "";
+    }
+
+    public static String getContentOfLastLogFileByBuddyName(String buddy) {
+        File[] folder = getFilesOfPath("resources/buddies/" + buddy + "/history");
+        if (folder == null) {
+            return "";
+        }
+        String logfile = getlogFileFromFolder(folder, "log");
+        if (!new File(logfile).exists()) {
+            return "";
+        } else {
+            String content = readSinceLineInFile(9, logfile);
+            return content;
+        }
     }
 
     /**
      * Returns the size of a file
+     *
      * @param path
      * @return size (in Byte)
      */
@@ -303,6 +324,7 @@ public class Utilities {
 
     /**
      * Returns all files in a passed path
+     *
      * @param path
      * @return File- array
      */
@@ -316,6 +338,7 @@ public class Utilities {
 
     /**
      * Returns a specific line in a passed path of file
+     *
      * @param goalLineNumber
      * @param path
      * @return line
@@ -333,7 +356,7 @@ public class Utilities {
             int linecounter = 0;
             int lnum = 0;
             while ((line = lnr.readLine()) != null) {
-                if (linecounter == goalLineNumber){
+                if (linecounter == goalLineNumber) {
                     return line;
                 }
                 linecounter++;
@@ -342,5 +365,55 @@ public class Utilities {
             java.util.logging.Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
+    }
+
+    /**
+     * Returns a specific line in a passed path of file
+     *
+     * @param goalLineNumber
+     * @param path
+     * @return line
+     */
+    public static String readSinceLineInFile(int sinceLineNumber, String path) {
+        File f = new File(path);
+        String result = "";
+        BufferedReader br = null;
+        try {
+            br = new BufferedReader(new FileReader(f));
+        } catch (FileNotFoundException ex) {
+            java.util.logging.Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try (LineNumberReader lnr = new LineNumberReader(br)) {
+            String line = null;
+
+            int linecounter = 0;
+            int lnum = 0;
+            while ((line = lnr.readLine()) != null) {
+                if (linecounter >= sinceLineNumber) {
+                    result += "\n" + line;
+                }
+                linecounter++;
+            }
+        } catch (IOException ex) {
+            java.util.logging.Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return result;
+    }
+
+
+    public static void playSound(String path) {
+        InputStream in = null;
+        try {
+            in = new FileInputStream(path);
+        } catch (FileNotFoundException ex) {
+            java.util.logging.Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        AudioStream audioStream = null;
+        try {
+            audioStream = new AudioStream(in);
+        } catch (IOException ex) {
+            java.util.logging.Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        AudioPlayer.player.start(audioStream);
     }
 }

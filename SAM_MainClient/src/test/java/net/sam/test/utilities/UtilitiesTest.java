@@ -5,7 +5,6 @@
  */
 package net.sam.test.utilities;
 
-import static org.junit.Assert.*;
 import org.junit.Test;
 import sam_testclient.utilities.Utilities;
 

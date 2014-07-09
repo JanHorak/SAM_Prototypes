@@ -8,7 +8,6 @@ package sam_testclient.beans;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
 import org.apache.log4j.Logger;
 import sam_testclient.entities.MediaFile;
 import sam_testclient.entities.MemberSettings;
@@ -32,6 +31,7 @@ public class ClientMainBean {
     private ClientMainBean(){
         logger = Logger.getLogger(ClientMainBean.class);
         this.buddyList = (Map<Integer, String>) FileManager.deserialize("resources/buddyList.data");
+        System.out.println(buddyList.toString());
         this.buddy_statusList = new HashMap<Integer, Boolean>();
         try {
             this.settings = FileManager.getMemberSettings("resources/properties/client.properties");
