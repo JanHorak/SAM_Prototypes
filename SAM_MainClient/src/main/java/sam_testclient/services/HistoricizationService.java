@@ -49,10 +49,10 @@ public abstract class HistoricizationService {
 
         if (folder.length != 0) {
             // get the present logfile (Its is possible that zips are present)
-            File presentLogFile = Utilities.getlogFileFromFolder(folder, ".log");
+            String presentLogFilePath = Utilities.getlogFileFromFolder(folder, ".log");
 
             // Test if Filesize and content will be higher than border
-            long summery1 = Utilities.getSizeOfFileContent(presentLogFile.getAbsolutePath()) + Utilities.getSizeOfFileContent(m.getContent());
+            long summery1 = Utilities.getSizeOfFileContent(presentLogFilePath) + Utilities.getSizeOfFileContent(m.getContent());
             long summery2 = Long.decode(FileManager.getValueOfPropertyByKey("resources/properties/client.properties", "histBorder"));
             if (summery1 >= summery2) {
                 // create new File for this buddy
@@ -60,17 +60,17 @@ public abstract class HistoricizationService {
 
                 // add it to List
                 List<String> fileList = new ArrayList<String>();
-                fileList.add(presentLogFile.getAbsolutePath());
+                fileList.add(presentLogFilePath);
 
                 // compress the old log file
-                Utilities.generateZip(presentLogFile.getAbsolutePath().replaceAll(".log", ".zip"), fileList);
+                Utilities.generateZip(presentLogFilePath.replaceAll(".log", ".zip"), fileList);
 
                 // delete old log file
-                presentLogFile.delete();
+                new File(presentLogFilePath).delete();
                 System.out.println("replaced");
             } else {
                 // add the content of the message to the present log file
-                Utilities.writeContentToFile(presentLogFile.getAbsolutePath(), m.getContent(), true);
+                Utilities.writeContentToFile(presentLogFilePath, m.getContent(), true);
                 System.out.println("added");
             }
         } else {

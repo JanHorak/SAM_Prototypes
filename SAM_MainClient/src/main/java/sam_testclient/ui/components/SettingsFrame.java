@@ -89,7 +89,8 @@ public class SettingsFrame extends javax.swing.JInternalFrame {
 
         chk_saveLocaleHist.setSelected(settings.isSaveLocaleHistory());
         
-        spn_KByte.setValue(Integer.decode(settings.getHistBorder()));
+        int formattedValue = Integer.decode(settings.getHistBorder())*1000;
+        spn_KByte.setValue(formattedValue);
         
         lb_wordamaount.setText("(about "+calcWords((int) spn_KByte.getValue())+" words)");
 
@@ -297,7 +298,7 @@ public class SettingsFrame extends javax.swing.JInternalFrame {
             }
         });
 
-        jLabel3.setText("Histoize at every");
+        jLabel3.setText("Historize at every");
 
         spn_KByte.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {

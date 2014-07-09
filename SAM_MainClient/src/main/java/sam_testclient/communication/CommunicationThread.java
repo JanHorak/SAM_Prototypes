@@ -6,14 +6,9 @@
 package sam_testclient.communication;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.Iterator;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
@@ -81,28 +76,20 @@ public class CommunicationThread extends Thread {
 
                 }
 
-                if (m.getMessageType() == EnumKindOfMessage.MESSAGE
-                        || m.getMessageType() == EnumKindOfMessage.SYSTEM) {
-                    area.append("\n" + m.getContent());
+                if (m.getMessageType() == EnumKindOfMessage.MESSAGE) {
+                    ui.distributeMessageToAreas(m.getContent());
                     if (cmb.getSettings().isSaveLocaleHistory()){
                         HistoricizationService.historizeMessage(m, false);
                     }
                 }
+                if (m.getMessageType() == EnumKindOfMessage.SYSTEM){
+                    area.append("\n" + m.getContent());
+                }
+                
                 if (m.getMessageType() == EnumKindOfMessage.LOGIN_RESPONSE) {
                     client.setId(Integer.decode(m.getContent()));
                     client.sendStatusRequest();
                     area.append(Utilities.getLogTime() + " logged in\n");
-                }
-                if (m.getMessageType() == EnumKindOfMessage.BUDDY_RESPONSE) {
-                    // Buddy founded
-
-                    cmb.getBuddyList().put(Integer.parseInt(m.getContent()), m.getOthers());
-                    // Asking for Status of Buddies
-                    client.sendStatusRequest();
-                    // Save the new buddy
-                    FileManager.serialize(cmb.getBuddyList(), "buddyList.data");
-                    this.client.setBuddyList(cmb.getBuddyList());
-                    area.append("\n" + new SimpleDateFormat("HH:mm").format(new Date()) + " Server: Buddy added!");
                 }
 
                 if (m.getMessageType() == EnumKindOfMessage.HANDSHAKE) {
@@ -117,7 +104,7 @@ public class CommunicationThread extends Thread {
                         if (handshake.getStatus() == EnumHandshakeStatus.START){
                             String secret = m.getContent();
                             String result = Utilities.calculateSecret(secret);
-                            Message message = new Message(this.client.getId(), 0, EnumKindOfMessage.REGISTER, ui.getName(), ui.getPW());
+                            Message message = new Message(this.client.getId(), 0, EnumKindOfMessage.REGISTER, ui.tf_memberName.getText(), ui.getPW());
                             Handshake hs = new Handshake(500, EnumHandshakeStatus.END, EnumHandshakeReason.REGISTER, live, result);
                             message.setHandshake(hs);
                             try {
@@ -139,12 +126,12 @@ public class CommunicationThread extends Thread {
                             if (m.getReceiverId() != 0 && handshake.isAnswer()) {
                                 cmb.getBuddyList().put(m.getSenderId(), handshake.getContent());
                                 client.createBuddyDir(handshake.getContent());
-                                FileManager.serialize(cmb.getBuddyList(), "buddyList.data");
+                                FileManager.serialize(cmb.getBuddyList(), "resources/buddyList.data");
                                 area.append(Utilities.getLogTime() + " " + handshake.getContent() + " is added to buddylist \n");
                                 client.sendStatusRequest();
                             } else {
-//                            // The client doesn't have to be noticed
-//                            area.append(Utilities.getLogTime() + " Server: " + "Client don't want to be your friend :P!\n");
+
+                                
                             }
 
                         }
@@ -176,15 +163,13 @@ public class CommunicationThread extends Thread {
 
                     }
                     if (handshake.getStatus() == EnumHandshakeStatus.WAITING) {
-//                        // The client doesn't have to be noticed
-//                        area.append(Utilities.getLogTime() + " Server: " + m.getContent() + " No answer from the client.\n"
-//                                + "Maybe he is offline. The request will be sent later again.\n");
                     }
                 }
 
                 if (m.getMessageType() == EnumKindOfMessage.STATUS_RESPONSE) {
                     cmb.setBuddy_statusList(Utilities.getOnlineMap(m.getContent()));
                     updateUI();
+                    ui.initTabPane(cmb.getBuddyList());
                 }
 
                 try {
