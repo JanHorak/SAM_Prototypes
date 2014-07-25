@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import sam_testclient.entities.Message;
-import sam_testclient.sources.FileManager;
 import sam_testclient.utilities.Utilities;
 
 /**
@@ -53,7 +52,7 @@ public abstract class HistoricizationService {
 
             // Test if Filesize and content will be higher than border
             long summery1 = Utilities.getSizeOfFileContent(presentLogFilePath) + Utilities.getSizeOfFileContent(m.getContent());
-            long summery2 = Long.decode(FileManager.getValueOfPropertyByKey("resources/properties/client.properties", "histBorder"));
+            long summery2 = Long.decode(ResourcePoolHandler.PropertiesHelper.getValueOfKey("clientProperties", "histBorder"));
             if (summery1 >= summery2) {
                 // create new File for this buddy
                 createNewFile(buddyName, m.getContent(), pathToFolder);

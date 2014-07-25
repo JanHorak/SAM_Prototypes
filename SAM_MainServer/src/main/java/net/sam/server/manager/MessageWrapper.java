@@ -19,8 +19,6 @@ import net.sam.server.enums.EnumHandshakeStatus;
 import net.sam.server.enums.EnumKindOfMessage;
 import net.sam.server.enums.EnumMediaType;
 import net.sam.server.exceptions.NotAHandshakeException;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.codec.binary.StringUtils;
 import org.apache.log4j.Logger;
 
 /**

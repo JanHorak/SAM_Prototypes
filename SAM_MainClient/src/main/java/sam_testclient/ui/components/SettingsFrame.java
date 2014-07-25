@@ -5,6 +5,7 @@
  */
 package sam_testclient.ui.components;
 
+import java.util.Properties;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JTextArea;
@@ -14,6 +15,7 @@ import sam_testclient.beans.ClientMainBean;
 import sam_testclient.communication.Client;
 import sam_testclient.entities.MemberSettings;
 import sam_testclient.exceptions.InvalidSettingsException;
+import sam_testclient.services.ResourcePoolHandler;
 import sam_testclient.sources.FileManager;
 import sam_testclient.ui.main.MainUI;
 import sam_testclient.utilities.Utilities;
@@ -35,8 +37,6 @@ public class SettingsFrame extends javax.swing.JInternalFrame {
     private Logger logger;
 
     private ClientMainBean cmb;
-
-    private final String CLIENTPROPERTIES = "resources/properties/client.properties";
 
     public SettingsFrame(Client client, MainUI ui, JTextField nameField, JTextArea area) {
         initComponents();
@@ -67,7 +67,7 @@ public class SettingsFrame extends javax.swing.JInternalFrame {
     private void prepareUI() {
         MemberSettings settings = null;
         try {
-            settings = FileManager.getMemberSettings(CLIENTPROPERTIES);
+            settings = FileManager.getMemberSettings("clientProperties");
         } catch (InvalidSettingsException ex) {
             logger.error("Validation of Settings are failed: " + ex);
         }
@@ -472,37 +472,37 @@ public class SettingsFrame extends javax.swing.JInternalFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btn_changeAvatarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_changeAvatarActionPerformed
-        ui.changeAvatarAction(MainUI.CLIENTPROPERTIES);
+        ui.changeAvatarAction(ResourcePoolHandler.getPathOfResource("clientProperties"));
         ui.updateAvatar();
     }//GEN-LAST:event_btn_changeAvatarActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         if (!tf_name.getText().isEmpty()) {
-            FileManager.storeValueInPropertiesFile(MainUI.CLIENTPROPERTIES, "announcementName", tf_name.getText());
+            ResourcePoolHandler.PropertiesHelper.setValueInProperties("clientProperties", "announcementName", tf_name.getText());
         } else {
             area.append(Utilities.getLogTime() + "Error: Your name has to be filled (AnnouncementName)!\n");
         }
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void formInternalFrameClosing(javax.swing.event.InternalFrameEvent evt) {//GEN-FIRST:event_formInternalFrameClosing
-        FileManager.storeValueInPropertiesFile(CLIENTPROPERTIES, "recreationDays", spn_days.getValue().toString());
+        ResourcePoolHandler.PropertiesHelper.setValueInProperties("clientProperties", "recreationDays", spn_days.getValue().toString());
         String borderForSaving = String.valueOf((int)spn_KByte.getValue()*1000);
-        FileManager.storeValueInPropertiesFile(CLIENTPROPERTIES, "histBorder", borderForSaving);
+        ResourcePoolHandler.PropertiesHelper.setValueInProperties("clientProperties", "histBorder", borderForSaving);
     }//GEN-LAST:event_formInternalFrameClosing
 
     private void chk_allowWebClientsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chk_allowWebClientsActionPerformed
-        FileManager.storeValueInPropertiesFile(CLIENTPROPERTIES, "allowWebClientRequests", String.valueOf(chk_allowWebClients.isSelected()));
+        ResourcePoolHandler.PropertiesHelper.setValueInProperties("clientProperties", "allowWebClientRequests", String.valueOf(chk_allowWebClients.isSelected()));
     }//GEN-LAST:event_chk_allowWebClientsActionPerformed
 
     private void chk_saveLocaleHistActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chk_saveLocaleHistActionPerformed
-        FileManager.storeValueInPropertiesFile(CLIENTPROPERTIES, "allowWebClientRequests", String.valueOf(chk_allowWebClients.isSelected()));
+        ResourcePoolHandler.PropertiesHelper.setValueInProperties("clientProperties", "allowWebClientRequests", String.valueOf(chk_allowWebClients.isSelected()));
         if (chk_saveLocaleHist.isSelected()){
             jLabel3.setEnabled(true);
             spn_KByte.setEnabled(true);
             jLabel9.setEnabled(true);
             lb_wordamaount.setEnabled(true);
-            spn_KByte.setValue(((int) Integer.decode(FileManager.getValueOfPropertyByKey(CLIENTPROPERTIES, "histBorder")) / 1000));
-        } else {
+            spn_KByte.setValue(((int) Integer.decode(((Properties) ResourcePoolHandler.getResource("clientProperties")).getProperty("histBorder"))/ 1000));
+        } else { 
             jLabel3.setEnabled(false);
             spn_KByte.setEnabled(false);
             jLabel9.setEnabled(false);
@@ -512,37 +512,37 @@ public class SettingsFrame extends javax.swing.JInternalFrame {
     }//GEN-LAST:event_chk_saveLocaleHistActionPerformed
 
     private void rd_atLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rd_atLoginActionPerformed
-        FileManager.storeValueInPropertiesFile(CLIENTPROPERTIES, "recreationType", MemberSettings.RecreationEnum.AT_LOGIN.toString());
+        ResourcePoolHandler.PropertiesHelper.setValueInProperties("clientProperties", "recreationType", MemberSettings.RecreationEnum.AT_LOGIN.toString());
         spn_days.setEnabled(false);
         spn_days.setValue(0);
     }//GEN-LAST:event_rd_atLoginActionPerformed
 
     private void rd_listenToServerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rd_listenToServerActionPerformed
-        FileManager.storeValueInPropertiesFile(CLIENTPROPERTIES, "recreationType", MemberSettings.RecreationEnum.AT_SERVER.toString());
+        ResourcePoolHandler.PropertiesHelper.setValueInProperties("clientProperties", "recreationType", MemberSettings.RecreationEnum.AT_SERVER.toString());
         spn_days.setEnabled(false);
         spn_days.setValue(0);
     }//GEN-LAST:event_rd_listenToServerActionPerformed
 
     private void rd_inDaysActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rd_inDaysActionPerformed
-        FileManager.storeValueInPropertiesFile(CLIENTPROPERTIES, "recreationType", MemberSettings.RecreationEnum.BY_DAYS.toString());
+        ResourcePoolHandler.PropertiesHelper.setValueInProperties("clientProperties", "recreationType", MemberSettings.RecreationEnum.BY_DAYS.toString());
         spn_days.setEnabled(true);
         spn_days.setValue(1);
     }//GEN-LAST:event_rd_inDaysActionPerformed
 
     private void rd_yesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rd_yesActionPerformed
-        FileManager.storeValueInPropertiesFile(CLIENTPROPERTIES, "autodownload", MemberSettings.AutoDownload.YES.toString());
+        ResourcePoolHandler.PropertiesHelper.setValueInProperties("clientProperties", "autodownload", MemberSettings.AutoDownload.YES.toString());
     }//GEN-LAST:event_rd_yesActionPerformed
 
     private void rd_askActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rd_askActionPerformed
-        FileManager.storeValueInPropertiesFile(CLIENTPROPERTIES, "autodownload", MemberSettings.AutoDownload.ASK.toString());
+        ResourcePoolHandler.PropertiesHelper.setValueInProperties("clientProperties", "autodownload", MemberSettings.AutoDownload.ASK.toString());
     }//GEN-LAST:event_rd_askActionPerformed
 
     private void rd_wlanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rd_wlanActionPerformed
-        FileManager.storeValueInPropertiesFile(CLIENTPROPERTIES, "validFor", MemberSettings.ValidFor.WLAN.toString());
+        ResourcePoolHandler.PropertiesHelper.setValueInProperties("clientProperties", "validFor", MemberSettings.ValidFor.WLAN.toString());
     }//GEN-LAST:event_rd_wlanActionPerformed
 
     private void rd_mobileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rd_mobileActionPerformed
-        FileManager.storeValueInPropertiesFile(CLIENTPROPERTIES, "validFor", MemberSettings.ValidFor.MOBILE.toString());
+        ResourcePoolHandler.PropertiesHelper.setValueInProperties("clientProperties", "validFor", MemberSettings.ValidFor.MOBILE.toString());
     }//GEN-LAST:event_rd_mobileActionPerformed
 
     private void spn_daysStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spn_daysStateChanged

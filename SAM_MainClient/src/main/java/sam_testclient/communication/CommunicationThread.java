@@ -9,6 +9,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
@@ -21,7 +22,9 @@ import sam_testclient.enums.EnumHandshakeReason;
 import sam_testclient.enums.EnumHandshakeStatus;
 import sam_testclient.enums.EnumKindOfMessage;
 import sam_testclient.exceptions.NotAHandshakeException;
+import sam_testclient.services.FileSubmitService;
 import sam_testclient.services.HistoricizationService;
+import sam_testclient.services.ResourcePoolHandler;
 import sam_testclient.sources.FileManager;
 import sam_testclient.sources.MessageWrapper;
 import sam_testclient.ui.dialogs.BuddyRequestDialog;
@@ -30,7 +33,7 @@ import sam_testclient.ui.main.MainUI;
 import sam_testclient.utilities.Utilities;
 
 /**
- * CommunitactionThread of the Server. This thread manages the main connections
+ * CommunitactionThread of the Client. This thread manages the main connections
  * and the evaluation of the messages
  *
  * @author janhorak
@@ -52,7 +55,6 @@ public class CommunicationThread extends Thread {
         this.id = id;
         this.list_buddies = ui.getBuddyList();
         cmb = ClientMainBean.getInstance();
-//        c.setBuddyList(cmb.getBuddyList());
     }
 
     /**
@@ -78,18 +80,24 @@ public class CommunicationThread extends Thread {
 
                 if (m.getMessageType() == EnumKindOfMessage.MESSAGE) {
                     ui.distributeMessageToAreas(m.getContent());
-                    if (cmb.getSettings().isSaveLocaleHistory()){
+                    if (cmb.getSettings().isSaveLocaleHistory()) {
                         HistoricizationService.historizeMessage(m, false);
                     }
                 }
-                if (m.getMessageType() == EnumKindOfMessage.SYSTEM){
+                if (m.getMessageType() == EnumKindOfMessage.SYSTEM) {
                     area.append("\n" + m.getContent());
                 }
-                
+
                 if (m.getMessageType() == EnumKindOfMessage.LOGIN_RESPONSE) {
                     client.setId(Integer.decode(m.getContent()));
                     client.sendStatusRequest();
                     area.append(Utilities.getLogTime() + " logged in\n");
+                }
+
+                if (m.getMessageType() == EnumKindOfMessage.FILEPART) {
+                    String[] meta = m.getOthers().split(" ");
+                    System.out.println(meta[3]);
+                    FileSubmitService.addPartToService(meta[3], m);
                 }
 
                 if (m.getMessageType() == EnumKindOfMessage.HANDSHAKE) {
@@ -99,9 +107,9 @@ public class CommunicationThread extends Thread {
                     } catch (NotAHandshakeException ex) {
                         Logger.getLogger(CommunicationThread.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    
-                    if (handshake.getReason() == EnumHandshakeReason.REGISTER){
-                        if (handshake.getStatus() == EnumHandshakeStatus.START){
+
+                    if (handshake.getReason() == EnumHandshakeReason.REGISTER) {
+                        if (handshake.getStatus() == EnumHandshakeStatus.START) {
                             String secret = m.getContent();
                             String result = Utilities.calculateSecret(secret);
                             Message message = new Message(this.client.getId(), 0, EnumKindOfMessage.REGISTER, ui.tf_memberName.getText(), ui.getPW());
@@ -114,8 +122,7 @@ public class CommunicationThread extends Thread {
                             }
                         }
                     }
-                    
-                    
+
                     if (handshake.getReason() == EnumHandshakeReason.BUDDY_REQUEST) {
                         if (handshake.getStatus() == EnumHandshakeStatus.START) {
                             area.append(Utilities.getLogTime() + "Server: Buddyrequest received\n");
@@ -131,7 +138,6 @@ public class CommunicationThread extends Thread {
                                 client.sendStatusRequest();
                             } else {
 
-                                
                             }
 
                         }
@@ -139,22 +145,27 @@ public class CommunicationThread extends Thread {
                     if (handshake.getReason() == EnumHandshakeReason.FILE_REQUEST) {
                         System.out.println("RECEIVED: " + m.toString());
                         if (handshake.getStatus() == EnumHandshakeStatus.START) {
-                            area.append(Utilities.getLogTime() + "Server: Buddyrequest received\n");
+                            area.append(Utilities.getLogTime() + "Server: FileRequest received\n");
                             new FileRequestDialog(ui, m).setVisible(true);
                         }
                         if (handshake.getStatus() == EnumHandshakeStatus.END) {
                             if (handshake.isAnswer() && !m.hasFile()) {
-                                Message me = new Message(handshake, cmb.getLastFile());
-                                me.setSenderId(this.client.getId());
-                                me.setReceiverId(m.getSenderId());
-                                try {
-                                    client.writeMessage(MessageWrapper.createJSON(me));
-                                } catch (IOException ex) {
-                                    Logger.getLogger(CommunicationThread.class.getName()).log(Level.SEVERE, null, ex);
+                                int parts = Integer.decode(ResourcePoolHandler.PropertiesHelper.getValueOfKey("clientProperties", "waitingServiceParts"));
+                                String path = cmb.getLastFile().getFilePath();
+                                String fileName = cmb.getLastFile().getFileName();
+                                ui.prepareFileProgressbar(fileName, String.valueOf(parts));
+                                List<Message> partList = FileSubmitService.createFileMessages(client.getId(), m.getSenderId(), path, fileName, parts, cmb.getLastFile().getId());
+                                for (Message me : partList) {
+                                    try {
+                                        client.writeMessage(MessageWrapper.createJSON(me));
+                                        MainUI.filePartSubmitted();
+                                        sleep(1000);
+                                    } catch (IOException | InterruptedException ex) {
+                                        Logger.getLogger(CommunicationThread.class.getName()).log(Level.SEVERE, null, ex);
+                                    }
                                 }
-                            }
-                            if (handshake.isAnswer() && m.hasFile()) {
-                                ui.showSaveDialog(m);
+                                cmb.setLastFile(null);
+                                MainUI.filePartSubmitEnd();
                             }
                             if (!handshake.isAnswer()) {
                                 area.append(Utilities.getLogTime() + "File-request denied\n");
@@ -201,12 +212,13 @@ public class CommunicationThread extends Thread {
      * @throws IOException
      */
     private String readMessage() throws IOException {
+        int maxSize = Integer.decode(ResourcePoolHandler.PropertiesHelper.getValueOfKey("clientProperties", "messageMaxSize"));
         BufferedReader bufferedReader
                 = new BufferedReader(
                         new InputStreamReader(
                                 this.client.getServerSocket().getInputStream()));
-        char[] buffer = new char[250];
-        int amountTokens = bufferedReader.read(buffer, 0, 250);
+        char[] buffer = new char[maxSize];
+        int amountTokens = bufferedReader.read(buffer, 0, maxSize);
         String message = new String(buffer, 0, amountTokens);
         return message;
     }

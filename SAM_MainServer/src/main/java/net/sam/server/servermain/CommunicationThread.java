@@ -28,7 +28,6 @@ import net.sam.server.exceptions.NotAHandshakeException;
 import net.sam.server.manager.DataAccess;
 import net.sam.server.manager.MessageWrapper;
 import net.sam.server.security.DoSGuard;
-import net.sam.server.services.ContainerService;
 import net.sam.server.utilities.Utilities;
 import org.apache.log4j.Logger;
 
@@ -187,6 +186,10 @@ public class CommunicationThread extends Thread {
                                 }
                             }
 
+                        }
+                        
+                        if (m.getMessageType() == EnumKindOfMessage.FILEPART){
+                            forwardMessage(m);
                         }
 
                         /*
@@ -411,7 +414,7 @@ public class CommunicationThread extends Thread {
                     }
 
                     try {
-                        sleep(500);
+                        sleep(50);
                     } catch (InterruptedException ex) {
                         logger.error(Utilities.getLogTime() + " Thread is interrupted! " + ex);
                     }
@@ -441,8 +444,8 @@ public class CommunicationThread extends Thread {
                 = new BufferedReader(
                         new InputStreamReader(
                                 socket.getInputStream()));
-        char[] buffer = new char[250];
-        int amountTokens = bufferedReader.read(buffer, 0, 250);
+        char[] buffer = new char[1000];
+        int amountTokens = bufferedReader.read(buffer, 0, 1000);
         String message = new String(buffer, 0, amountTokens);
         return message;
     }

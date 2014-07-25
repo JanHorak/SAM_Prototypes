@@ -12,6 +12,7 @@ import org.apache.log4j.Logger;
 import sam_testclient.entities.MediaFile;
 import sam_testclient.entities.MemberSettings;
 import sam_testclient.exceptions.InvalidSettingsException;
+import sam_testclient.services.ResourcePoolHandler;
 import sam_testclient.sources.FileManager;
 import sam_testclient.utilities.Utilities;
 
@@ -34,7 +35,7 @@ public class ClientMainBean {
         System.out.println(buddyList.toString());
         this.buddy_statusList = new HashMap<Integer, Boolean>();
         try {
-            this.settings = FileManager.getMemberSettings("resources/properties/client.properties");
+            this.settings = FileManager.getMemberSettings("clientProperties");
         } catch (InvalidSettingsException ex) {
             logger.error("Bean wasnt able to load settings");
         }

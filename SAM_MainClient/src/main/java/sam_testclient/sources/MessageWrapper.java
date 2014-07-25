@@ -6,8 +6,11 @@
 package sam_testclient.sources;
 
 import java.io.StringReader;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import javax.json.Json;
+import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
@@ -101,11 +104,12 @@ public abstract class MessageWrapper {
     }
 
     private static String createJSONFromMessage(Message m) {
+        System.out.println(m.toString());
         JsonObjectBuilder globalBuilder = Json.createObjectBuilder();
         JsonObjectBuilder messageBuilder = Json.createObjectBuilder();
         JsonObjectBuilder handshakeBuilder = Json.createObjectBuilder();
         JsonObjectBuilder mediaFileBuilder = Json.createObjectBuilder();
-
+        
         messageBuilder.add("senderId", m.getSenderId())
                 .add("receiverId", m.getReceiverId())
                 .add("messageType", m.getMessageType().toString())
@@ -127,7 +131,7 @@ public abstract class MessageWrapper {
                     .add("status", hs.getStatus().toString());
             globalBuilder.add("handshake", handshakeBuilder);
         }
-        
+
         /**
          * Not in use!
          */
@@ -144,15 +148,15 @@ public abstract class MessageWrapper {
 //                    
 //            globalBuilder.add("mediafile", mediaFileBuilder);
 //        }
-
         JsonObject empJsonObject = globalBuilder.build();
         return empJsonObject.toString();
     }
 
     private static Message createMessageFromJSON(String json) {
+
         JsonReader jsonReader = Json.createReader(new StringReader(json));
         JsonObject jsonObject = jsonReader.readObject();
-        
+  
         jsonReader.close();
         JsonObject messageJsonObject = jsonObject.getJsonObject("message");
         Message m = new Message(messageJsonObject.getInt("senderId"),
@@ -172,20 +176,19 @@ public abstract class MessageWrapper {
             hs.setStatus(EnumHandshakeStatus.valueOf(innerJsonObject.getString("status")));
             m.setHandshake(hs);
         }
-        
-        if (m.hasFile()){
-            MediaFile mf = new MediaFile();
-            JsonObject innerJsonObject = jsonObject.getJsonObject("mediafile");
-            
-            mf.setId(Long.decode(innerJsonObject.getString("id")));
-            mf.setFileName(innerJsonObject.getString("name"));
-            mf.setContent(innerJsonObject.getString("content").getBytes());
-            mf.setDescription(innerJsonObject.getString("description"));
-            mf.setType(EnumMediaType.valueOf(innerJsonObject.getString("type")));
-            m.setMediaStorage(mf);
-        }
-        
-        
+
+//        if (m.hasFile()) {
+//            MediaFile mf = new MediaFile();
+//            JsonObject innerJsonObject = jsonObject.getJsonObject("mediafile");
+//
+//            mf.setId(innerJsonObject.getString("id"));
+//            mf.setFileName(innerJsonObject.getString("name"));
+//            mf.setContent(innerJsonObject.getString("content").getBytes());
+//            mf.setDescription(innerJsonObject.getString("description"));
+//            mf.setType(EnumMediaType.valueOf(innerJsonObject.getString("type")));
+//            m.setMediaStorage(mf);
+//        }
+
         return m;
     }
 

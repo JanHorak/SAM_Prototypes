@@ -31,13 +31,6 @@ public class UIUpdateThread extends Thread {
     public void run() {
         logger.info(Utilities.getLogTime()+" UI- updateThread is started...");
         while (true) {
-//            for ( int i = 1; i < ui.tab_messages.getComponentCount(); i++){
-//                if (ui.tab_messages.isEnabledAt(i)){
-//                    if (ui.tab_messages.getIconAt(i) != null){
-//                        ui.tab_messages.setIconAt(i, new ImageIcon());
-//                    }
-//                }
-//            }
             try {
                 sleep(5000);
             } catch (InterruptedException ex) {

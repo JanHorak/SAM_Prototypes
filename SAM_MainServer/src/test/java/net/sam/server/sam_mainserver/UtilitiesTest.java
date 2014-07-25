@@ -34,10 +34,10 @@ public class UtilitiesTest {
 
     @Test
     public void generateRandomNumbers() {
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 100; i++) {
             int number = Utilities.generateRandomNumberBetween(5, 100);
             assertNotNull(number);
-            assertTrue(number > 5);
+            assertTrue(number >= 5);
             assertTrue(number <= 100);
         }
     }
