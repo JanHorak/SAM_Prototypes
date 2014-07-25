@@ -3,35 +3,29 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package sam_testclient.entities;
 
 import java.io.Serializable;
 import sam_testclient.enums.EnumMediaType;
 
-
 /**
  *
  * @author janhorak
  */
-
 public abstract class MediaStorage implements Serializable {
-    
 
-    private Long id;
-    
+    private String id;
 
     private EnumMediaType type;
-    
 
     private String fileName;
-    
+
+    private String filePath;
 
     private String description;
-    
 
     private byte[] content;
-    
+
     private Message message;
 
     public Message getMessage() {
@@ -57,12 +51,12 @@ public abstract class MediaStorage implements Serializable {
     public void setContent(byte[] content) {
         this.content = content;
     }
-    
-    public Long getId() {
+
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -81,5 +75,13 @@ public abstract class MediaStorage implements Serializable {
     public void setType(EnumMediaType type) {
         this.type = type;
     }
-     
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
+
 }

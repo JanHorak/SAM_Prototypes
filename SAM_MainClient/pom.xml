@@ -171,6 +171,7 @@
                                 
                                 <echo>Copying Properties...</echo>
                                 <copy file="resources/properties/client.properties" tofile="${basedir}/target/resources/properties/client.properties"/>
+                                <copy file="resources/properties/log4j.properties" tofile="${basedir}/target/resources/properties/log4j.properties"/>
                                 
                                 <echo>Copying Images...</echo>
                                 <copy file="resources/graphics/testImage_buntesBild.png" tofile="${basedir}/target/resources/graphics/testImage_buntesBild.png"/>
@@ -179,6 +180,8 @@
                                 <copy file="resources/graphics/unknown.png" tofile="${basedir}/target/resources/graphics/unknown.png"/>
                                 <copy file="resources/graphics/notice.gif" tofile="${basedir}/target/resources/graphics/notice.gif"/>
                                 <copy file="resources/graphics/notice.png" tofile="${basedir}/target/resources/graphics/notice.png"/>
+                                <copy file= "resources/graphics/simpleLogoSAM.png" tofile="${basedir}/target/resources/graphics/simpleLogoSAM.png"/>
+                               
                                 
                                 <echo>Copying Sounds...</echo>
                                 <copy file="resources/sounds/notice.mp3" tofile="${basedir}/target/resources/sounds/notice.mp3"/>

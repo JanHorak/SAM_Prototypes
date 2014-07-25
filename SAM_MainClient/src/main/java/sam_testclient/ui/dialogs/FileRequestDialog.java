@@ -27,8 +27,7 @@ public class FileRequestDialog extends javax.swing.JFrame {
         initComponents();
         System.out.println("FileRqeustDIALOG:\n Incoming Message: "+ m.toString());
         this.setTitle("File- Request");
-        initComponents();
-        jLabel1.setText(m.getContent() + " ");
+        jLabel1.setText(m.getOthers() + " ");
         this.ui = ui;
         this.m = m;
     }

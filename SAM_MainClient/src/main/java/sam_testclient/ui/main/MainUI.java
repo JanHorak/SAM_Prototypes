@@ -2,17 +2,19 @@ package sam_testclient.ui.main;
 
 import java.beans.PropertyVetoException;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
+import org.apache.log4j.BasicConfigurator;
 import sam_testclient.beans.ClientMainBean;
 import sam_testclient.communication.Client;
 import sam_testclient.communication.CommunicationThread;
@@ -24,9 +26,11 @@ import sam_testclient.enums.EnumHandshakeReason;
 import sam_testclient.enums.EnumHandshakeStatus;
 import sam_testclient.enums.EnumKindOfMessage;
 import sam_testclient.exceptions.NotAHandshakeException;
+import sam_testclient.services.ClientResoucesPool;
+import sam_testclient.services.FileSubmitService;
 import sam_testclient.services.HistoricizationService;
+import sam_testclient.services.ResourcePoolHandler;
 import sam_testclient.sources.FileManager;
-import static sam_testclient.sources.FileManager.storeValueInPropertiesFile;
 import sam_testclient.sources.MessageWrapper;
 import sam_testclient.sources.ValidationManager;
 import sam_testclient.ui.components.SettingsFrame;
@@ -40,34 +44,42 @@ public class MainUI extends javax.swing.JFrame {
 
     private Client client;
     private ClientMainBean cmb;
+    private static int progressStep = 0;
+    private static int progressBuffer = 0;
 
     public String getPW() {
         return this.tf_password.getText();
     }
 
-    public static final String CLIENTPROPERTIES = "resources/properties/client.properties";
     SettingsFrame sf;
 
     public MainUI() {
+        BasicConfigurator.configure();
+        ResourcePoolHandler.loadFileResources(ClientResoucesPool.class);
         sf = new SettingsFrame(client, this, jTextField1, messageArea);
         this.add(sf);
         initComponents();
+
         cmb = ClientMainBean.getInstance();
         ButtonGroup bg = new ButtonGroup();
         bg.add(jRadioButton1);
         bg.add(jRadioButton2);
         jRadioButton1.doClick();
         updateAvatar();
-        jTextField2.setText(FileManager.getValueOfPropertyByKey(CLIENTPROPERTIES, "announcementName"));
 
-        UIUpdateThread uiThread = new UIUpdateThread(this);
-        uiThread.start();
+        jTextField2.setText(((Properties) ResourcePoolHandler.getResource("clientProperties")).getProperty("announcementName"));
+
+        /*Currently no uiThread needed */
+//        UIUpdateThread uiThread = new UIUpdateThread(this);
+//        uiThread.start();
+        lb_filesubmitPercent.setText("0%");
+        lb_fileLabel_incoming.setText("");
 
         initTabPane(cmb.getBuddyList());
     }
 
     public void updateAvatar() {
-        lb_avatar.setIcon(new ImageIcon(FileManager.getValueOfPropertyByKey(CLIENTPROPERTIES, "avatar")));
+        lb_avatar.setIcon(new ImageIcon(((Properties) ResourcePoolHandler.getResource("clientProperties")).getProperty("avatar")));
     }
 
     private void prepareUI() {
@@ -99,7 +111,7 @@ public class MainUI extends javax.swing.JFrame {
         buddyName = buddyName.split(" ")[1];
         int buddyIndex = tab_messages.indexOfTab(buddyName);
 
-        tab_messages.setIconAt(buddyIndex, new ImageIcon("resources/graphics/notice.gif"));
+        tab_messages.setIconAt(buddyIndex, new ImageIcon(ResourcePoolHandler.getPathOfResource("notice_gif")));
         Utilities.playSound("resources/sounds/notice.wav");
         ((JTextArea) tab_messages.getComponentAt(buddyIndex)).append(content);
     }
@@ -144,12 +156,8 @@ public class MainUI extends javax.swing.JFrame {
 
         m.setReceiverId(m.getSenderId());
         m.setSenderId(this.client.getId());
-        try {
-            client.writeMessage(MessageWrapper.createJSON(m));
-        } catch (IOException ex) {
-            Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
-        }
 
+        this.showSaveDialog(m);
     }
 
     public void denyFileRequest(Message m) throws NotAHandshakeException {
@@ -177,35 +185,70 @@ public class MainUI extends javax.swing.JFrame {
             // Validation
             avatar = new AvatarImage(f.getAbsolutePath());
             if (ValidationManager.isValid(avatar)) {
-                storeValueInPropertiesFile(pathOfProperties, "avatar", f.getAbsolutePath());
+                ResourcePoolHandler.PropertiesHelper.setValueInProperties("clientProperties", "avatar", f.getAbsolutePath());
             } else {
                 messageArea.append(Utilities.getLogTime() + "Error: The selected Avatar is not valid\n");
             }
         }
     }
 
-    @Deprecated
-    public void showSaveDialog(Message m) {
+    /**
+     * Message request = new Message(this.client.getId(),
+     * returnSelectedIDFromBuddy(), EnumKindOfMessage.HANDSHAKE, id_UUID, name);
+     *
+     * @param m
+     */
+    private void showSaveDialog(Message m) {
+
         JFileChooser chooser = new JFileChooser();
+        chooser.setSelectedFile(new File(m.getOthers()));
+        String result = "";
+        String key = m.getContent();
+        String parts = "";
+        try {
+            parts = m.getHandshake().getContent();
+        } catch (NotAHandshakeException ex) {
+            Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
         int returnValue = chooser.showSaveDialog(null);
         if (returnValue == JFileChooser.APPROVE_OPTION) {
-            FileOutputStream fos = null;
-            try {
-                fos = new FileOutputStream(chooser.getSelectedFile() + File.pathSeparator + m.getMediaStorage().getFileName());
-                fos.write(m.getMediaStorage().getContent());
-                fos.close();
-            } catch (FileNotFoundException ex) {
-                Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (IOException ex) {
-                Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
-            } finally {
-                try {
-                    fos.close();
-                } catch (IOException ex) {
-                    Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
+            result = chooser.getSelectedFile().getAbsolutePath();
         }
+        FileSubmitService.startWaitingService(key, result, Integer.decode(parts), Integer.decode(ResourcePoolHandler.PropertiesHelper.getValueOfKey("clientProperties", "waitingServiceTimeout")));
+        try {
+            client.writeMessage(MessageWrapper.createJSON(m));
+        } catch (IOException ex) {
+            Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        prepareFileProgressbar(result, parts);
+    }
+
+    public void prepareFileProgressbar(String fileName, String parts) {
+        jProgressBar1.setValue(0);
+        jProgressBar1.setIndeterminate(true);
+        jProgressBar1.setBorderPainted(true);
+        jProgressBar1.setStringPainted(true);
+        lb_filesubmitPercent.setText("0%");
+        lb_fileLabel_incoming.setText("File: " + new File(fileName).getName() + "...");
+        progressBuffer = 100 / Integer.decode(parts);
+        progressStep = progressBuffer;
+    }
+
+    public static void filePartSubmitted() {
+        jProgressBar1.setIndeterminate(false);
+        jProgressBar1.setValue(progressStep);
+        lb_filesubmitPercent.setText(progressStep + "%");
+        progressStep += progressBuffer;
+    }
+
+    public static void filePartSubmitEnd() {
+        progressBuffer = 0;
+        progressStep = 0;
+        jProgressBar1.setValue(0);
+        lb_filesubmitPercent.setText("0%");
+        lb_fileLabel_incoming.setText("Completed.");
     }
 
     public int returnSelectedIDFromBuddy() {
@@ -258,6 +301,9 @@ public class MainUI extends javax.swing.JFrame {
         jLabel5 = new javax.swing.JLabel();
         jTextField2 = new javax.swing.JTextField();
         jSeparator6 = new javax.swing.JSeparator();
+        jProgressBar1 = new javax.swing.JProgressBar();
+        lb_filesubmitPercent = new javax.swing.JLabel();
+        lb_fileLabel_incoming = new javax.swing.JLabel();
         jScrollPane3 = new javax.swing.JScrollPane();
         tab_messages = new javax.swing.JTabbedPane();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -444,39 +490,59 @@ public class MainUI extends javax.swing.JFrame {
 
         jSeparator6.setOrientation(javax.swing.SwingConstants.VERTICAL);
 
+        lb_filesubmitPercent.setText("#{%}");
+
+        lb_fileLabel_incoming.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        lb_fileLabel_incoming.setText("#{text}");
+
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                    .addComponent(jSeparator4, javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jSeparator3, javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jSeparator2, javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel4Layout.createSequentialGroup()
-                        .addComponent(jLabel4)
-                        .addGap(28, 28, 28)
-                        .addComponent(lb_avatar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel4Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel4Layout.createSequentialGroup()
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jSeparator4, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jSeparator3, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jSeparator2, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jSeparator5, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jTextField2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 188, Short.MAX_VALUE)
                             .addGroup(jPanel4Layout.createSequentialGroup()
-                                .addComponent(jLabel2)
-                                .addGap(18, 18, 18)
-                                .addComponent(btn_sendFile))
+                                .addContainerGap()
+                                .addComponent(lb_fileLabel_incoming, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel4Layout.createSequentialGroup()
+                                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel4Layout.createSequentialGroup()
+                                        .addComponent(jLabel4)
+                                        .addGap(28, 28, 28)
+                                        .addComponent(lb_avatar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addComponent(jLabel5, javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jButton1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 174, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(0, 0, Short.MAX_VALUE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jSeparator6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel4Layout.createSequentialGroup()
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                             .addGroup(jPanel4Layout.createSequentialGroup()
-                                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(jTextField1))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btn_searchFriend))))
-                    .addComponent(jLabel5, javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jButton1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 174, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jSeparator5, javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jTextField2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 188, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jSeparator6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addContainerGap()
+                                .addComponent(jProgressBar1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel4Layout.createSequentialGroup()
+                                .addGap(15, 15, 15)
+                                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(jPanel4Layout.createSequentialGroup()
+                                        .addComponent(jLabel2)
+                                        .addGap(18, 18, 18)
+                                        .addComponent(btn_sendFile))
+                                    .addGroup(jPanel4Layout.createSequentialGroup()
+                                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                            .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                            .addComponent(jTextField1))
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(btn_searchFriend)))))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(lb_filesubmitPercent)))
+                .addContainerGap())
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -505,14 +571,19 @@ public class MainUI extends javax.swing.JFrame {
                             .addComponent(jLabel2)
                             .addComponent(btn_sendFile))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jSeparator4, javax.swing.GroupLayout.PREFERRED_SIZE, 8, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jProgressBar1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(lb_filesubmitPercent))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(lb_fileLabel_incoming)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 10, Short.MAX_VALUE)
+                        .addComponent(jSeparator4, javax.swing.GroupLayout.PREFERRED_SIZE, 8, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(btn_searchFriend))
-                        .addGap(0, 0, Short.MAX_VALUE))
+                            .addComponent(btn_searchFriend)))
                     .addComponent(jSeparator6))
                 .addContainerGap())
         );
@@ -568,7 +639,7 @@ public class MainUI extends javax.swing.JFrame {
                             .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 133, Short.MAX_VALUE)
+                        .addComponent(jScrollPane3)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(tf_message, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -680,24 +751,27 @@ public class MainUI extends javax.swing.JFrame {
         int returnValue = chooser.showOpenDialog(null);
         if (returnValue == JFileChooser.APPROVE_OPTION) {
             File sendFile = chooser.getSelectedFile();
-            byte[] content = FileManager.returnBytesOfFile(sendFile);
-            String name = sendFile.getName();
-
-            MediaFile mf = new MediaFile();
-            mf.setFileName(name);
-            mf.setContent(content);
-            mf.setType(MediaFile.getEnumTypeOfFile(sendFile));
-            mf.setDescription("FileTest");
-            cmb.setLastFile(mf);
-
-            Message request = new Message(this.client.getId(), returnSelectedIDFromBuddy(), EnumKindOfMessage.HANDSHAKE, "", "");
-            Handshake hs = new Handshake(1, EnumHandshakeStatus.START, EnumHandshakeReason.FILE_REQUEST, false, mf.getFileName());
-            request.setHandshake(hs);
-
-            try {
-                this.client.writeMessage(MessageWrapper.createJSON(request));
-            } catch (IOException ex) {
-                Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
+            if (sendFile.length() > Integer.decode(ResourcePoolHandler.PropertiesHelper.getValueOfKey("clientProperties", "fileMaxSize"))) {
+                JOptionPane.showMessageDialog(this, "Filesize is higher or equals 1 MB!", "Error", JOptionPane.WARNING_MESSAGE);
+            } else {
+                String name = sendFile.getName();
+                String id_UUID = Utilities.generateRandomUUID().toString();
+                int parts = Integer.decode(ResourcePoolHandler.PropertiesHelper.getValueOfKey("clientProperties", "waitingServiceParts"));
+                Message request = new Message(this.client.getId(), returnSelectedIDFromBuddy(), EnumKindOfMessage.HANDSHAKE, id_UUID, name);
+                Handshake hs = new Handshake(1, EnumHandshakeStatus.START, EnumHandshakeReason.FILE_REQUEST, false, String.valueOf(parts));
+                request.setHandshake(hs);
+                MediaFile mf = new MediaFile();
+                mf.setId(id_UUID);
+                mf.setFilePath(sendFile.getAbsolutePath());
+                mf.setFileName(name);
+                mf.setType(MediaFile.getEnumTypeOfFile(sendFile));
+                mf.setDescription("FileTest");
+                cmb.setLastFile(mf);
+                try {
+                    this.client.writeMessage(MessageWrapper.createJSON(request));
+                } catch (IOException ex) {
+                    Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         }
         if (returnValue == JFileChooser.CANCEL_OPTION) {
@@ -791,6 +865,7 @@ public class MainUI extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPasswordField jPasswordField1;
+    private static javax.swing.JProgressBar jProgressBar1;
     private javax.swing.JRadioButton jRadioButton1;
     private javax.swing.JRadioButton jRadioButton2;
     private javax.swing.JScrollPane jScrollPane1;
@@ -805,6 +880,8 @@ public class MainUI extends javax.swing.JFrame {
     private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField jTextField2;
     private javax.swing.JLabel lb_avatar;
+    private static javax.swing.JLabel lb_fileLabel_incoming;
+    private static javax.swing.JLabel lb_filesubmitPercent;
     private javax.swing.JLabel lb_name;
     private javax.swing.JLabel lb_password;
     private javax.swing.JList list_buddies;

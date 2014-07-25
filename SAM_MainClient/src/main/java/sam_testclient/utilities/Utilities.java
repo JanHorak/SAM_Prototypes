@@ -400,7 +400,6 @@ public class Utilities {
         return result;
     }
 
-
     public static void playSound(String path) {
         InputStream in = null;
         try {
@@ -416,4 +415,22 @@ public class Utilities {
         }
         AudioPlayer.player.start(audioStream);
     }
+
+    public static byte[] combineBytes(List<byte[]> bytes) {
+        byte[] result;
+        int l = 0;
+        for (byte[] b : bytes) {
+            l += b.length;
+        }
+        result = new byte[l];
+        l = 0;
+        for (byte[] b : bytes) {
+            for (int i = 0; i < b.length; i++) {
+                result[l] = b[i];
+            }
+        }
+
+        return result;
+    }
+
 }

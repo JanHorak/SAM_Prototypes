@@ -10,18 +10,15 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import sam_testclient.entities.MemberSettings;
 import sam_testclient.exceptions.InvalidSettingsException;
+import sam_testclient.services.ResourcePoolHandler;
 import sam_testclient.utilities.Utilities;
 
 /**
@@ -88,30 +85,6 @@ public class FileManager {
         return result;
     }
 
-    public static String getValueOfPropertyByKey(String path, String key) {
-        System.out.println(path + " " + key);
-        return initProperties(path).getProperty(key);
-    }
-
-    /**
-     * Storing the new value at the key in the propertiesfile.
-     *
-     * @param path
-     * @param key
-     * @param value
-     */
-    public static void storeValueInPropertiesFile(String path, String key, String value) {
-        initLogger();
-        Properties props = initProperties(path);
-        value = new String(value.getBytes(), Charset.forName("UTF-8"));
-        props.setProperty(key, value);
-        try {
-            props.store(new FileOutputStream(new File(path)), "");
-        } catch (IOException ex) {
-            logger.error(Utilities.getLogTime() + " Cant storing Data");
-        }
-    }
-
     public static byte[] returnBytesOfFile(File file) {
         try {
             return Files.readAllBytes(file.toPath());
@@ -120,31 +93,7 @@ public class FileManager {
         }
         return null;
     }
-
-    /**
-     * Initializes and returns the properties.
-     *
-     * @param path
-     * @return Properties in path
-     */
-    public static Properties initProperties(String path) {
-        initLogger();
-        Reader r = null;
-        Properties property = null;
-        try {
-            property = new Properties();
-            r = new InputStreamReader(new FileInputStream(new File(path)), "UTF-8");
-            property.load(r);
-        } catch (UnsupportedEncodingException ex) {
-            logger.error(Utilities.getLogTime() + " EncodingError");
-        } catch (FileNotFoundException ex) {
-            logger.error(Utilities.getLogTime() + " FileNotFound");
-        } catch (IOException ex) {
-            logger.error(Utilities.getLogTime() + " IO");
-        }
-        logger.info(Utilities.getLogTime() + " Properties are accessed");
-        return property;
-    }
+    
     
     /**
      * Mapping- method for the settings of the client.
@@ -153,9 +102,9 @@ public class FileManager {
      * @return Settings of a Member
      * @throws InvalidSettingsException
      */
-    public static MemberSettings getMemberSettings(String path) throws InvalidSettingsException{
+    public static MemberSettings getMemberSettings(String fieldName) throws InvalidSettingsException{
         MemberSettings settings = new MemberSettings();
-        Properties props = initProperties(path);
+        Properties props = (Properties) ResourcePoolHandler.getResource(fieldName);
         
         settings.setName(props.getProperty("announcementName"));
         settings.setAllowWebClients(Boolean.valueOf(props.getProperty("allowWebClientRequests")));
