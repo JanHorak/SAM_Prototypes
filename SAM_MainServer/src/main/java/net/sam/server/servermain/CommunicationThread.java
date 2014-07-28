@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -208,8 +209,8 @@ public class CommunicationThread extends Thread {
                             area.append("\n" + Utilities.getLogTime() + " Logoutsignal recieved!");
                             area.append("\n " + "Logged out" + m.getContent());
                             Member me = new Member();
-                            me.setName(m.getContent());
-
+                            me = sb.getLoggedInMemberById(m.getSenderId());
+                            DataAccess.updateLastActionTime(me.getUserID());
                             sb.logoutMember(me);
                             try {
                                 this.socket.close();
@@ -247,7 +248,7 @@ public class CommunicationThread extends Thread {
                             logger.info(Utilities.getLogTime() + " Status Request from User " + m.getSenderId() + " received");
                             if (!m.getContent().isEmpty()) {
                                 String[] requestList = m.getContent().split(" ");
-                                Map< Integer, Boolean> buddy_online_Response = sb.getOnlineStatusOfMemberById(requestList);
+                                Map< Integer, String> buddy_online_Response = sb.getOnlineStatusOfMemberById(requestList);
                                 Message statusResponse = new Message(0, m.getSenderId(), EnumKindOfMessage.STATUS_RESPONSE, buddy_online_Response.toString(), "");
                                 try {
                                     this.writeMessage(sb.returnCommnunicationChannel(m.getSenderId()), MessageWrapper.createJSON(statusResponse));

@@ -55,4 +55,10 @@ public class UtilitiesTest {
 
     }
     
+    @Test
+    public void mapTest(){
+        String incoming = "[3=false HH:mm dd-MM-yyyy, 4=true]";
+        System.out.println(Utilities.getOnlineMap(incoming).toString());
+    }
+    
 }

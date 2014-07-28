@@ -1,5 +1,6 @@
 package net.sam.server.manager;
 
+import java.util.Date;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -125,7 +126,23 @@ public abstract class DataAccess {
         } finally {
             shutDown();
         }
-        
+    }
+    
+    public static void updateLastActionTime(int id){
+        setUp();
+        Member m = new Member();
+        Query q = em.createNamedQuery("Member.findByID").setParameter("id", id);
+        try {
+            m = (Member) q.getSingleResult();
+            System.out.println(m.toString());
+        } catch (NoResultException e) {
+            System.err.println("No User is founded");
+        }
+        m.setLastTimeOnline(new Date());
+        System.out.println(m.toString());
+        em.persist(m);
+        em.getTransaction().commit();
+        shutDown();
     }
     
     /**

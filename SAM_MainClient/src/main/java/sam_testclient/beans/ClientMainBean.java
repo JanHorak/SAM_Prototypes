@@ -24,7 +24,7 @@ public class ClientMainBean {
     
     private static Logger logger;
     private Map<Integer, String> buddyList;
-    private Map<Integer, Boolean> buddy_statusList;
+    private Map<Integer, String> buddy_statusList;
     private MediaFile lastFile;
     
     private MemberSettings settings;
@@ -33,7 +33,7 @@ public class ClientMainBean {
         logger = Logger.getLogger(ClientMainBean.class);
         this.buddyList = (Map<Integer, String>) FileManager.deserialize("resources/buddyList.data");
         System.out.println(buddyList.toString());
-        this.buddy_statusList = new HashMap<Integer, Boolean>();
+        this.buddy_statusList = new HashMap<Integer, String>();
         try {
             this.settings = FileManager.getMemberSettings("clientProperties");
         } catch (InvalidSettingsException ex) {
@@ -63,11 +63,11 @@ public class ClientMainBean {
         this.buddyList = buddyList;
     }
 
-    public Map<Integer, Boolean> getBuddy_statusList() {
+    public Map<Integer, String> getBuddy_statusList() {
         return buddy_statusList;
     }
 
-    public void setBuddy_statusList(Map<Integer, Boolean> buddy_statusList) {
+    public void setBuddy_statusList(Map<Integer, String> buddy_statusList) {
         this.buddy_statusList = buddy_statusList;
     }
 

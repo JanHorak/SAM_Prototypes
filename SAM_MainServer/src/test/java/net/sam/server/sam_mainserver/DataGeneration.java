@@ -9,6 +9,7 @@ package net.sam.server.sam_mainserver;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import javax.persistence.EntityManager;
@@ -45,10 +46,12 @@ public class DataGeneration {
 
         m1.setName("Test1");
         m1.setPassword("sss");
+        m1.setLastTimeOnline(new Date());
         m1.setActive(true);
         
         m2.setName("Test2");
         m2.setPassword("sss");
+        m2.setLastTimeOnline(new Date());
         m2.setActive(true);
         
         em.persist(m1);

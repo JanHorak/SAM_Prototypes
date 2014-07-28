@@ -6,12 +6,14 @@
 package net.sam.server.beans;
 
 import java.net.Socket;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import net.sam.server.entities.Member;
+import net.sam.server.manager.DataAccess;
 import net.sam.server.utilities.Utilities;
 import org.apache.log4j.Logger;
 
@@ -167,24 +169,36 @@ public class ServerMainBean {
         }
         return result;
     }
+    
+    public Member getRegisteredMemberById(int id){
+        for (Member m : getRegisteredMembers()){
+            if (m.getUserID() == id){
+                return m;
+            }
+        }
+        return null;
+    }
 
-    public Map<Integer, Boolean> getOnlineStatusOfMemberById(String[] ids) {
+    public Map<Integer, String> getOnlineStatusOfMemberById(String[] ids) {
         List<Integer> idList = new ArrayList<>();
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm dd-MM-yyyy");
         for (int i = 0; i < ids.length; i++) {
             idList.add(Integer.decode(ids[i]));
         }
 
-        Map<Integer, Boolean> buddy_online_Response = new HashMap<Integer, Boolean>();
+        Map<Integer, String> buddy_online_Response = new HashMap<Integer, String>();
         for (int id : idList) {
             for (Member m : loggedInuserList) {
                 if (m.getUserID() == id) {
-                    buddy_online_Response.put(id, Boolean.TRUE);
+                    buddy_online_Response.put(id, "true");
                 }
             }
         }
         for (int id : idList) {
             if (!buddy_online_Response.containsKey(id)) {
-                buddy_online_Response.put(id, Boolean.FALSE);
+                // if for allowed in membersettings is needed
+                Member m = DataAccess.getMemberById(id);
+                buddy_online_Response.put(id, "false " + sdf.format(m.getLastTimeOnline()));
             }
         }
         return buddy_online_Response;

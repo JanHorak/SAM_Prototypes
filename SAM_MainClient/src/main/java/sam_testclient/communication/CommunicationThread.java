@@ -227,12 +227,20 @@ public class CommunicationThread extends Thread {
     public void updateUI() {
         DefaultListModel lm = new DefaultListModel();
         if (!this.cmb.getBuddyList().isEmpty()) {
-            Iterator it = cmb.getBuddyList().keySet().iterator();
-            while (it.hasNext()) {
-                int number = (int) it.next();
-                System.out.println(number);
-                String status = cmb.getBuddy_statusList().get(number) ? "online" : "offline";
-                lm.addElement(status + ": " + cmb.getBuddyList().get(number));
+            Iterator it_value = cmb.getBuddy_statusList().values().iterator();
+            Iterator it_id = cmb.getBuddy_statusList().keySet().iterator();
+            while (it_value.hasNext()) {
+                String content = (String) it_value.next();
+                String[] contentArray = content.split(" ");
+                String id = String.valueOf(it_id.next());
+                String nameOfBuddy = cmb.getBuddyList().get(Integer.valueOf(id));
+                String active = contentArray[0];
+                String date = "";
+                if (contentArray.length == 3){
+                    date = contentArray[1].concat(" "+contentArray[2]);
+                }
+                String status = Boolean.valueOf(active) ? "online" : "offline. Last seen at " + date;
+                lm.addElement(nameOfBuddy+ ": " + status);
             }
         } else {
             lm.addElement("You have no Buddies!!\nPoor!");
