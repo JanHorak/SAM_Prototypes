@@ -19,6 +19,7 @@ import java.io.LineNumberReader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -72,15 +73,31 @@ public class Utilities {
         return sm.format(new Date());
     }
 
-    public static Map<Integer, Boolean> getOnlineMap(String input) {
-        Map<Integer, Boolean> map = new HashMap<Integer, Boolean>();
+    public static Map<Integer, String> getOnlineMap(String input) {
+        Map<Integer, String> map = new HashMap<Integer, String>();
+        List<String> statusList = new ArrayList<>();
         input = input.substring(1, input.length() - 1);
         String[] cleaned = input.split(", ");
-
-        for (int i = 0; i < cleaned.length; i++) {
-            System.out.println(cleaned[i]);
-            String[] tmpSplit = cleaned[i].split("=");
-            map.put(Integer.parseInt(tmpSplit[0]), Boolean.valueOf(tmpSplit[1]));
+        for (int i = 0; i < cleaned.length; i++){
+            statusList.add(cleaned[i]);
+        }
+        
+        for (String status : statusList){
+            String[] content = status.split(",");
+            String[] availability = content[0].split("=");
+            String id = availability[0];
+            String date = "";
+            String active = availability[1].split(" ")[0];
+            StringBuilder sb = new StringBuilder();
+            if (active.equals("false")){
+                sb.append(availability[1].split(" ")[1]);
+                sb.append(" "+availability[1].split(" ")[2]);
+                date = sb.toString();
+            }
+            System.out.println(id);
+            System.out.println(active);
+            System.out.println(date);
+            map.put(Integer.decode(id), active + " " + date);
         }
         System.out.println(map);
         return map;

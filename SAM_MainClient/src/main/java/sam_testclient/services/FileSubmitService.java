@@ -39,17 +39,39 @@ public class FileSubmitService {
 
     private static Map<String, WaitingService> serviceMap = new HashMap<String, WaitingService>();
 
+    /**
+     * This method starts a {@link WaitingService}.
+     * Additional to the start the {@link FileSubmitService} puts the 
+     * WaitingService to the {@link #serviceMap}.
+     * 
+     * @param id ID of the Service (given by the other client)
+     * @param fileName Name of File
+     * @param parts Parts of the File. The {@link WaitingService} waits for the parts
+     * @param timeOut Timeout for the waiting
+     */
     public static void startWaitingService(String id, String fileName, int parts, int timeOut) {
         WaitingService ws = new WaitingService(id, fileName, parts, timeOut);
         serviceMap.put(id, ws);
         ws.start();
     }
 
+    /**
+     * This method deletes a specific WaitingService by passed ID
+     * @param id 
+     */
     private static synchronized void deleteWaitingService(String id) {
         System.out.println("Service with ID: " + id + " is deleted...");
         serviceMap.remove(id);
     }
 
+    /**
+     * The method manages if a incoming part can be added to the passed serviceID.
+     * 
+     * @param serviceID
+     * @param m
+     * @return true, if the passed message is added. False, if the service
+     * does not exist.
+     */
     public static synchronized boolean addPartToService(String serviceID, Message m) {
         if (!serviceMap.containsKey(serviceID)) {
             System.out.println("No Service with this ID started. Message ignored.");
@@ -62,6 +84,13 @@ public class FileSubmitService {
         }
     }
 
+    /**
+     * This method returns the List of byte- Arrays of the file which is aimed
+     * by the passed path and the parts.
+     * @param path of the file
+     * @param parts of the file are coming back
+     * @return List of byte[]- parts.
+     */
     public static List<byte[]> getPartsOfFile(String path, int parts) {
         List<byte[]> byteList = new ArrayList<>();
 
@@ -108,6 +137,13 @@ public class FileSubmitService {
         return byteList;
     }
 
+    /**
+     * This method collects and combines the parts of byte-Arrays and 
+     * creates a new file at the passed path.
+     * 
+     * @param byteList
+     * @param path 
+     */
     public static void createFile(List<byte[]> byteList, String path) {
         int globalSize = 0;
 
@@ -163,6 +199,18 @@ public class FileSubmitService {
         return result;
     }
 
+    /**
+     * This method creates a List of Messages which contains the byte-array of the file and the
+     * meta- information of the message.
+     * 
+     * @param ownID
+     * @param receiverID
+     * @param filePath
+     * @param fileName
+     * @param amountParts
+     * @param serviceID
+     * @return List of Messages for sending
+     */
     public static List<Message> createFileMessages(int ownID, int receiverID, String filePath, String fileName, int amountParts, String serviceID) {
         List<byte[]> byteList = getPartsOfFile(filePath, amountParts);
         int counter = 0;
@@ -175,6 +223,14 @@ public class FileSubmitService {
         return partList;
     }
 
+    /**
+     * This method creates the Meta- Information for the creation of messages.
+     * @param partID
+     * @param fileName
+     * @param lenOfPart
+     * @param SID
+     * @return Meta- information
+     */
     private static String createCustomInformation(int partID, String fileName, int lenOfPart, String SID) {
         return partID + " " + fileName + " " + lenOfPart + " " + SID;
     }
@@ -236,6 +292,10 @@ public class FileSubmitService {
         return result;
     }
 
+    /**
+     * Protected inner class for the calculation of the distribution.
+     * 
+     */
     protected static class Range {
 
         private int upperLimit;
@@ -273,7 +333,13 @@ public class FileSubmitService {
         }
 
     }
-
+    /**
+     * WaitingService of the clients.
+     * The Service is started with a specific ID and waits for incoming Data
+     * during a defined time.
+     * After all Parts are collected the service creates the file,
+     * else the service stops.
+     */
     protected static class WaitingService extends Thread {
 
         private String name;

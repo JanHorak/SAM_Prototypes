@@ -2,6 +2,7 @@ package net.sam.server.entities;
 
 import java.io.Serializable;
 import java.net.Socket;
+import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -10,6 +11,8 @@ import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 
@@ -43,6 +46,29 @@ public class Member implements Serializable{
     
     @NotNull
     private boolean active;
+    
+    @NotNull
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date lastTimeOnline;
+
+    @Transient
+    private MemberSettings memberSettings;
+
+    public MemberSettings getMemberSettings() {
+        return memberSettings;
+    }
+    
+    public Date getLastTimeOnline() {
+        return lastTimeOnline;
+    }
+
+    public void setLastTimeOnline(Date lastTimeOnline) {
+        this.lastTimeOnline = lastTimeOnline;
+    }
+
+    public void setMemberSettings(MemberSettings memberSettings) {
+        this.memberSettings = memberSettings;
+    }
 
     public int getUserID() {
         return memberID;
