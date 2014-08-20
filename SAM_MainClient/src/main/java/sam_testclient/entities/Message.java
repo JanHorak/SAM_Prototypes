@@ -6,11 +6,19 @@
 package sam_testclient.entities;
 
 import java.io.Serializable;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.logging.Level;
 import org.apache.log4j.Logger;
 import sam_testclient.enums.EnumKindOfMessage;
+import sam_testclient.enums.EnumMessageStatus;
 import sam_testclient.exceptions.NotAHandshakeException;
+import sam_testclient.utilities.Utilities;
 
 /**
  *
@@ -19,11 +27,13 @@ import sam_testclient.exceptions.NotAHandshakeException;
 public class Message extends TransportObject implements Serializable {
 
     private static Logger logger = Logger.getLogger(Message.class);
-    
+
     protected Message() {
     }
 
     public Message(int senderId, int receiverId, EnumKindOfMessage kind, String content, String others) {
+        this.setId(Utilities.generateRandomUUID().toString());
+        this.setMessageStatus(EnumMessageStatus.NA);
         this.setContent(content);
         this.setMessageType(kind);
         this.setReceiverId(receiverId);
@@ -40,6 +50,7 @@ public class Message extends TransportObject implements Serializable {
         this.setTimestamp(new SimpleDateFormat("yyyy-MM-dd' 'HH:mm:ss").format(new Date()));
     }
 
+    private EnumMessageStatus messageStatus;
 
     private Handshake handshake;
 
@@ -56,9 +67,17 @@ public class Message extends TransportObject implements Serializable {
     public boolean isHandshake() {
         return this.getMessageType() == EnumKindOfMessage.HANDSHAKE;
     }
-    
-    public boolean hasFile(){
+
+    public boolean hasFile() {
         return this.mediaStorage != null;
+    }
+
+    public EnumMessageStatus getMessageStatus() {
+        return messageStatus;
+    }
+
+    public void setMessageStatus(EnumMessageStatus messageStatus) {
+        this.messageStatus = messageStatus;
     }
 
     public void setHandshake(Handshake handshake) {
@@ -73,23 +92,26 @@ public class Message extends TransportObject implements Serializable {
     public void setMediaStorage(MediaStorage mediaStorage) {
         this.mediaStorage = mediaStorage;
     }
-    
-    public void interchangeSenderIDAndReceiverID(){
+
+    public void interchangeSenderIDAndReceiverID() {
         int buffer = this.getSenderId();
         this.setSenderId(this.getReceiverId());
         this.setReceiverId(buffer);
     }
-    
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(this.getTimestamp()).append(": ")
+        sb.append("ID: ").append(this.getId())
+                .append(" @ ")
+                .append(this.getTimestamp()).append(": ")
                 .append(this.getSenderId())
                 .append(" to ").append(this.getReceiverId())
                 .append(" Type: ").append(this.getMessageType())
                 .append(" Content: ").append(this.getContent())
                 .append(" Others: ").append(this.getOthers())
-                .append(" Handshake: ").append(this.isHandshake());
+                .append(" Handshake: ").append(this.isHandshake())
+                .append(" Status: ").append(this.getMessageStatus().toString());
         if (this.isHandshake()) {
             Handshake hs = null;
             try {
@@ -105,6 +127,47 @@ public class Message extends TransportObject implements Serializable {
                     .append(" Owner: ").append(hs.getOwner());
         }
         return sb.toString();
+
+    }
+
+    // Java 8 Impr!!
+    public static class CompareMessageByTimeStampHelper implements Comparator<String> {
+
+        private Map<String, Message> messageMap;
+
+        private CompareMessageByTimeStampHelper(HashMap<String, Message> messageMap) {
+            this.messageMap = messageMap;
+        }
+        
+        public CompareMessageByTimeStampHelper(){
+            
+        }
+
+        @Override
+        public int compare(String o1, String o2) {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+
+            String t1 = messageMap.get(o1).getTimestamp();
+            String t2 = messageMap.get(o2).getTimestamp();
+
+            try {
+                if (sdf.parse(t1).after(sdf.parse(t2))) {
+                    return 1;
+                } else {
+                    return -1;
+                }
+            } catch (ParseException ex) {
+                java.util.logging.Logger.getLogger(Message.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            return 0;
+        }
+
+        public TreeMap<String, Message> sortByValue(HashMap<String, Message> map) {
+            Message.CompareMessageByTimeStampHelper vc = new Message.CompareMessageByTimeStampHelper(map);
+            TreeMap<String, Message> sortedMap = new TreeMap<String, Message>(vc);
+            sortedMap.putAll(map);
+            return sortedMap;
+        }
 
     }
 

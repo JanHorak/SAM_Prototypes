@@ -8,14 +8,17 @@ package net.sam.server.entities;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.logging.Level;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.OneToOne;
 import net.sam.server.enums.EnumKindOfMessage;
+import net.sam.server.enums.EnumMessageStatus;
 import net.sam.server.exceptions.NotAHandshakeException;
 import net.sam.server.servermain.ServerMainThread;
+import net.sam.server.utilities.Utilities;
 import org.apache.log4j.Logger;
 
 /**
@@ -31,6 +34,8 @@ public class Message extends TransportObject implements Serializable {
     }
 
     public Message(int senderId, int receiverId, EnumKindOfMessage kind, String content, String others) {
+        this.setId(Utilities.generateRandomUUID().toString());
+        this.setMessageStatus(EnumMessageStatus.NA);
         this.setContent(content);
         this.setMessageType(kind);
         this.setReceiverId(receiverId);
@@ -59,20 +64,23 @@ public class Message extends TransportObject implements Serializable {
      * @param ms
      * @return Cleaned up Message
      */
-    public static Message cleanUpHandshake(Message ms) {
+    public static Message cleanUpMessage(Message ms) {
         Message m = new Message();
-        try {
-            Handshake cleanedUpHs = new Handshake();
-            cleanedUpHs.setId(ms.getHandshake().getId());
-            cleanedUpHs.setAnswer(ms.getHandshake().isAnswer());
-            cleanedUpHs.setReason(ms.getHandshake().getReason());
-            cleanedUpHs.setContent(ms.getHandshake().getContent());
-            cleanedUpHs.setStatus(ms.getHandshake().getStatus());
-            m.setHandshake(cleanedUpHs);
-        } catch (NotAHandshakeException ex) {
-            logger.error("Error in Message-Class: " + ex);
+        if (ms.isHandshake()) {
+            try {
+                Handshake cleanedUpHs = new Handshake();
+                cleanedUpHs.setId(ms.getHandshake().getId());
+                cleanedUpHs.setAnswer(ms.getHandshake().isAnswer());
+                cleanedUpHs.setReason(ms.getHandshake().getReason());
+                cleanedUpHs.setContent(ms.getHandshake().getContent());
+                cleanedUpHs.setStatus(ms.getHandshake().getStatus());
+                m.setHandshake(cleanedUpHs);
+            } catch (NotAHandshakeException ex) {
+                logger.error("Error in Message-Class: " + ex);
+            }
         }
 
+        m.setId(ms.getId());
         m.setContent(ms.getContent());
         m.setMessageType(ms.getMessageType());
         m.setOthers(ms.getOthers());
@@ -80,10 +88,14 @@ public class Message extends TransportObject implements Serializable {
         m.setReceiverId(ms.getReceiverId());
         m.setSenderId(ms.getSenderId());
         m.setTimestamp(ms.getTimestamp());
+        m.setMessageStatus(ms.getMessageStatus());
 
         return m;
 
     }
+
+    @Enumerated(EnumType.STRING)
+    private EnumMessageStatus messageStatus;
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Handshake handshake;
@@ -99,14 +111,21 @@ public class Message extends TransportObject implements Serializable {
         }
     }
 
+    public EnumMessageStatus getMessageStatus() {
+        return messageStatus;
+    }
+
+    public void setMessageStatus(EnumMessageStatus messageStatus) {
+        this.messageStatus = messageStatus;
+    }
+
     public boolean isHandshake() {
         return this.getMessageType() == EnumKindOfMessage.HANDSHAKE;
     }
-    
-    public boolean hasFile(){
+
+    public boolean hasFile() {
         return this.mediaStorage != null;
     }
-
 
     public void setHandshake(Handshake handshake) {
         this.setMessageType(EnumKindOfMessage.HANDSHAKE);
@@ -121,16 +140,28 @@ public class Message extends TransportObject implements Serializable {
         this.mediaStorage = mediaStorage;
     }
 
+    public void updateStatus() {
+        if (this.messageStatus == EnumMessageStatus.NA) {
+            this.messageStatus = EnumMessageStatus.SENT;
+
+        } else if (this.messageStatus == EnumMessageStatus.DELIVERED) {
+            this.messageStatus = EnumMessageStatus.RECEIVED;
+        }
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(this.getTimestamp()).append(": ")
+        sb.append("ID: ").append(this.getId())
+                .append(" @ ")
+                .append(this.getTimestamp()).append(": ")
                 .append(this.getSenderId())
                 .append(" to ").append(this.getReceiverId())
                 .append(" Type: ").append(this.getMessageType())
                 .append(" Content: ").append(this.getContent())
                 .append(" Others: ").append(this.getOthers())
-                .append(" Handshake: ").append(this.isHandshake());
+                .append(" Handshake: ").append(this.isHandshake())
+                .append(" Status: ").append(this.getMessageStatus().toString());
         if (this.isHandshake()) {
             Handshake hs = null;
             try {
@@ -146,6 +177,7 @@ public class Message extends TransportObject implements Serializable {
                     .append(" Owner: ").append(hs.getOwner());
         }
         return sb.toString();
+
     }
 
 }

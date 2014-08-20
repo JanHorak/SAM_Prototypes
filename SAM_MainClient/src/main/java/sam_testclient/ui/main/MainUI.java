@@ -9,7 +9,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
-import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -25,6 +24,7 @@ import sam_testclient.entities.Message;
 import sam_testclient.enums.EnumHandshakeReason;
 import sam_testclient.enums.EnumHandshakeStatus;
 import sam_testclient.enums.EnumKindOfMessage;
+import sam_testclient.enums.EnumMessageStatus;
 import sam_testclient.exceptions.NotAHandshakeException;
 import sam_testclient.services.ClientResoucesPool;
 import sam_testclient.services.FileSubmitService;
@@ -34,6 +34,7 @@ import sam_testclient.sources.FileManager;
 import sam_testclient.sources.MessageWrapper;
 import sam_testclient.sources.ValidationManager;
 import sam_testclient.ui.components.SettingsFrame;
+import sam_testclient.ui.components.StatusFrame;
 import sam_testclient.utilities.Utilities;
 
 /**
@@ -51,16 +52,21 @@ public class MainUI extends javax.swing.JFrame {
         return this.tf_password.getText();
     }
 
-    SettingsFrame sf;
+    private SettingsFrame sf;
+
+    private StatusFrame statusFrame;
 
     public MainUI() {
         BasicConfigurator.configure();
         ResourcePoolHandler.loadFileResources(ClientResoucesPool.class);
         sf = new SettingsFrame(client, this, jTextField1, messageArea);
+        statusFrame = new StatusFrame();
         this.add(sf);
+        this.add(statusFrame);
         initComponents();
 
         cmb = ClientMainBean.getInstance();
+        HistoricizationService.loadCurrentHistoryInMemory();
         ButtonGroup bg = new ButtonGroup();
         bg.add(jRadioButton1);
         bg.add(jRadioButton2);
@@ -98,21 +104,33 @@ public class MainUI extends javax.swing.JFrame {
         tab_messages.removeAll();
         for (String buddyName : buddyList.values()) {
             JTextArea area = new JTextArea();
-            String content = Utilities.getContentOfLastLogFileByBuddyName(buddyName);
-            area.append(content);
+            if (HistoricizationService.isHistoryPresent(buddyName)) {
+                String content = HistoricizationService.getContentFromHistMessagesByName(buddyName);
+                area.append(content);
+            } else {
+                area.append("You are friends now");
+            }
             tab_messages.addTab(buddyName, area);
         }
         tab_messages.addTab("System", messageArea);
         tab_messages.setSelectedIndex(0);
     }
 
-    public void distributeMessageToAreas(String content) {
+    public void distributeMessageToAreas(Message m) {
+        String content = m.getContent();
         String buddyName = content.split(":")[1];
         buddyName = buddyName.split(" ")[1];
         int buddyIndex = tab_messages.indexOfTab(buddyName);
+        if (tab_messages.getSelectedIndex() != buddyIndex) {
+            cmb.addMessageToUnreadList(buddyIndex, m);
+            tab_messages.setIconAt(buddyIndex, new ImageIcon(ResourcePoolHandler.getPathOfResource("notice_gif")));
+            Utilities.playSound("resources/sounds/notice.wav");
+        } else {
+            CommunicationThread.fireStatusMessage(m, EnumMessageStatus.READ);
+            m.setMessageStatus(EnumMessageStatus.READ);
 
-        tab_messages.setIconAt(buddyIndex, new ImageIcon(ResourcePoolHandler.getPathOfResource("notice_gif")));
-        Utilities.playSound("resources/sounds/notice.wav");
+        }
+
         ((JTextArea) tab_messages.getComponentAt(buddyIndex)).append(content);
     }
 
@@ -132,6 +150,7 @@ public class MainUI extends javax.swing.JFrame {
             client.createBuddyDir(m.getContent());
             client.sendStatusRequest();
             client.writeMessage(MessageWrapper.createJSON(m));
+            HistoricizationService.createEmptyHistFile(m.getContent());
         } catch (IOException ex) {
             Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -252,7 +271,7 @@ public class MainUI extends javax.swing.JFrame {
     }
 
     public int returnSelectedIDFromBuddy() {
-        return client.getIdFromBuddy(list_buddies.getSelectedValue().toString().split(": ")[1]);
+        return client.getIdFromBuddy(list_buddies.getSelectedValue().toString().split(": ")[0]);
     }
 
     public JTextArea getArea() {
@@ -308,6 +327,8 @@ public class MainUI extends javax.swing.JFrame {
         tab_messages = new javax.swing.JTabbedPane();
         jScrollPane1 = new javax.swing.JScrollPane();
         messageArea = new javax.swing.JTextArea();
+        jButton3 = new javax.swing.JButton();
+        jButton4 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -597,6 +618,7 @@ public class MainUI extends javax.swing.JFrame {
 
         jScrollPane1.setAutoscrolls(true);
 
+        messageArea.setEditable(false);
         messageArea.setColumns(20);
         messageArea.setRows(5);
         jScrollPane1.setViewportView(messageArea);
@@ -605,6 +627,15 @@ public class MainUI extends javax.swing.JFrame {
 
         jScrollPane3.setViewportView(tab_messages);
 
+        jButton3.setText("Smileys");
+
+        jButton4.setText("Status");
+        jButton4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton4ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -612,16 +643,19 @@ public class MainUI extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(tf_message, javax.swing.GroupLayout.PREFERRED_SIZE, 574, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(btn_send, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                         .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                        .addComponent(tf_message, javax.swing.GroupLayout.PREFERRED_SIZE, 451, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButton3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btn_send, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButton4)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
@@ -641,7 +675,9 @@ public class MainUI extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(tf_message, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(btn_send))))
+                            .addComponent(btn_send)
+                            .addComponent(jButton3)
+                            .addComponent(jButton4))))
                 .addContainerGap())
         );
 
@@ -670,25 +706,32 @@ public class MainUI extends javax.swing.JFrame {
     }//GEN-LAST:event_btn_registerActionPerformed
 
     private void btn_sendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_sendActionPerformed
-        int receiverID = client.getIdFromBuddy(list_buddies.getSelectedValue().toString().split(": ")[1]);
+        int receiverID = client.getIdFromBuddy(list_buddies.getSelectedValue().toString().split(": ")[0]);
         Message m = new Message(client.getId(), receiverID, EnumKindOfMessage.MESSAGE, tf_message.getText(), "");
-        String buddyName = list_buddies.getSelectedValue().toString().split(": ")[1];
+
+        String buddyName = list_buddies.getSelectedValue().toString().split(": ")[0];
 
         String formattedMessage_forMe = "\n" + Utilities.getTime() + " " + buddyName + ": \t" + m.getContent(); // contains Name of otherMember
         String formattedMessage_forOther = "\n" + Utilities.getTime() + " " + tf_memberName.getText() + ": \t" + m.getContent(); // contains my Name
 
         try {
             m.setContent(formattedMessage_forOther);
+            m.setMessageStatus(EnumMessageStatus.SENT);
             client.writeMessage(MessageWrapper.createJSON(m));
             addMyMessageToMessageArea(buddyName, formattedMessage_forOther);
             tf_message.setText("");
-            if (cmb.getSettings().isSaveLocaleHistory()) {
-                m.setContent(formattedMessage_forMe);
-                HistoricizationService.historizeMessage(m, true);
-            }
+
         } catch (IOException ex) {
             Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
         }
+        m.setContent(formattedMessage_forMe);
+        cmb.initMessageStatus(m, buddyName);
+
+        if (cmb.getSettings().isSaveLocaleHistory()) {
+            m.setContent(formattedMessage_forMe);
+            HistoricizationService.addMessageToCurrentHistory(m, true);
+        }
+
     }//GEN-LAST:event_btn_sendActionPerformed
 
     private void tgl_loginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tgl_loginActionPerformed
@@ -807,10 +850,32 @@ public class MainUI extends javax.swing.JFrame {
 
     private void tab_messagesStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_tab_messagesStateChanged
         int index = tab_messages.getSelectedIndex();
+        cmb = ClientMainBean.getInstance();
         if (index >= 0) {
-            tab_messages.setIconAt(index, new ImageIcon());
+            if (!cmb.getUnreadMessagesAtTabMap().isEmpty()) {
+                if (cmb.getUnreadMessagesAtTabMap().containsKey(index)) {
+                    for (Message me : cmb.getUnreadMessagesAtTabMap().get(index)) {
+                        CommunicationThread.fireStatusMessage(me, EnumMessageStatus.READ);
+
+                        me.setMessageStatus(EnumMessageStatus.READ);
+                        cmb.updateMessageStatus(me);
+                    }
+                    cmb.removeMessagesFromUnreadList(index);
+                }
+                tab_messages.setIconAt(index, new ImageIcon());
+            }
         }
     }//GEN-LAST:event_tab_messagesStateChanged
+
+    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+        statusFrame.reloadMessages();
+        statusFrame.setVisible(true);
+        try {
+            statusFrame.setSelected(true);
+        } catch (PropertyVetoException ex) {
+            Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jButton4ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -854,6 +919,8 @@ public class MainUI extends javax.swing.JFrame {
     private javax.swing.JButton btn_sendFile;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
+    private javax.swing.JButton jButton3;
+    private javax.swing.JButton jButton4;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;

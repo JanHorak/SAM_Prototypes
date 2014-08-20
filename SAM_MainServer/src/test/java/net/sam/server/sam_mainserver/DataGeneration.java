@@ -43,6 +43,7 @@ public class DataGeneration {
         em.getTransaction().begin();
         Member m1 = new Member();
         Member m2 = new Member();
+        Member m3 = new Member();
 
         m1.setName("Test1");
         m1.setPassword("sss");
@@ -54,8 +55,14 @@ public class DataGeneration {
         m2.setLastTimeOnline(new Date());
         m2.setActive(true);
         
+        m3.setName("Test3");
+        m3.setPassword("sss");
+        m3.setLastTimeOnline(new Date());
+        m3.setActive(true);
+        
         em.persist(m1);
         em.persist(m2);
+        em.persist(m3);
         em.getTransaction().commit();
         
     }

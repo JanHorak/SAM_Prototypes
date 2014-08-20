@@ -6,24 +6,18 @@
 package sam_testclient.sources;
 
 import java.io.StringReader;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import javax.json.Json;
-import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.codec.binary.StringUtils;
 import org.apache.log4j.Logger;
 import sam_testclient.entities.Handshake;
-import sam_testclient.entities.MediaFile;
 import sam_testclient.entities.Message;
 import sam_testclient.enums.EnumHandshakeReason;
 import sam_testclient.enums.EnumHandshakeStatus;
 import sam_testclient.enums.EnumKindOfMessage;
-import sam_testclient.enums.EnumMediaType;
+import sam_testclient.enums.EnumMessageStatus;
 import sam_testclient.exceptions.NotAHandshakeException;
 
 /**
@@ -36,7 +30,7 @@ public abstract class MessageWrapper {
     public static String createJSON(Message message) {
         Logger logger = Logger.getLogger(MessageWrapper.class);
         Handshake hs = null;
-        System.out.println(message.toString());
+        logger.debug("Incoming Message: \n" + message.toString());
         if (message.isHandshake()) {
             try {
                 hs = message.getHandshake();
@@ -66,10 +60,10 @@ public abstract class MessageWrapper {
 
     public static Message JSON2Message(String json) {
         Logger logger = Logger.getLogger(MessageWrapper.class);
-        System.out.println(json);
+        logger.debug("Incoming String: \n" + json);
         Message incoming = create(json);
         Handshake hs = null;
-
+        
         if (incoming.isHandshake()) {
             try {
                 hs = incoming.getHandshake();
@@ -99,8 +93,12 @@ public abstract class MessageWrapper {
     }
 
     private static String returnError(Message message) {
+        String errors = "";
+        for (String err : ValidationManager.returnAmountOfInvalidFields(message)){
+            errors += err + " ";
+        }
         return "MessageWrapper: ValidationError of the Message\n"
-                + message.toString();
+                + message.toString()+ errors;
     }
 
     private static String createJSONFromMessage(Message m) {
@@ -110,9 +108,11 @@ public abstract class MessageWrapper {
         JsonObjectBuilder handshakeBuilder = Json.createObjectBuilder();
         JsonObjectBuilder mediaFileBuilder = Json.createObjectBuilder();
         
-        messageBuilder.add("senderId", m.getSenderId())
+        messageBuilder.add("id", m.getId())
+                .add("senderId", m.getSenderId())
                 .add("receiverId", m.getReceiverId())
                 .add("messageType", m.getMessageType().toString())
+                .add("status", m.getMessageStatus().toString())
                 .add("content", m.getContent())
                 .add("others", m.getOthers());
         globalBuilder.add("message", messageBuilder);
@@ -132,22 +132,6 @@ public abstract class MessageWrapper {
             globalBuilder.add("handshake", handshakeBuilder);
         }
 
-        /**
-         * Not in use!
-         */
-//        if (m.hasFile()){
-//            MediaFile mf = (MediaFile) m.getMediaStorage();
-//            StringBuilder sb = new StringBuilder();
-//            sb.append("data:image/png;base64,");
-//            sb.append(StringUtils.newStringUtf8(Base64.encodeBase64(mf.getContent(), false)));
-//            mediaFileBuilder.add("id", mf.getId())
-//                    .add("name", mf.getFileName())
-//                    .add("content", sb.toString())
-//                    .add("description", mf.getDescription())
-//                    .add("type", mf.getType().toString());
-//                    
-//            globalBuilder.add("mediafile", mediaFileBuilder);
-//        }
         JsonObject empJsonObject = globalBuilder.build();
         return empJsonObject.toString();
     }
@@ -164,7 +148,9 @@ public abstract class MessageWrapper {
                 EnumKindOfMessage.valueOf(messageJsonObject.getString("messageType")),
                 messageJsonObject.getString("content"),
                 messageJsonObject.getString("others"));
-
+        m.setId(messageJsonObject.getString("id"));
+        m.setMessageStatus(EnumMessageStatus.valueOf(messageJsonObject.getString("status")));
+        
         if (m.isHandshake()) {
             Handshake hs = new Handshake();
             JsonObject innerJsonObject = jsonObject.getJsonObject("handshake");
@@ -176,19 +162,7 @@ public abstract class MessageWrapper {
             hs.setStatus(EnumHandshakeStatus.valueOf(innerJsonObject.getString("status")));
             m.setHandshake(hs);
         }
-
-//        if (m.hasFile()) {
-//            MediaFile mf = new MediaFile();
-//            JsonObject innerJsonObject = jsonObject.getJsonObject("mediafile");
-//
-//            mf.setId(innerJsonObject.getString("id"));
-//            mf.setFileName(innerJsonObject.getString("name"));
-//            mf.setContent(innerJsonObject.getString("content").getBytes());
-//            mf.setDescription(innerJsonObject.getString("description"));
-//            mf.setType(EnumMediaType.valueOf(innerJsonObject.getString("type")));
-//            m.setMediaStorage(mf);
-//        }
-
+        
         return m;
     }
 

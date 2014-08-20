@@ -37,7 +37,7 @@ import sun.audio.AudioStream;
  *
  * @author janhorak
  */
-public class Utilities {
+public abstract class Utilities {
 
     private static Logger logger = Logger.getLogger(Utilities.class);
 
@@ -167,7 +167,7 @@ public class Utilities {
      * @param pathOfZip Path of the outcoming Zip- File
      * @param filePathes List of pathes of files
      */
-    public static void generateZip(String pathOfZip, List<String> filePathes) {
+    public static void generateZip(String pathOfZip, List<File> filePathes) {
         FileOutputStream fos = null;
         try {
             fos = new FileOutputStream(pathOfZip);
@@ -176,9 +176,8 @@ public class Utilities {
         }
         ZipOutputStream zos = new ZipOutputStream(fos);
 
-        for (String filePath : filePathes) {
-            File file = new File(filePath);
-            ZipEntry ze = new ZipEntry(file.getName());
+        for (File filePath : filePathes) {
+            ZipEntry ze = new ZipEntry(filePath.getName());
             try {
                 zos.putNextEntry(ze);
             } catch (IOException ex) {
@@ -186,9 +185,9 @@ public class Utilities {
             }
             FileInputStream fis = null;
             try {
-                fis = new FileInputStream(file.getAbsoluteFile());
+                fis = new FileInputStream(filePath.getAbsoluteFile());
             } catch (FileNotFoundException ex) {
-                logger.error("Utilities: generateZip- File not found: " + file, ex);
+                logger.error("Utilities: generateZip- File not found: " + filePath, ex);
             }
             byte[] buffer = new byte[2048];
             int len;
@@ -303,24 +302,36 @@ public class Utilities {
      * @param endsWithFilterRegEx
      * @return logfile
      */
-    public static String getlogFileFromFolder(File[] folder, final String endsWithFilterRegEx) {
+    public static String getFilesFromFolder(File[] folder, final String endsWithFilterRegEx) {
         File result = null;
         for (int i = 0; i < folder.length; i++) {
             File f = folder[i];
-            if (f.getAbsolutePath().endsWith("log")) {
+            if (f.getAbsolutePath().endsWith(endsWithFilterRegEx)) {
                 result = f;
                 return result.getAbsolutePath();
             }
         }
         return "";
     }
+    
+    public static List<File> getFilesFromFolder(String path, final String endsWithFilterRegEx){
+        File[] fileList = new File(path).listFiles();
+        List<File> result = new ArrayList<>();
+        for (int i = 0; i < fileList.length; i++) {
+            File f = fileList[i];
+            if (f.getAbsolutePath().endsWith(endsWithFilterRegEx)) {
+                result.add(f);
+            }
+        }
+        return result;
+    }
 
-    public static String getContentOfLastLogFileByBuddyName(String buddy) {
+    public static String getContentOfLastLogFileByBuddyName(String buddy, final String endsWithFilerRegEx) {
         File[] folder = getFilesOfPath("resources/buddies/" + buddy + "/history");
         if (folder == null) {
             return "";
         }
-        String logfile = getlogFileFromFolder(folder, "log");
+        String logfile = getFilesFromFolder(folder, endsWithFilerRegEx);
         if (!new File(logfile).exists()) {
             return "";
         } else {
