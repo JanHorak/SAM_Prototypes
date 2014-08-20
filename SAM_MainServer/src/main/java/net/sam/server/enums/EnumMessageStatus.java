@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package sam_testclient.enums;
+package net.sam.server.enums;
 
 /**
  *

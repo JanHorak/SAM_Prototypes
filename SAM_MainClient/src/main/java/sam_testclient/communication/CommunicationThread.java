@@ -21,6 +21,7 @@ import sam_testclient.entities.Message;
 import sam_testclient.enums.EnumHandshakeReason;
 import sam_testclient.enums.EnumHandshakeStatus;
 import sam_testclient.enums.EnumKindOfMessage;
+import sam_testclient.enums.EnumMessageStatus;
 import sam_testclient.exceptions.NotAHandshakeException;
 import sam_testclient.services.FileSubmitService;
 import sam_testclient.services.HistoricizationService;
@@ -43,7 +44,7 @@ public class CommunicationThread extends Thread {
     private boolean live = true;
     private final JTextArea area;
     private int id;
-    private Client client;
+    private static Client client;
     private JList list_buddies;
     private MainUI ui;
     private ClientMainBean cmb;
@@ -79,11 +80,29 @@ public class CommunicationThread extends Thread {
                 }
 
                 if (m.getMessageType() == EnumKindOfMessage.MESSAGE) {
-                    ui.distributeMessageToAreas(m.getContent());
+
+                    // Received- Message back to sender
+                    fireStatusMessage(m, EnumMessageStatus.RECEIVED);
+                    m.setMessageStatus(EnumMessageStatus.RECEIVED);
+                    
+                    // Updateing the status
+                    cmb.updateMessageStatus(m);
+                    
+                    
+                    // UI (ReadMessage- Handling)
+                    ui.distributeMessageToAreas(m);
+
+                    // Hist
                     if (cmb.getSettings().isSaveLocaleHistory()) {
-                        HistoricizationService.historizeMessage(m, false);
+                        HistoricizationService.addMessageToCurrentHistory(m, false);
                     }
+                    
                 }
+                                
+                if (m.getMessageType() == EnumKindOfMessage.MESSAGE_STATUS) {
+                    cmb.updateMessageStatus(m);
+                }
+
                 if (m.getMessageType() == EnumKindOfMessage.SYSTEM) {
                     area.append("\n" + m.getContent());
                 }
@@ -133,6 +152,7 @@ public class CommunicationThread extends Thread {
                             if (m.getReceiverId() != 0 && handshake.isAnswer()) {
                                 cmb.getBuddyList().put(m.getSenderId(), handshake.getContent());
                                 client.createBuddyDir(handshake.getContent());
+                                HistoricizationService.createEmptyHistFile(handshake.getContent());
                                 FileManager.serialize(cmb.getBuddyList(), "resources/buddyList.data");
                                 area.append(Utilities.getLogTime() + " " + handshake.getContent() + " is added to buddylist \n");
                                 client.sendStatusRequest();
@@ -236,15 +256,27 @@ public class CommunicationThread extends Thread {
                 String nameOfBuddy = cmb.getBuddyList().get(Integer.valueOf(id));
                 String active = contentArray[0];
                 String date = "";
-                if (contentArray.length == 3){
-                    date = contentArray[1].concat(" "+contentArray[2]);
+                if (contentArray.length == 3) {
+                    date = contentArray[1].concat(" " + contentArray[2]);
                 }
                 String status = Boolean.valueOf(active) ? "online" : "offline. Last seen at " + date;
-                lm.addElement(nameOfBuddy+ ": " + status);
+                lm.addElement(nameOfBuddy + ": " + status);
             }
         } else {
             lm.addElement("You have no Buddies!!\nPoor!");
         }
         this.list_buddies.setModel(lm);
+    }
+
+    public static void fireStatusMessage(Message m, EnumMessageStatus status) {
+        Message buffer = new Message(m.getSenderId(), m.getReceiverId(), EnumKindOfMessage.MESSAGE_STATUS, m.getId(), "");
+        buffer.setMessageStatus(status);
+        buffer.setReceiverId(buffer.getSenderId());
+        buffer.setSenderId(client.getId());
+        try {
+            client.writeMessage(MessageWrapper.createJSON(buffer));
+        } catch (IOException ex) {
+            java.util.logging.Logger.getLogger(CommunicationThread.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }

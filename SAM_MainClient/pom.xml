@@ -196,6 +196,11 @@
                                         <exclude name="**/TestClient1/**"/>
                                     </fileset>
                                 </copy> 
+                                <copy todir="${basedir}/target/TestClient3">  
+                                    <fileset dir="${basedir}/target/">
+                                        <exclude name="**/TestClient1/**"/>
+                                    </fileset>
+                                </copy> 
                             </tasks>
                         </configuration>
                     </execution>

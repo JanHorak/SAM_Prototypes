@@ -31,8 +31,8 @@ import net.sam.server.enums.EnumKindOfMessage;
 public abstract class TransportObject implements Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
+    @NotNull
+    private String id;
 
     @Enumerated(EnumType.STRING)
     @NotNull
@@ -101,11 +101,11 @@ public abstract class TransportObject implements Serializable {
         this.timestamp = timestamp;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

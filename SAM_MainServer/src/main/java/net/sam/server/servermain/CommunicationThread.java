@@ -25,6 +25,7 @@ import net.sam.server.entities.MessageBuffer;
 import net.sam.server.enums.EnumHandshakeReason;
 import net.sam.server.enums.EnumHandshakeStatus;
 import net.sam.server.enums.EnumKindOfMessage;
+import net.sam.server.enums.EnumMessageStatus;
 import net.sam.server.exceptions.NotAHandshakeException;
 import net.sam.server.manager.DataAccess;
 import net.sam.server.manager.MessageWrapper;
@@ -103,6 +104,7 @@ public class CommunicationThread extends Thread {
                                 newMember.setName(m.getContent());
                                 newMember.setPassword(m.getOthers());
                                 newMember.setActive(true);
+                                newMember.setLastTimeOnline(new Date());
                                 System.out.println(m.toString());
                                 logger.info(Utilities.getLogTime() + " New Member registered");
                                 logger.info(Utilities.getLogTime() + " " + newMember.toString());
@@ -156,10 +158,8 @@ public class CommunicationThread extends Thread {
                                     if (!messageBufferList.isEmpty()) {
                                         for (MessageBuffer mw : messageBufferList) {
                                             Message message = mw.getMessage();
-
-                                            if (message.isHandshake()) {
-                                                message = Message.cleanUpHandshake(message);
-                                            }
+                                            System.out.println(message.toString());
+                                            message = Message.cleanUpMessage(message);
                                             logger.debug("Message from Buffer for User " + m.getSenderId() + ": " + message.toString());
                                             forwardMessage(message);
                                         }
@@ -188,8 +188,12 @@ public class CommunicationThread extends Thread {
                             }
 
                         }
-                        
-                        if (m.getMessageType() == EnumKindOfMessage.FILEPART){
+
+                        if (m.getMessageType() == EnumKindOfMessage.FILEPART) {
+                            forwardMessage(m);
+                        }
+
+                        if (m.getMessageType() == EnumKindOfMessage.MESSAGE_STATUS) {
                             forwardMessage(m);
                         }
 
@@ -281,6 +285,7 @@ public class CommunicationThread extends Thread {
                         if (m.getMessageType() == EnumKindOfMessage.MESSAGE) {
                             logger.info(Utilities.getLogTime() + " Message received");
                             // 0 indicates message to server
+                            fireStatusMessage(m, EnumMessageStatus.RECEIVED);
                             if (m.getReceiverId() == 0) {
                                 area.append(m.getContent());
                             } else {
@@ -353,6 +358,7 @@ public class CommunicationThread extends Thread {
                                         newMember.setName(m.getContent());
                                         newMember.setPassword(m.getOthers());
                                         newMember.setActive(true);
+                                        newMember.setLastTimeOnline(new Date());
                                         DataAccess.registerUser(newMember);
                                         area.append("\n" + Utilities.getLogTime() + " User registered:");
                                         area.append("\n" + Utilities.getLogTime() + " " + newMember.toString());
@@ -367,7 +373,7 @@ public class CommunicationThread extends Thread {
                                     } else {
                                         result.setContent(result.getContent().concat(": Registration failed"));
                                     }
-                                    
+
                                     forwardToUnsafeClient(result);
                                     logger.info("Resultmessage is sent");
                                     // Cleanup
@@ -474,15 +480,27 @@ public class CommunicationThread extends Thread {
      */
     private void forwardMessage(Message m) {
         if (sb.isMemberOnline(m.getReceiverId())) {
-            String json = MessageWrapper.createJSON(m);
+            // Fireing respones for the types
+            if (m.getMessageType() == EnumKindOfMessage.MESSAGE) {
+                m.setMessageStatus(EnumMessageStatus.DELIVERED);
+                fireStatusMessage(m, EnumMessageStatus.DELIVERED);
+            }
+
             try {
                 writeMessage(sb.returnCommnunicationChannel(m.getReceiverId()),
-                        json);
+                        MessageWrapper.createJSON(m));
+                System.out.println(m.toString());
+                System.out.println("--------FIRED");
             } catch (IOException ex) {
                 logger.error("Cannot get Communicationchannel! " + ex);
             }
+
         } else {
             logger.warn("Member is not online - Save Message in Buffer!");
+            if (m.getMessageType() == EnumKindOfMessage.MESSAGE) {
+                fireStatusMessage(m, EnumMessageStatus.WAITING);
+            }
+
             DataAccess.saveMessageInBuffer(m);
             logger.debug(Utilities.getLogTime() + " Message is saved in Buffer\n" + m.toString());
         }
@@ -510,7 +528,7 @@ public class CommunicationThread extends Thread {
             }
         }
     }
-    
+
     private void sendLoginResponseMessage(Member me) {
         // Get right MemberID
         Message m = new Message(0, me.getUserID(), EnumKindOfMessage.LOGIN_RESPONSE, String.valueOf(me.getUserID()), "");
@@ -522,4 +540,20 @@ public class CommunicationThread extends Thread {
         }
     }
 
+    private void fireStatusMessage(Message m, EnumMessageStatus status) {
+        Message buffer = new Message(m.getSenderId(), m.getReceiverId(), EnumKindOfMessage.MESSAGE_STATUS, m.getId(), "");
+        buffer.setMessageStatus(status);
+        buffer.setReceiverId(buffer.getSenderId());
+        buffer.setSenderId(0);
+        if (sb.isMemberOnline(buffer.getReceiverId())) {
+            try {
+                writeMessage(sb.returnCommnunicationChannel(buffer.getReceiverId()), MessageWrapper.createJSON(buffer));
+            } catch (IOException ex) {
+                java.util.logging.Logger.getLogger(CommunicationThread.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } else {
+            DataAccess.saveMessageInBuffer(buffer);
+        }
+
+    }
 }

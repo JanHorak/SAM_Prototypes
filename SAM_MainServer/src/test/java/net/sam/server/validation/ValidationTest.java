@@ -35,7 +35,8 @@ public class ValidationTest {
         Message m3 = new Message(1, 5, EnumKindOfMessage.LOGIN, null, "additional bla");
         Message m4 = new Message(1, 2, null, "bla", "additional bla");
         Message m5 = new Message(1, 5, null, null, null);
-
+        Message m6 = new Message(1, 4, EnumKindOfMessage.LOGIN, "", "");
+        
         assertTrue(ValidationManager.isValid(m));
         assertTrue(!ValidationManager.isValid(m2));
         assertTrue(ValidationManager.returnAmountOfInvalidFields(m2).size() == 2);
@@ -45,7 +46,8 @@ public class ValidationTest {
         assertTrue(ValidationManager.returnAmountOfInvalidFields(m4).size() == 1);
         assertTrue(!ValidationManager.isValid(m5));
         assertTrue(ValidationManager.returnAmountOfInvalidFields(m5).size() == 3);
-        
+        assertTrue(ValidationManager.isValid(m6));
+
         
         // Test for Handshakes
         
