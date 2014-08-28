@@ -16,23 +16,19 @@ import javax.swing.ImageIcon;
 public abstract class ClientResoucesPool {
 
     @FileResource(path = "resources/graphics/simpleLogoSAM.png",
-            writeable = false,
-            kindOfResource = FileResource.Type.IMAGE)
+            writeable = false)
     private static ImageIcon samLogo;
 
     @FileResource(path = "resources/graphics/notice.gif",
-            writeable = false,
-            kindOfResource = FileResource.Type.IMAGE)
+            writeable = false)
     private static ImageIcon notice_gif;
 
     @FileResource(path = "resources/properties/client.properties",
-            writeable = true,
-            kindOfResource = FileResource.Type.PROPERTY)
+            writeable = true)
     private static Properties clientProperties;
 
     @FileResource(path = "resources/properties/log4j.properties",
-            writeable = false,
-            kindOfResource = FileResource.Type.PROPERTY)
+            writeable = false)
     private static Properties log4jProperties;
 
 }
