@@ -13,6 +13,7 @@ import java.lang.annotation.Target;
 /**
  *
  * @author janhorak
+ * @version 1.3
  */
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
@@ -22,9 +23,9 @@ public @interface FileResource {
 
     boolean writeable() default true;
 
-    Type kindOfResource() default Type.PROPERTY;
+    Type kindOfResource() default Type.NA;
 
     enum Type {
-        PROPERTY, IMAGE, TEXTFILE, XMLFILE
+        TEXTFILE, XMLFILE, NA
     }
 }

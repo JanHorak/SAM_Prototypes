@@ -18,13 +18,13 @@ public class MethodNotAllowedForResourceType extends RuntimeException{
         super(message);
     }
     
-    public static String format(FileResource.Type... allowdTypes){
+    public static String format(Class<?>... allowdTypes){
         String fieldList = "";
         for (int i = 0; i < allowdTypes.length; i++){
             if ( (i+1) != allowdTypes.length ){
-                fieldList += allowdTypes[i].name()+", ";
+                fieldList += allowdTypes[i].toString()+", ";
             } else {
-                fieldList += allowdTypes[i].name();
+                fieldList += allowdTypes[i].toString();
             }
         }
         return fieldList;
