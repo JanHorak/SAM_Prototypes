@@ -5,7 +5,6 @@
  */
 package sam_testclient.ui.components;
 
-import java.util.Properties;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JTextArea;
@@ -13,12 +12,11 @@ import javax.swing.JTextField;
 import org.apache.log4j.Logger;
 import sam_testclient.beans.ClientMainBean;
 import sam_testclient.communication.Client;
+import sam_testclient.dao.DataAccess;
 import sam_testclient.entities.MemberSettings;
-import sam_testclient.exceptions.InvalidSettingsException;
 import sam_testclient.services.ResourcePoolHandler;
-import sam_testclient.sources.FileManager;
+import sam_testclient.sources.ValidationManager;
 import sam_testclient.ui.main.MainUI;
-import sam_testclient.utilities.Utilities;
 
 /**
  *
@@ -33,10 +31,14 @@ public class SettingsFrame extends javax.swing.JInternalFrame {
     private MainUI ui;
     private JTextField nameField;
     private JTextArea area;
-    
+
     private Logger logger;
 
     private ClientMainBean cmb;
+
+    private MemberSettings settings;
+
+    private MemberSettings buffer;
 
     public SettingsFrame(Client client, MainUI ui, JTextField nameField, JTextArea area) {
         initComponents();
@@ -47,7 +49,7 @@ public class SettingsFrame extends javax.swing.JInternalFrame {
         this.cmb = ClientMainBean.getInstance();
         this.setClosable(true);
         logger = org.apache.log4j.Logger.getLogger(SettingsFrame.class);
-        
+
         ButtonGroup recreationGroup = new ButtonGroup();
         recreationGroup.add(rd_atLogin);
         recreationGroup.add(rd_inDays);
@@ -65,13 +67,8 @@ public class SettingsFrame extends javax.swing.JInternalFrame {
     }
 
     private void prepareUI() {
-        MemberSettings settings = null;
-        try {
-            settings = FileManager.getMemberSettings("clientProperties");
-        } catch (InvalidSettingsException ex) {
-            logger.error("Validation of Settings are failed: " + ex);
-        }
-
+        this.settings = DataAccess.getMembersettings();
+        this.buffer = settings;
         lb_avatar.setIcon(new ImageIcon(settings.getAvatarPath()));
 
         if (settings.getRecreationType() == MemberSettings.RecreationEnum.AT_LOGIN) {
@@ -88,18 +85,16 @@ public class SettingsFrame extends javax.swing.JInternalFrame {
         chk_allowWebClients.setSelected(settings.isAllowWebClients());
 
         chk_saveLocaleHist.setSelected(settings.isSaveLocaleHistory());
-        
-        int formattedValue = Integer.decode(settings.getHistBorder())*1000;
-        spn_KByte.setValue(formattedValue);
-        
-        lb_wordamaount.setText("(about "+calcWords((int) spn_KByte.getValue())+" words)");
+
+        int formattedValue = Integer.decode(settings.getHistBorder());
+        spn_KMessages.setValue(formattedValue);
 
         tf_name.setText(settings.getName());
 
         if (settings.getAutoDownload() == MemberSettings.AutoDownload.YES) {
-            rd_ask.setSelected(true);
+            rd_yes.setSelected(true);
         } else if (settings.getAutoDownload() == MemberSettings.AutoDownload.ASK) {
-            rd_mobile.setSelected(true);
+            rd_ask.setSelected(true);
         }
 
         if (settings.getValidFor() == MemberSettings.ValidFor.WLAN) {
@@ -109,17 +104,13 @@ public class SettingsFrame extends javax.swing.JInternalFrame {
         }
 
     }
-    
-    private void checkSpinnerRange(){
-        if ((int) spn_days.getValue() <= 0){
+
+    private void checkSpinnerRange() {
+        if ((int) spn_days.getValue() <= 0) {
             spn_days.setValue(1);
-        } else if ( (int) spn_days.getValue() >= 30){
+        } else if ((int) spn_days.getValue() >= 30) {
             spn_days.setValue(30);
         }
-    }
-    
-    private String calcWords(int kb){
-        return String.valueOf(kb*150);
     }
 
     /**
@@ -139,7 +130,7 @@ public class SettingsFrame extends javax.swing.JInternalFrame {
         jSeparator5 = new javax.swing.JSeparator();
         jLabel5 = new javax.swing.JLabel();
         tf_name = new javax.swing.JTextField();
-        jButton2 = new javax.swing.JButton();
+        btn_save = new javax.swing.JButton();
         jSeparator6 = new javax.swing.JSeparator();
         jLabel6 = new javax.swing.JLabel();
         rd_atLogin = new javax.swing.JRadioButton();
@@ -160,9 +151,9 @@ public class SettingsFrame extends javax.swing.JInternalFrame {
         jSeparator9 = new javax.swing.JSeparator();
         chk_saveLocaleHist = new javax.swing.JCheckBox();
         jLabel3 = new javax.swing.JLabel();
-        spn_KByte = new javax.swing.JSpinner();
+        spn_KMessages = new javax.swing.JSpinner();
         jLabel9 = new javax.swing.JLabel();
-        lb_wordamaount = new javax.swing.JLabel();
+        errorLabel = new javax.swing.JLabel();
 
         addInternalFrameListener(new javax.swing.event.InternalFrameListener() {
             public void internalFrameActivated(javax.swing.event.InternalFrameEvent evt) {
@@ -203,10 +194,10 @@ public class SettingsFrame extends javax.swing.JInternalFrame {
 
         tf_name.setText("#{autoFilled}");
 
-        jButton2.setText("Save");
-        jButton2.addActionListener(new java.awt.event.ActionListener() {
+        btn_save.setText("Save and close");
+        btn_save.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton2ActionPerformed(evt);
+                btn_saveActionPerformed(evt);
             }
         });
 
@@ -300,15 +291,13 @@ public class SettingsFrame extends javax.swing.JInternalFrame {
 
         jLabel3.setText("Historize at every");
 
-        spn_KByte.addChangeListener(new javax.swing.event.ChangeListener() {
+        spn_KMessages.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                spn_KByteStateChanged(evt);
+                spn_KMessagesStateChanged(evt);
             }
         });
 
-        jLabel9.setText("Kb per File");
-
-        lb_wordamaount.setText("#{autoCalculates}");
+        jLabel9.setText("K Messages");
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
@@ -325,11 +314,8 @@ public class SettingsFrame extends javax.swing.JInternalFrame {
                                 .addGap(55, 55, 55)
                                 .addComponent(lb_avatar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addComponent(jLabel5, javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel4Layout.createSequentialGroup()
-                                .addComponent(tf_name, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButton2)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addComponent(tf_name, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(27, 27, Short.MAX_VALUE))
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel4Layout.createSequentialGroup()
@@ -348,11 +334,10 @@ public class SettingsFrame extends javax.swing.JInternalFrame {
                                     .addGroup(jPanel4Layout.createSequentialGroup()
                                         .addComponent(jLabel3)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                        .addComponent(spn_KByte, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(spn_KMessages, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(jLabel9))
-                                    .addComponent(lb_wordamaount))
-                                .addGap(0, 0, Short.MAX_VALUE)))
+                                        .addComponent(jLabel9)))
+                                .addGap(0, 5, Short.MAX_VALUE)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)))
                 .addComponent(jSeparator6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -380,46 +365,21 @@ public class SettingsFrame extends javax.swing.JInternalFrame {
                                     .addComponent(jLabel8))
                                 .addGap(18, 18, 18)
                                 .addComponent(rd_mobile)))
-                        .addGap(0, 0, Short.MAX_VALUE))))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(jPanel4Layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(btn_save))))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jSeparator6)
-                    .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addComponent(jLabel6)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(rd_atLogin)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(rd_listenToServer)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(rd_inDays)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(spn_days, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jSeparator7, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel7)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(rd_yes)
-                            .addComponent(rd_ask))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel8)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(rd_wlan)
-                            .addComponent(rd_mobile))
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addComponent(jSeparator6)
                 .addContainerGap())
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addComponent(jLabel5)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(tf_name, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton2))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(tf_name, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 9, Short.MAX_VALUE)
                 .addComponent(jSeparator5, javax.swing.GroupLayout.PREFERRED_SIZE, 11, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -445,10 +405,35 @@ public class SettingsFrame extends javax.swing.JInternalFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
-                    .addComponent(spn_KByte, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(spn_KMessages, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel9))
+                .addGap(20, 20, 20))
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addComponent(jLabel6)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(lb_wordamaount))
+                .addComponent(rd_atLogin)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(rd_listenToServer)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(rd_inDays)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(spn_days, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jSeparator7, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel7)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(rd_yes)
+                    .addComponent(rd_ask))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel8)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(rd_wlan)
+                    .addComponent(rd_mobile))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(btn_save))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -457,7 +442,9 @@ public class SettingsFrame extends javax.swing.JInternalFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(errorLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -465,7 +452,9 @@ public class SettingsFrame extends javax.swing.JInternalFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(errorLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 14, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         pack();
@@ -476,95 +465,100 @@ public class SettingsFrame extends javax.swing.JInternalFrame {
         ui.updateAvatar();
     }//GEN-LAST:event_btn_changeAvatarActionPerformed
 
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        if (!tf_name.getText().isEmpty()) {
-            ResourcePoolHandler.PropertiesHelper.setValueInProperties("clientProperties", "announcementName", tf_name.getText());
+    private void btn_saveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_saveActionPerformed
+        settings.setRecreationDays((int) spn_days.getValue());
+        String borderForSaving = String.valueOf((int) spn_KMessages.getValue());
+        settings.setHistBorder(borderForSaving);
+        settings.setName(tf_name.getText());
+        // VALIDATION
+        if (ValidationManager.isValid(settings)) {
+            DataAccess.updateClientSettings(settings);
+            errorLabel.setText("");
+            dispose();
         } else {
-            area.append(Utilities.getLogTime() + "Error: Your name has to be filled (AnnouncementName)!\n");
+            errorLabel.setText("Some values are invalid!");
         }
-    }//GEN-LAST:event_jButton2ActionPerformed
+
+    }//GEN-LAST:event_btn_saveActionPerformed
 
     private void formInternalFrameClosing(javax.swing.event.InternalFrameEvent evt) {//GEN-FIRST:event_formInternalFrameClosing
-        ResourcePoolHandler.PropertiesHelper.setValueInProperties("clientProperties", "recreationDays", spn_days.getValue().toString());
-        String borderForSaving = String.valueOf((int)spn_KByte.getValue()*1000);
-        ResourcePoolHandler.PropertiesHelper.setValueInProperties("clientProperties", "histBorder", borderForSaving);
+        settings = buffer;
+        errorLabel.setText("");
     }//GEN-LAST:event_formInternalFrameClosing
 
     private void chk_allowWebClientsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chk_allowWebClientsActionPerformed
-        ResourcePoolHandler.PropertiesHelper.setValueInProperties("clientProperties", "allowWebClientRequests", String.valueOf(chk_allowWebClients.isSelected()));
+        settings.setAllowWebClients(chk_allowWebClients.isSelected());
     }//GEN-LAST:event_chk_allowWebClientsActionPerformed
 
     private void chk_saveLocaleHistActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chk_saveLocaleHistActionPerformed
-        ResourcePoolHandler.PropertiesHelper.setValueInProperties("clientProperties", "allowWebClientRequests", String.valueOf(chk_allowWebClients.isSelected()));
-        if (chk_saveLocaleHist.isSelected()){
+        settings.setAllowWebClients(chk_allowWebClients.isSelected());
+        if (chk_saveLocaleHist.isSelected()) {
             jLabel3.setEnabled(true);
-            spn_KByte.setEnabled(true);
+            spn_KMessages.setEnabled(true);
             jLabel9.setEnabled(true);
-            lb_wordamaount.setEnabled(true);
-            spn_KByte.setValue(((int) Integer.decode(((Properties) ResourcePoolHandler.getResource("clientProperties")).getProperty("histBorder"))/ 1000));
-        } else { 
+            spn_KMessages.setValue(Integer.decode(settings.getHistBorder()));
+        } else {
             jLabel3.setEnabled(false);
-            spn_KByte.setEnabled(false);
+            spn_KMessages.setEnabled(false);
             jLabel9.setEnabled(false);
-            lb_wordamaount.setEnabled(false);
-            spn_KByte.setValue(0);
+            spn_KMessages.setValue(0);
         }
     }//GEN-LAST:event_chk_saveLocaleHistActionPerformed
 
     private void rd_atLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rd_atLoginActionPerformed
-        ResourcePoolHandler.PropertiesHelper.setValueInProperties("clientProperties", "recreationType", MemberSettings.RecreationEnum.AT_LOGIN.toString());
+        settings.setRecreationType(MemberSettings.RecreationEnum.AT_LOGIN);
         spn_days.setEnabled(false);
         spn_days.setValue(0);
     }//GEN-LAST:event_rd_atLoginActionPerformed
 
     private void rd_listenToServerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rd_listenToServerActionPerformed
-        ResourcePoolHandler.PropertiesHelper.setValueInProperties("clientProperties", "recreationType", MemberSettings.RecreationEnum.AT_SERVER.toString());
+        settings.setRecreationType(MemberSettings.RecreationEnum.AT_SERVER);
         spn_days.setEnabled(false);
         spn_days.setValue(0);
     }//GEN-LAST:event_rd_listenToServerActionPerformed
 
     private void rd_inDaysActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rd_inDaysActionPerformed
-        ResourcePoolHandler.PropertiesHelper.setValueInProperties("clientProperties", "recreationType", MemberSettings.RecreationEnum.BY_DAYS.toString());
+        settings.setRecreationType(MemberSettings.RecreationEnum.BY_DAYS);
         spn_days.setEnabled(true);
         spn_days.setValue(1);
     }//GEN-LAST:event_rd_inDaysActionPerformed
 
     private void rd_yesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rd_yesActionPerformed
-        ResourcePoolHandler.PropertiesHelper.setValueInProperties("clientProperties", "autodownload", MemberSettings.AutoDownload.YES.toString());
+        settings.setAutoDownload(MemberSettings.AutoDownload.YES);
     }//GEN-LAST:event_rd_yesActionPerformed
 
     private void rd_askActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rd_askActionPerformed
-        ResourcePoolHandler.PropertiesHelper.setValueInProperties("clientProperties", "autodownload", MemberSettings.AutoDownload.ASK.toString());
+        settings.setAutoDownload(MemberSettings.AutoDownload.ASK);
     }//GEN-LAST:event_rd_askActionPerformed
 
     private void rd_wlanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rd_wlanActionPerformed
-        ResourcePoolHandler.PropertiesHelper.setValueInProperties("clientProperties", "validFor", MemberSettings.ValidFor.WLAN.toString());
+        settings.setValidFor(MemberSettings.ValidFor.WLAN);
     }//GEN-LAST:event_rd_wlanActionPerformed
 
     private void rd_mobileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rd_mobileActionPerformed
-        ResourcePoolHandler.PropertiesHelper.setValueInProperties("clientProperties", "validFor", MemberSettings.ValidFor.MOBILE.toString());
+        settings.setValidFor(MemberSettings.ValidFor.MOBILE);
     }//GEN-LAST:event_rd_mobileActionPerformed
 
     private void spn_daysStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spn_daysStateChanged
         checkSpinnerRange();
     }//GEN-LAST:event_spn_daysStateChanged
 
-    private void spn_KByteStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spn_KByteStateChanged
-        if ((int)spn_KByte.getValue() <= 0){
-            spn_KByte.setValue(1);
-        } 
-        if ((int) spn_KByte.getValue() > 15){
-            spn_KByte.setValue(15);
+    private void spn_KMessagesStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spn_KMessagesStateChanged
+        if ((int) spn_KMessages.getValue() <= 0) {
+            spn_KMessages.setValue(1);
         }
-        lb_wordamaount.setText("(about "+calcWords((int) spn_KByte.getValue())+" words)");
-    }//GEN-LAST:event_spn_KByteStateChanged
+        if ((int) spn_KMessages.getValue() > 15) {
+            spn_KMessages.setValue(15);
+        }
+    }//GEN-LAST:event_spn_KMessagesStateChanged
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btn_changeAvatar;
+    private javax.swing.JButton btn_save;
     private javax.swing.JCheckBox chk_allowWebClients;
     private javax.swing.JCheckBox chk_saveLocaleHist;
-    private javax.swing.JButton jButton2;
+    private javax.swing.JLabel errorLabel;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -582,7 +576,6 @@ public class SettingsFrame extends javax.swing.JInternalFrame {
     private javax.swing.JSeparator jSeparator8;
     private javax.swing.JSeparator jSeparator9;
     private javax.swing.JLabel lb_avatar;
-    private javax.swing.JLabel lb_wordamaount;
     private javax.swing.JRadioButton rd_ask;
     private javax.swing.JRadioButton rd_atLogin;
     private javax.swing.JRadioButton rd_inDays;
@@ -590,7 +583,7 @@ public class SettingsFrame extends javax.swing.JInternalFrame {
     private javax.swing.JRadioButton rd_mobile;
     private javax.swing.JRadioButton rd_wlan;
     private javax.swing.JRadioButton rd_yes;
-    private javax.swing.JSpinner spn_KByte;
+    private javax.swing.JSpinner spn_KMessages;
     private javax.swing.JSpinner spn_days;
     private javax.swing.JTextField tf_name;
     // End of variables declaration//GEN-END:variables

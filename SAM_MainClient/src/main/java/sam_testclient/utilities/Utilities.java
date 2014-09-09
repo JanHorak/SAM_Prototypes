@@ -16,6 +16,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.LineNumberReader;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
@@ -460,5 +462,22 @@ public abstract class Utilities {
 
         return result;
     }
+    
+//    public static void replaceDB(String path){
+//        File old = new File(path);
+//        File old_buffer = new File(path.concat("_tmp"));
+//        try {
+//            Files.copy(old.toPath(), old_buffer.toPath(), StandardCopyOption.REPLACE_EXISTING);
+//        } catch (IOException ex) {
+//            java.util.logging.Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//        System.out.println("kopiert");
+//        old.delete();
+//        System.out.println(old.getAbsolutePath() + " gelöscht");
+//        old_buffer.renameTo(old);
+//        System.out.println(old_buffer.getAbsolutePath() + " unbenannt in: " + old.getAbsolutePath());
+//        old_buffer.delete();
+//        System.out.println(old_buffer.getAbsolutePath() + " gelöscht");
+//    }
 
 }

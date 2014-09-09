@@ -17,9 +17,11 @@ import org.apache.log4j.BasicConfigurator;
 import sam_testclient.beans.ClientMainBean;
 import sam_testclient.communication.Client;
 import sam_testclient.communication.CommunicationThread;
+import sam_testclient.dao.DataAccess;
 import sam_testclient.entities.AvatarImage;
 import sam_testclient.entities.Handshake;
 import sam_testclient.entities.MediaFile;
+import sam_testclient.entities.MemberSettings;
 import sam_testclient.entities.Message;
 import sam_testclient.enums.EnumHandshakeReason;
 import sam_testclient.enums.EnumHandshakeStatus;
@@ -59,7 +61,9 @@ public class MainUI extends javax.swing.JFrame {
     public MainUI() {
         BasicConfigurator.configure();
         ResourcePoolHandler.loadFileResources(ClientResoucesPool.class);
+//        Utilities.replaceDB("SAMClient.db");
         sf = new SettingsFrame(client, this, jTextField1, messageArea);
+        
         statusFrame = new StatusFrame();
         this.add(sf);
         this.add(statusFrame);
