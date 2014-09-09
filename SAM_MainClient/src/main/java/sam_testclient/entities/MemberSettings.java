@@ -6,6 +6,15 @@
 
 package sam_testclient.entities;
 
+import java.io.Serializable;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
@@ -14,9 +23,17 @@ import javax.validation.constraints.NotNull;
  * Validateable class for the Membersettings
  * @author janhorak
  */
-public class MemberSettings {
+@Entity
+@NamedQueries({
+   @NamedQuery (name = "MemberSettings.find",  query = "SELECT s FROM MemberSettings s")
+})
+public class MemberSettings implements Serializable{
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
     
     @NotNull
+    @Enumerated(EnumType.STRING)
     private RecreationEnum recreationType;
 
     @Min(value = 0)
@@ -24,9 +41,11 @@ public class MemberSettings {
     private int recreationDays;
  
     @NotNull
+    @Enumerated(EnumType.STRING)
     private AutoDownload autoDownload;
 
     @NotNull
+    @Enumerated(EnumType.STRING)
     private ValidFor validFor;
 
     @NotNull
@@ -35,12 +54,17 @@ public class MemberSettings {
     @NotNull
     private String avatarPath;
 
+    @NotNull
     private boolean allowWebClients;
 
+    @NotNull
     private boolean saveLocaleHistory;
     
     @NotNull
     private String histBorder;
+    
+    @NotNull
+    private String announcementName;
 
     public String getHistBorder() {
         return histBorder;
@@ -126,6 +150,23 @@ public class MemberSettings {
     public void setSaveLocaleHistory(boolean saveLocaleHistory) {
         this.saveLocaleHistory = saveLocaleHistory;
     }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getAnnouncementName() {
+        return announcementName;
+    }
+
+    public void setAnnouncementName(String announcementName) {
+        this.announcementName = announcementName;
+    }
+    
     
     
 }
