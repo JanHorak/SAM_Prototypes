@@ -245,6 +245,7 @@ public class FileSubmitService {
         System.out.println("step = " + step);
         System.out.println("parts = " + parts);
         System.out.println("glSize = " + globalSize);
+        int adjustment = parts -1;
         // Calculate the Distribution
         for (int i = 0; i < parts; i++) {
             if (i == 0) {
@@ -270,7 +271,7 @@ public class FileSubmitService {
                 if (i + 1 != parts) {
                     partRanges.put(i, new Range(range + 1, partDistribution.get(i)));
                 } else {
-                    partRanges.put(i, new Range(range + 1, range + rest));
+                    partRanges.put(i, new Range(range + 1, range + rest + adjustment));
                 }
             }
 
