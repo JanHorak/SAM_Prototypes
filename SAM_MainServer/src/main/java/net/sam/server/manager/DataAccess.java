@@ -10,6 +10,7 @@ import javax.persistence.Query;
 import net.sam.server.entities.Member;
 import net.sam.server.entities.Message;
 import net.sam.server.entities.MessageBuffer;
+import net.sam.server.entities.ServerConfig;
 import net.sam.server.utilities.Utilities;
 import org.apache.log4j.Logger;
 
@@ -64,6 +65,71 @@ public abstract class DataAccess {
         em.getTransaction().commit();
         shutDown();
         logger.info(Utilities.getLogTime()+" New Member registered");
+    }
+    
+    
+    // Todo: em.merge?!
+    public static void updateServerConfig(ServerConfig old, ServerConfig newOne){
+        setUp();
+        
+        ServerConfig sc_old = (ServerConfig) em.createNamedQuery("ServerConfig.findByName").setParameter("name", old.getName()).getSingleResult();
+        
+        sc_old.setName(newOne.getName());
+        sc_old.setIpaddress(newOne.getIpaddress());
+        sc_old.setMaximalUsers(newOne.getMaximalUsers());
+        sc_old.setPort(newOne.getMaximalUsers());
+        
+        em.persist(sc_old);
+        em.getTransaction().commit();
+        shutDown();
+    }
+    
+    public static ServerConfig getActiveConfig(){
+        setUp();
+        ServerConfig sc = (ServerConfig) em.createNamedQuery("ServerConfig.findActive").getSingleResult();
+        shutDown();
+        return sc;
+    }
+    
+    public static List<ServerConfig> getAllServerConfigs(){
+        setUp();
+        List<ServerConfig> sc = (List<ServerConfig>)em.createNamedQuery("ServerConfig.findAll").getResultList();
+        shutDown();
+        return sc;
+    }
+    
+    public static ServerConfig getServerConfigByName(String name){
+        setUp();
+        ServerConfig sc = (ServerConfig) em.createNamedQuery("ServerConfig.findByName").setParameter("name", name).getSingleResult();
+        shutDown();
+        return sc;
+    }
+    
+    public static void setNewActiveConfig(ServerConfig newOne){
+        setUp();
+        ServerConfig old = (ServerConfig) em.createNamedQuery("ServerConfig.findActive").getSingleResult();
+        old.setActive(false);
+        ServerConfig sc = (ServerConfig) em.createNamedQuery("ServerConfig.findByName").setParameter("name", newOne.getName()).getSingleResult();
+        sc.setActive(true);
+        em.getTransaction().commit();
+        shutDown();
+    }
+    
+    public static void saveNewServerConfig(ServerConfig sc){
+        setUp();
+        em.persist(sc);
+        em.getTransaction().commit();
+        shutDown();
+        logger.info(Utilities.getLogTime()+" New ServerConfiguration saved");
+    }
+    
+    public static void deleteServerConfig(ServerConfig sc){
+        setUp();
+        ServerConfig old = (ServerConfig) em.createNamedQuery("ServerConfig.findByName").setParameter("name", sc.getName()).getSingleResult();
+        em.remove(old);
+        em.getTransaction().commit();
+        shutDown();
+        logger.info(Utilities.getLogTime()+" ServerConfiguration deleted: " + sc.getName());
     }
 
     /**

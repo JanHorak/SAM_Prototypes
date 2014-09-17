@@ -21,20 +21,20 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-core</artifactId>
-            <version>3.6.1.Final</version>
+            <version>3.6.10.Final</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-entitymanager</artifactId>
-            <version>3.6.1.Final</version>
+            <version>3.6.10.Final</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-validator</artifactId>
             <version>5.0.3.Final</version>
-            <scope>runtime</scope>
+            <type>jar</type>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
@@ -125,6 +125,12 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>1.8.3</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
             <groupId>javax</groupId>
             <artifactId>javaee-api</artifactId>
             <version>6.0</version>
@@ -169,6 +175,17 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.2.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.web</groupId>
+            <artifactId>el-impl</artifactId>
+            <version>2.2.1-b05</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.el</groupId>
+            <artifactId>el-api</artifactId>
+            <version>2.2</version>
+            <scope>provided</scope>
         </dependency>
         <dependency> 
             <groupId>javax.json</groupId> 
@@ -278,6 +295,11 @@
                                 <echo>Copying Graphic- Files...</echo>
                                 <copy file="resources/graphics/AndroidLogo.png" tofile="${basedir}/target/resources/graphics/AndroidLogo.png"/>
                                 <copy file="resources/graphics/simpleLogoSAM.png" tofile="${basedir}/target/resources/graphics/simpleLogoSAM.png"/>
+                                <copy file="resources/graphics/edit-file-icon_25x25.png" tofile="${basedir}/target/resources/graphics/edit-file-icon_25x25.png"/>
+                                <copy file="resources/graphics/File-Delete-icon_25x25.png" tofile="${basedir}/target/resources/graphics/File-Delete-icon_25x25.png"/>
+                                <copy file="resources/graphics/new-file-icon_25x25.png" tofile="${basedir}/target/resources/graphics/new-file-icon_25x25.png"/>
+                                <copy file="resources/graphics/ok_25x25.png" tofile="${basedir}/target/resources/graphics/ok_25x25.png"/>
+                                <copy file="resources/graphics/wrong_25x25.png" tofile="${basedir}/target/resources/graphics/wrong_25x25.png"/>
                             </tasks>
                         </configuration>
                     </execution>
@@ -305,12 +327,12 @@
                     <dependency>
                         <groupId>org.hibernate</groupId>
                         <artifactId>hibernate-core</artifactId>
-                        <version>3.6.1.Final</version>
+                        <version>3.6.10.Final</version>
                     </dependency>
                     <dependency>
                         <groupId>org.hibernate</groupId>
                         <artifactId>hibernate-entitymanager</artifactId>
-                        <version>3.6.1.Final</version>
+                        <version>3.6.10.Final</version>
                     </dependency>
                     <dependency>
                         <groupId>org.hibernate</groupId>

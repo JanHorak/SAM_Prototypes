@@ -54,7 +54,7 @@ public class QueryTest {
     public void shouldChangeActiveTimeFromUser(){
         em.getTransaction().begin();
         Member m = new Member();
-        Query q = em.createNamedQuery("Member.findByID").setParameter("id", 2);
+        Query q = em.createNamedQuery("Member.findByID").setParameter("id", 3);
         try {
             m = (Member) q.getSingleResult();
         } catch (NoResultException e) {
@@ -67,7 +67,7 @@ public class QueryTest {
     
     @Test
     public void shouldReturnMemberById(){
-        final int id = 2;
+        final int id = 3;
         em.getTransaction().begin();
         TypedQuery<Member> query = em.createNamedQuery("Member.findByID", Member.class).setParameter("id", id);
         List<Member> results = query.getResultList();

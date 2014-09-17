@@ -11,12 +11,14 @@ import net.sam.server.services.ContainerService;
 import org.junit.After;
 import static org.junit.Assert.*;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
  *
  * @author janhorak
  */
+@Ignore
 public class CDITest {
     
     ContainerService container = new ContainerService();

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import net.sam.server.entities.Member;
+import net.sam.server.entities.ServerConfig;
 import net.sam.server.manager.DataAccess;
 import net.sam.server.utilities.Utilities;
 import org.apache.log4j.Logger;
@@ -37,25 +38,31 @@ public class ServerMainBean {
     }
 
     public ServerMainBean() {
-        this.loggedInuserList = new ArrayList<Member>();
-        this.registeredUserList = new ArrayList<Member>();
-        this.socketMap = new ConcurrentHashMap<Integer, Socket>();
+        this.loggedInuserList = new ArrayList<>();
+        this.registeredUserList = new ArrayList<>();
+        this.socketMap = new ConcurrentHashMap<>();
+        this.allConfigs = new ArrayList<>();
+
         this.socketMap_unsafe = new ConcurrentHashMap<>();
         this.secretBuffer = new ConcurrentHashMap<>();
-        
+        reloadAllConfigs();
         logger = Logger.getLogger(ServerMainBean.class);
     }
 
     private static Logger logger;
+    
+    private ServerConfig currentConfig;
 
     private List<Member> loggedInuserList;
+
+    private static List<ServerConfig> allConfigs;
 
     private List<Member> registeredUserList;
 
     private Map<Integer, Socket> socketMap;
 
     private Map<Integer, Socket> socketMap_unsafe;
-    
+
     private Map<Integer, String> secretBuffer;
 
     private String serverPassword;
@@ -64,6 +71,18 @@ public class ServerMainBean {
 
     public boolean isMemberOnline(int id) {
         return socketMap.containsKey(id);
+    }
+    
+    public static void reloadAllConfigs(){
+        allConfigs = DataAccess.getAllServerConfigs();
+    }
+
+    public List<ServerConfig> getConfigs() {
+        return this.allConfigs;
+    }
+    
+    public void setCurrentConfig(ServerConfig sc){
+        currentConfig = sc;
     }
 
     public boolean isMemberOnline(String membername) {
@@ -75,12 +94,21 @@ public class ServerMainBean {
         }
         return !isOnline;
     }
+    
+    public ServerConfig getConfigByName(String name){
+        for (ServerConfig sc : allConfigs){
+            if (sc.getName().equals(name)){
+                return sc;
+            }
+        }
+        return null;
+    }
 
     public Socket returnCommnunicationChannel(int id) {
         return socketMap.get(id);
     }
-    
-    public Socket returnUnsafeCommucationChannel(int id){
+
+    public Socket returnUnsafeCommucationChannel(int id) {
         return socketMap_unsafe.get(id);
     }
 
@@ -133,10 +161,18 @@ public class ServerMainBean {
         this.registeredUserList = memberList;
     }
 
-    public static List<String> wrapForUI(List<Member> incomingList) {
+    public static List<String> wrapUserListForUI(List<Member> incomingList) {
         List<String> resultList = new ArrayList<>();
         for (Member m : incomingList) {
             resultList.add("Id: " + m.getUserID() + "| Name: " + m.getName());
+        }
+        return resultList;
+    }
+
+    public List<String> wrapServerConfigListForUI() {
+        List<String> resultList = new ArrayList<>();
+        for (ServerConfig m : allConfigs) {
+            resultList.add(m.getName());
         }
         return resultList;
     }
@@ -169,10 +205,10 @@ public class ServerMainBean {
         }
         return result;
     }
-    
-    public Member getRegisteredMemberById(int id){
-        for (Member m : getRegisteredMembers()){
-            if (m.getUserID() == id){
+
+    public Member getRegisteredMemberById(int id) {
+        for (Member m : getRegisteredMembers()) {
+            if (m.getUserID() == id) {
                 return m;
             }
         }
@@ -226,12 +262,13 @@ public class ServerMainBean {
     public void setServerPassword(String serverPassword) {
         this.serverPassword = serverPassword;
     }
-    
+
     /**
-     * Adds a passed socket and ID of a client to the unsafe- List.
-     * See: {@link #socketMap_unsafe}
+     * Adds a passed socket and ID of a client to the unsafe- List. See:
+     * {@link #socketMap_unsafe}
+     *
      * @param id
-     * @param socket 
+     * @param socket
      */
     public void addToUnsafeList(Integer id, Socket socket) {
         this.socketMap_unsafe.put(id, socket);
@@ -241,9 +278,10 @@ public class ServerMainBean {
     }
 
     /**
-     * Deletes an entry of the unsafe- List by passed id.
-     * See: {@link #socketMap_unsafe}
-     * @param id 
+     * Deletes an entry of the unsafe- List by passed id. See:
+     * {@link #socketMap_unsafe}
+     *
+     * @param id
      */
     public void deleteFromUnsafe(Integer id) {
         logger.info("Client will be removed from unsafe- List:\n ID: "
@@ -251,13 +289,13 @@ public class ServerMainBean {
                 + this.socketMap_unsafe.get(id).toString());
         this.socketMap_unsafe.remove(id);
     }
-    
+
     /**
-     * Adds a id (id of client) and a secretground to a map.
-     * The secretground is the String which is sent to the Client.
-     * Calculated uncleaned String.
+     * Adds a id (id of client) and a secretground to a map. The secretground is
+     * the String which is sent to the Client. Calculated uncleaned String.
+     *
      * @param id
-     * @param secretground 
+     * @param secretground
      */
     public void addToSecretBuffer(Integer id, String secretground) {
         this.secretBuffer.put(id, secretground);
@@ -267,9 +305,9 @@ public class ServerMainBean {
     }
 
     /**
-     * Removes the secretground from the map.
-     * The secretground is the String which is sent to the Client.
-     * Calculated uncleaned String.
+     * Removes the secretground from the map. The secretground is the String
+     * which is sent to the Client. Calculated uncleaned String.
+     *
      * @param id
      */
     public void deleteFromSecretBuffer(Integer id) {
@@ -278,8 +316,8 @@ public class ServerMainBean {
                 + this.secretBuffer.get(id));
         this.secretBuffer.remove(id);
     }
-    
-    public String getSecretById(Integer id){
+
+    public String getSecretById(Integer id) {
         return this.secretBuffer.get(id);
     }
 
