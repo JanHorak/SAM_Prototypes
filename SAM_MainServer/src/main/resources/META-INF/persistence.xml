@@ -8,6 +8,7 @@
         <class>net.sam.server.entities.Member</class>
         <class>net.sam.server.entities.MessageBuffer</class>
         <class>net.sam.server.entities.Message</class>
+        <class>net.sam.server.entities.ServerConfig</class>
         <properties>
             <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
             <property name="hibernate.connection.url" value="jdbc:postgresql://localhost:5432/SAM_DB"/>

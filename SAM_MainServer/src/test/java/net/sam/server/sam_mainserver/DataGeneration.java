@@ -18,6 +18,7 @@ import javax.persistence.Persistence;
 import net.sam.server.entities.MediaFile;
 import net.sam.server.entities.Member;
 import net.sam.server.entities.Message;
+import net.sam.server.entities.ServerConfig;
 import net.sam.server.enums.EnumKindOfMessage;
 import net.sam.server.enums.EnumMediaType;
 import org.junit.After;
@@ -87,6 +88,20 @@ public class DataGeneration {
         em.persist(mt);
         em.getTransaction().commit();
         
+    }
+    
+    @Test
+    public void shouldAddTheDefaulConfiguration(){
+        em.getTransaction().begin();
+        ServerConfig sc = new ServerConfig();
+        sc.setName("default*");
+        sc.setActive(true);
+        sc.setDeleteable(false);
+        sc.setIpaddress("localhost");
+        sc.setMaximalUsers(25);
+        sc.setPort(2222);
+        em.persist(sc);
+        em.getTransaction().commit();
     }
     
     @Test

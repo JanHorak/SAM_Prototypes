@@ -24,6 +24,31 @@ public abstract class ServerResoucesPool {
             writeable = false,
             kindOfResource = FileResource.Type.IMAGE)
     private static ImageIcon samLogo;
+    
+    @FileResource(path = "resources/graphics/edit-file-icon_25x25.png",
+            writeable = false,
+            kindOfResource = FileResource.Type.IMAGE)
+    private static ImageIcon editConfig;
+    
+    @FileResource(path = "resources/graphics/File-Delete-icon_25x25.png",
+            writeable = false,
+            kindOfResource = FileResource.Type.IMAGE)
+    private static ImageIcon deleteConfig;
+    
+    @FileResource(path = "resources/graphics/new-file-icon_25x25.png",
+            writeable = false,
+            kindOfResource = FileResource.Type.IMAGE)
+    private static ImageIcon newConfig;
+    
+    @FileResource(path = "resources/graphics/ok_25x25.png",
+            writeable = false,
+            kindOfResource = FileResource.Type.IMAGE)
+    private static ImageIcon validImage;
+    
+    @FileResource(path = "resources/graphics/wrong_25x25.png",
+            writeable = false,
+            kindOfResource = FileResource.Type.IMAGE)
+    private static ImageIcon invalidImage;
 
     @FileResource(path = "resources/properties/server.properties",
             writeable = true,
