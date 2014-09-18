@@ -10,7 +10,6 @@ import javax.swing.JOptionPane;
 import net.sam.server.beans.ServerMainBean;
 import net.sam.server.entities.ServerConfig;
 import net.sam.server.manager.DataAccess;
-import net.sam.server.manager.FileManager;
 import net.sam.server.servermain.Server;
 import net.sam.server.services.ContainerService;
 import net.sam.server.services.ResourcePoolHandler;
@@ -36,7 +35,10 @@ public class ServerMainUI extends javax.swing.JFrame {
         ResourcePoolHandler.loadFileResources(ServerResoucesPool.class);
 
         this.setTitle("SAM - SecureAndroidMessenger - Server");
-        lb_logo.setIcon(new ImageIcon(SAMLOGO));
+
+        ImageIcon samLogo = ResourcePoolHandler.getResource("samLogo");
+        lb_logo.setIcon(samLogo);
+
         loadSettings();
 
         container = new ContainerService();
@@ -61,6 +63,9 @@ public class ServerMainUI extends javax.swing.JFrame {
 
         radio_membersRegistered.doClick();
         logger.info(Utilities.getLogTime() + " UI loaded successfully");
+
+        serverPropertyPath = ResourcePoolHandler.getPathOfResource("serverProperties");
+        loggingPropertyPath = ResourcePoolHandler.getPathOfResource("log4jProperties");
 
         // Set icons
         ImageIcon editIcon = ResourcePoolHandler.getResource("editConfig");
@@ -90,11 +95,9 @@ public class ServerMainUI extends javax.swing.JFrame {
 
     private Logger logger;
 
-    private static final String SERVERPROPERTIES = "resources/properties/server.properties";
+    private static String serverPropertyPath;
 
-    private static final String LOGGINGPROPERTIES = "resources/properties/log4j.properties";
-
-    private static final String SAMLOGO = "resources/graphics/simpleLogoSAM.png";
+    private static String loggingPropertyPath;
 
     // ---------- ---------- ----------------
     public void refreshConfigList() {
@@ -306,10 +309,8 @@ public class ServerMainUI extends javax.swing.JFrame {
 
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Serverconfiguration"));
 
-        tf_serverIP.setText("127.0.0.1");
         tf_serverIP.setEnabled(false);
 
-        tf_serverPORT.setText("2222");
         tf_serverPORT.setEnabled(false);
 
         lb_registerPW.setText("Register-password:");
@@ -353,8 +354,7 @@ public class ServerMainUI extends javax.swing.JFrame {
             }
         });
 
-        tf_maximalCons.setEditable(false);
-        tf_maximalCons.setText("20");
+        tf_maximalCons.setEnabled(false);
 
         lb_serverPORT.setText("ServerPort:");
 
@@ -429,24 +429,21 @@ public class ServerMainUI extends javax.swing.JFrame {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(pnl_messanges, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(pnl_messanges, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(tf_singleMessange)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btn_send, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                        .addComponent(tf_singleMessange)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btn_send, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
+                                .addGap(10, 10, 10)
                                 .addComponent(lb_logo, javax.swing.GroupLayout.PREFERRED_SIZE, 169, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(tgl_StartServer))
-                            .addGroup(layout.createSequentialGroup()
-                                .addContainerGap()
-                                .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                            .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 278, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
@@ -456,16 +453,16 @@ public class ServerMainUI extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap(19, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jTabbedPane1)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(2, 2, 2)
-                                .addComponent(lb_logo, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(tgl_StartServer))))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(tgl_StartServer)
+                            .addComponent(lb_logo, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(8, 8, 8))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jTabbedPane1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
                 .addComponent(pnl_messanges, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -485,7 +482,8 @@ public class ServerMainUI extends javax.swing.JFrame {
      *
      */
     private void loadSettings() {
-        Properties serverprops = FileManager.initProperties(SERVERPROPERTIES);
+        Properties serverprops = ResourcePoolHandler.getResource("serverProperties");
+
         chk_logging.setSelected(Boolean.parseBoolean(serverprops.getProperty("LOGGING")));
         chk_memberListPublic.setSelected(Boolean.parseBoolean(serverprops.getProperty("MEMBERLISTISPUBLIC")));
         chk_saveMessages.setSelected(Boolean.parseBoolean(serverprops.getProperty("SAVEMESSAGESINBUFFER")));
@@ -497,7 +495,7 @@ public class ServerMainUI extends javax.swing.JFrame {
         serverMainBean.setServerPassword(md5);
 
         // Save the settings for key-recreation
-        FileManager.storeValueInPropertiesFile(SERVERPROPERTIES, "DAYSFORKEYRECREATION", String.valueOf(spr_daysKeyPair.getValue()));
+        ResourcePoolHandler.PropertiesHelper.setValueInProperties("serverProperties", "DAYSFORKEYRECREATION", String.valueOf(spr_daysKeyPair.getValue()));
 
         if (tgl_StartServer.isSelected()) {
             server = new Server(ta_messanges);
@@ -548,20 +546,28 @@ public class ServerMainUI extends javax.swing.JFrame {
 
     private void chk_loggingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chk_loggingActionPerformed
         if (chk_logging.isSelected()) {
-            FileManager.storeValueInPropertiesFile(SERVERPROPERTIES, "LOGGING", "true");
-            FileManager.storeValueInPropertiesFile(LOGGINGPROPERTIES, "log4j.rootLogger", "info, file");
+            ResourcePoolHandler.PropertiesHelper.setValueInProperties("serverProperties", "LOGGING", "true");
+            ResourcePoolHandler.PropertiesHelper.setValueInProperties("serverProperties", "log4j.rootLogger", "info, file");
         } else {
-            FileManager.storeValueInPropertiesFile(SERVERPROPERTIES, "LOGGING", "false");
-            FileManager.storeValueInPropertiesFile(LOGGINGPROPERTIES, "log4j.rootLogger", "\"\"");
+            ResourcePoolHandler.PropertiesHelper.setValueInProperties("serverProperties", "LOGGING", "false");
+            ResourcePoolHandler.PropertiesHelper.setValueInProperties("serverProperties", "log4j.rootLogger", "\"\"");
         }
     }//GEN-LAST:event_chk_loggingActionPerformed
 
     private void chk_memberListPublicActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chk_memberListPublicActionPerformed
-
+        if (chk_memberListPublic.isSelected()) {
+            ResourcePoolHandler.PropertiesHelper.setValueInProperties("serverProperties", "MEMBERLISTISPUBLIC", "true");
+        } else {
+            ResourcePoolHandler.PropertiesHelper.setValueInProperties("serverProperties", "MEMBERLISTISPUBLIC", "false");
+        }
     }//GEN-LAST:event_chk_memberListPublicActionPerformed
 
     private void chk_saveMessagesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chk_saveMessagesActionPerformed
-
+        if (chk_saveMessages.isSelected()) {
+            ResourcePoolHandler.PropertiesHelper.setValueInProperties("serverProperties", "SAVEMESSAGESINBUFFER", "true");
+        } else {
+            ResourcePoolHandler.PropertiesHelper.setValueInProperties("serverProperties", "SAVEMESSAGESINBUFFER", "false");
+        }
     }//GEN-LAST:event_chk_saveMessagesActionPerformed
 
     private void spr_daysKeyPairStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spr_daysKeyPairStateChanged
@@ -600,7 +606,7 @@ public class ServerMainUI extends javax.swing.JFrame {
     private void btn_deleteConfigActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_deleteConfigActionPerformed
         int delete = -5;
         if (current.isDeleteable()) {
-            delete = JOptionPane.showConfirmDialog(this, "Do you want to delete" + current.getName(), "Confirm", JOptionPane.YES_NO_OPTION);
+            delete = JOptionPane.showConfirmDialog(this, "Do you want to delete " + current.getName(), "Confirm", JOptionPane.YES_NO_OPTION);
             if (delete == JOptionPane.YES_OPTION) {
                 DataAccess.deleteServerConfig(current);
                 ServerMainBean.reloadAllConfigs();
