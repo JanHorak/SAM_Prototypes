@@ -67,8 +67,10 @@ public class SettingsFrame extends javax.swing.JInternalFrame {
     }
 
     private void prepareUI() {
-        this.settings = DataAccess.getMembersettings();
-        this.buffer = settings;
+        settings  = DataAccess.getMembersettings();
+        cmb.setSettings(settings);
+        buffer = settings;
+        
         lb_avatar.setIcon(new ImageIcon(settings.getAvatarPath()));
 
         if (settings.getRecreationType() == MemberSettings.RecreationEnum.AT_LOGIN) {
