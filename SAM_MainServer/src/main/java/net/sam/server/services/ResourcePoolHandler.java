@@ -5,7 +5,6 @@
  */
 package net.sam.server.services;
 
-import net.sam.server.annotations.FileResource;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -20,6 +19,7 @@ import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 import javax.swing.ImageIcon;
+import net.sam.server.annotations.FileResource;
 import net.sam.server.exceptions.MethodNotAllowedForResourceType;
 import net.sam.server.exceptions.ResourcesAlreadyLoadedException;
 import net.sam.server.utilities.Utilities;
@@ -42,13 +42,14 @@ import org.apache.log4j.Logger;
  * {@link FileResource} an inner abstract class for the management and the
  * access of the sources.
  *
+ * @version 1.3
  */
 public class ResourcePoolHandler {
 
     private static boolean isLoaded = false;
-    
+
     private static Logger logger;
-    
+
     private static Class<?> associatedPool;
 
     /**
@@ -70,7 +71,7 @@ public class ResourcePoolHandler {
      * @param resourcesPoolClass
      */
     public static void loadFileResources(Class<?> resourcesPoolClass) {
-        if (!isLoaded) {
+        if (!isLoaded()) {
             isLoaded = true;
             logger = Logger.getLogger(ResourcePoolHandler.class);
             associatedPool = resourcesPoolClass;
@@ -114,7 +115,7 @@ public class ResourcePoolHandler {
         try {
             result = (T) field.get(field.getName());
         } catch (IllegalArgumentException | IllegalAccessException ex) {
-            
+
         }
         return result;
     }
@@ -123,30 +124,28 @@ public class ResourcePoolHandler {
         // Default- values
         String path = "";
         boolean isWriteable = false;
-        FileResource.Type type = FileResource.Type.PROPERTY;
-
+        
         // Getting Metadata
         if (field.isAnnotationPresent(FileResource.class)) {
             path = getPathFromFileResource(field);
             isWriteable = getIsWriteableFromFileResource(field);
-            type = getTypeOfFileResource(field);
 
             logger.info("Field (re)loaded: Field: " + field.getName()
                     + " path: " + getPathFromFileResource(field)
                     + " writeable: " + getIsWriteableFromFileResource(field)
-                    + " Type: " + getTypeOfFileResource(field));
+                    + " Type: " + field.getType().toString());
 
             field.setAccessible(true);
         }
 
         // Instantiate
         // Properties- loading
-        if (type == FileResource.Type.PROPERTY) {
+        if (field.getType() == Properties.class) {
             Properties properties = new Properties();
             try {
                 properties.load(new FileInputStream(new File(path)));
             } catch (FileNotFoundException ex) {
-                logger.error(Utilities.getLogTime() + " FileNotFound: " +ex);
+                logger.error(Utilities.getLogTime() + " FileNotFound: " + ex);
             } catch (IOException ex) {
                 logger.error(Utilities.getLogTime() + " IOException " + ex);
             }
@@ -158,7 +157,7 @@ public class ResourcePoolHandler {
         }
 
         // ImageIcon
-        if (type == FileResource.Type.IMAGE) {
+        if (field.getType()== ImageIcon.class) {
             ImageIcon icon = new ImageIcon(getPathFromFileResource(field));
             try {
                 field.set(field.getName(), icon);
@@ -168,7 +167,7 @@ public class ResourcePoolHandler {
         }
 
         // TextFile
-        if (type == FileResource.Type.TEXTFILE) {
+        if (field.getType() == String.class && getTypeOfFileResource(field) == FileResource.Type.TEXTFILE) {
             String content = TextFileHelper.getContentOfTextFile(field);
             try {
                 field.set(field.getName(), content);
@@ -177,8 +176,18 @@ public class ResourcePoolHandler {
             }
         }
 
-        if (type == FileResource.Type.XMLFILE) {
+        if (getTypeOfFileResource(field) == FileResource.Type.XMLFILE) {
             throw new UnsupportedOperationException("XML is not supported yet");
+        }
+
+        if (field.getType() == File.class) {
+            File file = new File(getPathFromFileResource(field));
+            try {
+                field.set(field.getName(), file);
+            } catch (IllegalArgumentException | IllegalAccessException ex) {
+                
+            }
+
         }
 
     }
@@ -210,14 +219,18 @@ public class ResourcePoolHandler {
 
         return field;
     }
-    
-    public static void destroy(){
+
+    public static String getPathOfResource(String fieldname) {
+        return getPathFromFileResource(getFieldByName(fieldname));
+    }
+
+    public static void destroy() {
         isLoaded = false;
         associatedPool = null;
         logger.info(Utilities.getLogTime() + " ResourcePoolHandler is destroyed.");
     }
-    
-    public static boolean isLoaded(){
+
+    public static boolean isLoaded() {
         return isLoaded;
     }
 
@@ -238,7 +251,7 @@ public class ResourcePoolHandler {
          */
         public static void setValueInProperties(String fieldName, String key, String value) {
             Field field = getFieldByName(fieldName);
-            if (getTypeOfFileResource(field) == FileResource.Type.PROPERTY) {
+            if (field.getType() == Properties.class) {
                 if (getIsWriteableFromFileResource(field)) {
                     Properties properties = getResource(fieldName);
                     if (!properties.get(key).equals(value)) {
@@ -261,9 +274,13 @@ public class ResourcePoolHandler {
                 }
             } else {
                 throw new MethodNotAllowedForResourceType("Using of this Method is not allowed. FileResource needs to has Type: "
-                        + MethodNotAllowedForResourceType.format(FileResource.Type.PROPERTY));
+                        + MethodNotAllowedForResourceType.format(Properties.class));
             }
 
+        }
+
+        public static String getValueOfKey(String fieldName, String key){
+            return ((Properties) getResource(fieldName)).getProperty(key);
         }
     }
 
@@ -304,8 +321,8 @@ public class ResourcePoolHandler {
                     logger.error(Utilities.getLogTime() +  " "+ getPathFromFileResource(field) + " is not writeable!");
                 }
             } else {
-                    throw new MethodNotAllowedForResourceType("Using of this Method is not allowed. FileResource needs to has Type: "
-                            + MethodNotAllowedForResourceType.format(FileResource.Type.TEXTFILE, FileResource.Type.XMLFILE));
+                throw new MethodNotAllowedForResourceType("Using of this Method is not allowed. FileResource needs to has Type: "
+                        + MethodNotAllowedForResourceType.format(String.class));
             }
 
         }
@@ -334,5 +351,4 @@ public class ResourcePoolHandler {
             return contents.toString();
         }
     }
-
 }
