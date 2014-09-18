@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.log4j.Logger;
+import sam_testclient.dao.DataAccess;
 import sam_testclient.entities.MediaFile;
 import sam_testclient.entities.MemberSettings;
 import sam_testclient.entities.Message;
@@ -37,7 +38,6 @@ public class ClientMainBean {
     private Map<String, Map<String, Message>> currentHistoryMap;
 
     private MemberSettings settings;
-    
 
     private ClientMainBean() {
         logger = Logger.getLogger(ClientMainBean.class);
@@ -45,18 +45,27 @@ public class ClientMainBean {
         this.buddy_statusMap = new HashMap<>();
         this.currentHistoryMap = new ConcurrentHashMap<>();
         this.unreadMessagesAtTab = new ConcurrentHashMap<>();
-        try {
-            this.settings = FileManager.getMemberSettings("clientProperties");
-        } catch (InvalidSettingsException ex) {
-            logger.error("Bean wasnt able to load settings");
-        }
     }
+    
+    /**
+     * Singleton- Pattern [@TODO: Maybe it should be replaced by CDI]
+     */
+    private static ClientMainBean instance = null;
+
+    public static ClientMainBean getInstance() {
+        if (instance == null) {
+            instance = new ClientMainBean();
+            logger.info(Utilities.getLogTime() + " Singleton instantiated successfully");
+        }
+        return instance;
+    }
+
 
     /**
      * Adds an incoming message to the unreadlist, if it is needed.
-     * 
+     *
      * @param tabId
-     * @param m 
+     * @param m
      */
     public void addMessageToUnreadList(int tabId, Message m) {
         if (!this.unreadMessagesAtTab.containsKey(tabId)) {
@@ -74,8 +83,8 @@ public class ClientMainBean {
 
     /**
      * Inits the List for unread messages.
-     * 
-     * @param tabId 
+     *
+     * @param tabId
      */
     public void initUnreadList(int tabId) {
         this.unreadMessagesAtTab.put(tabId, new ArrayList<Message>());
@@ -86,10 +95,10 @@ public class ClientMainBean {
     }
 
     /**
-     * Updates the status of an incoming message for the histService and
-     * the message- status.
-     * 
-     * @param m 
+     * Updates the status of an incoming message for the histService and the
+     * message- status.
+     *
+     * @param m
      */
     public void updateMessageStatus(Message m) {
         for (String buddy : currentHistoryMap.keySet()) {
@@ -97,25 +106,25 @@ public class ClientMainBean {
             for (Message message : messagesFromBuddy.values()) {
                 if (m.getMessageType() == EnumKindOfMessage.MESSAGE_STATUS) {
                     if (message.getId().equals(m.getContent())) {
-                        
+
                         //  .put() is not allowed because this would be replaceing the MessageInformation
                         Message update = message;
                         update.setMessageStatus(m.getMessageStatus());
                         messagesFromBuddy.put(message.getId(), update);
-                        
+
                         HistoricizationService.serializeSpecificHistory(messagesFromBuddy, buddy);
                         logger.debug("Message is updated: " + m.toString());
                         break;
                     }
                 } else {
                     if (message.getId().equals(m.getId())) {
-                        
+
                         Message update = message;
                         update.setMessageStatus(m.getMessageStatus());
                         messagesFromBuddy.put(message.getId(), update);
-                        
+
                         HistoricizationService.serializeSpecificHistory(messagesFromBuddy, buddy);
-                        logger.debug("Message is updated (Type: Message): " +m.toString());
+                        logger.debug("Message is updated (Type: Message): " + m.toString());
                         break;
                     }
                 }
@@ -124,29 +133,20 @@ public class ClientMainBean {
 
         }
     }
+    
+    public void initCurrentHistoryMap(String buddyName){
+        currentHistoryMap.put(buddyName, new HashMap<String, Message>());
+    }
 
     /**
      * Inits the message- status.
-     * 
+     *
      * @param m
-     * @param buddyName 
+     * @param buddyName
      */
     public void initMessageStatus(Message m, String buddyName) {
         currentHistoryMap.get(buddyName).put(m.getId(), m);
         logger.debug("Status " + m.getMessageStatus().toString() + " is set for Message: " + m.getId());
-    }
-
-    /**
-     * Singleton- Pattern [@TODO: Maybe it should be replaced by CDI]
-     */
-    private static ClientMainBean instance = null;
-
-    public static ClientMainBean getInstance() {
-        if (instance == null) {
-            instance = new ClientMainBean();
-            logger.info(Utilities.getLogTime() + " Singleton instantiated successfully");
-        }
-        return instance;
     }
 
     public Map<Integer, String> getBuddyList() {
@@ -178,6 +178,10 @@ public class ClientMainBean {
         return this.settings;
     }
 
+    public void setSettings(MemberSettings settings) {
+        this.settings = settings;
+    }
+    
     public Map<String, Map<String, Message>> getCurrentHistoryMap() {
         return currentHistoryMap;
     }

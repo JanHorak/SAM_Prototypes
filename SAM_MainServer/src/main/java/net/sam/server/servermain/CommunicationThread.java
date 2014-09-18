@@ -30,6 +30,7 @@ import net.sam.server.exceptions.NotAHandshakeException;
 import net.sam.server.manager.DataAccess;
 import net.sam.server.manager.MessageWrapper;
 import net.sam.server.security.DoSGuard;
+import net.sam.server.services.ResourcePoolHandler;
 import net.sam.server.utilities.Utilities;
 import org.apache.log4j.Logger;
 
@@ -496,13 +497,24 @@ public class CommunicationThread extends Thread {
             }
 
         } else {
-            logger.warn("Member is not online - Save Message in Buffer!");
-            if (m.getMessageType() == EnumKindOfMessage.MESSAGE) {
-                fireStatusMessage(m, EnumMessageStatus.WAITING);
+            boolean shouldSave = Boolean.valueOf(ResourcePoolHandler.PropertiesHelper.getValueOfKey("serverProperties", "SAVEMESSAGESINBUFFER"));
+            if (shouldSave) {
+                logger.warn("Member is not online - Save Message in Buffer!");
+                if (m.getMessageType() == EnumKindOfMessage.MESSAGE) {
+                    fireStatusMessage(m, EnumMessageStatus.WAITING);
+                }
+
+                DataAccess.saveMessageInBuffer(m);
+                logger.debug(Utilities.getLogTime() + " Message is saved in Buffer\n" + m.toString());
+            } else {
+                Message message = new Message(0, m.getSenderId(), EnumKindOfMessage.SYSTEM, "The saving of messages is not allowed at serverside. Please send it again if your friend is back", "");
+                try {
+                    writeMessage(sb.returnCommnunicationChannel(m.getSenderId()), MessageWrapper.createJSON(message));
+                } catch (IOException ex) {
+                    logger.error(ex);
+                }
             }
 
-            DataAccess.saveMessageInBuffer(m);
-            logger.debug(Utilities.getLogTime() + " Message is saved in Buffer\n" + m.toString());
         }
     }
 

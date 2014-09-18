@@ -151,13 +151,12 @@ public class CommunicationThread extends Thread {
                             // If the message is not coming from server then it is from the buddy
                             if (m.getReceiverId() != 0 && handshake.isAnswer()) {
                                 cmb.getBuddyList().put(m.getSenderId(), handshake.getContent());
+                                cmb.initCurrentHistoryMap(handshake.getContent());
                                 client.createBuddyDir(handshake.getContent());
                                 HistoricizationService.createEmptyHistFile(handshake.getContent());
                                 FileManager.serialize(cmb.getBuddyList(), "resources/buddyList.data");
                                 area.append(Utilities.getLogTime() + " " + handshake.getContent() + " is added to buddylist \n");
                                 client.sendStatusRequest();
-                            } else {
-
                             }
 
                         }

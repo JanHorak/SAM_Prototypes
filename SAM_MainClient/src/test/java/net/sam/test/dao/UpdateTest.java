@@ -11,12 +11,14 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.Ignore;
 import sam_testclient.entities.MemberSettings;
 
 /**
  *
  * @author Jan
  */
+@Ignore
 public class UpdateTest {
     
     public UpdateTest() {
