@@ -8,9 +8,9 @@ package net.sam.server.resourcesPoolTest;
 
 import java.util.Properties;
 import javax.swing.ImageIcon;
-import net.sam.server.exceptions.MethodNotAllowedForResourceType;
-import net.sam.server.exceptions.ResourcesAlreadyLoadedException;
-import net.sam.server.services.ResourcePoolHandler;
+import net.jan.poolhandler.resourcepoolhandler.ResourcePoolHandler;
+import net.jan.poolhandler.resourcepoolhandler.exceptions.MethodNotAllowedForResourceType;
+import net.jan.poolhandler.resourcepoolhandler.exceptions.ResourcesAlreadyLoadedException;
 import net.sam.server.services.ServerResoucesPool;
 import org.junit.After;
 import static org.junit.Assert.*;
@@ -62,20 +62,7 @@ public class ResourcesPoolTest {
         ResourcePoolHandler.PropertiesHelper.setValueInProperties("serverProperties", "DAYSFORKEYRECREATION", buffer);
     }
     
-    @Test
-    public void testTexts(){
-        String originalContent = ResourcePoolHandler.getResource("serverLog");
-        assertTrue(!originalContent.isEmpty() || originalContent != null);
-        String testString = "MyTestStringLaLaLa";
-        
-        ResourcePoolHandler.TextFileHelper.writeContentToTextFile("serverLog", testString, true);
-        String testContent = ResourcePoolHandler.getResource("serverLog");
-        assertTrue(!testContent.equals(originalContent));
-        
-        ResourcePoolHandler.TextFileHelper.writeContentToTextFile("serverLog", originalContent, false);
-        assertTrue(!ResourcePoolHandler.getResource("serverLog").toString().contains("LaLaLa"));
-    }
-    
+   
     // Exceptiontesting
     @Test(expected = ResourcesAlreadyLoadedException.class)
     public void shouldFailWithResourcesAlreadyLoadedException(){

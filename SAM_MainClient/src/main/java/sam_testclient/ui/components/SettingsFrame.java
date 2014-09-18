@@ -9,12 +9,12 @@ import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import net.jan.poolhandler.resourcepoolhandler.ResourcePoolHandler;
 import org.apache.log4j.Logger;
 import sam_testclient.beans.ClientMainBean;
 import sam_testclient.communication.Client;
 import sam_testclient.dao.DataAccess;
 import sam_testclient.entities.MemberSettings;
-import sam_testclient.services.ResourcePoolHandler;
 import sam_testclient.sources.ValidationManager;
 import sam_testclient.ui.main.MainUI;
 

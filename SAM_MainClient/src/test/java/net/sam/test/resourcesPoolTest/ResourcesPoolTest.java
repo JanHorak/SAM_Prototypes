@@ -6,14 +6,14 @@
 package net.sam.test.resourcesPoolTest;
 
 import java.util.Properties;
-import sam_testclient.exceptions.MethodNotAllowedForResourceType;
-import sam_testclient.exceptions.ResourcesAlreadyLoadedException;
+import net.jan.poolhandler.resourcepoolhandler.ResourcePoolHandler;
+import net.jan.poolhandler.resourcepoolhandler.exceptions.MethodNotAllowedForResourceType;
+import net.jan.poolhandler.resourcepoolhandler.exceptions.ResourcesAlreadyLoadedException;
 import org.junit.After;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 import sam_testclient.services.ClientResoucesPool;
-import sam_testclient.services.ResourcePoolHandler;
 
 /**
  *

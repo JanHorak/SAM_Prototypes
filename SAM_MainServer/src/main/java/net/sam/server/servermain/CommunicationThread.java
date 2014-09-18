@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import javax.swing.JTextArea;
+import net.jan.poolhandler.resourcepoolhandler.ResourcePoolHandler;
 import net.sam.server.beans.ServerMainBean;
 import net.sam.server.entities.Handshake;
 import net.sam.server.entities.Member;
@@ -30,7 +31,6 @@ import net.sam.server.exceptions.NotAHandshakeException;
 import net.sam.server.manager.DataAccess;
 import net.sam.server.manager.MessageWrapper;
 import net.sam.server.security.DoSGuard;
-import net.sam.server.services.ResourcePoolHandler;
 import net.sam.server.utilities.Utilities;
 import org.apache.log4j.Logger;
 

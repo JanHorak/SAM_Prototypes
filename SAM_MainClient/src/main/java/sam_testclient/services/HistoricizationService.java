@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
+import net.jan.poolhandler.resourcepoolhandler.ResourcePoolHandler;
 import sam_testclient.beans.ClientMainBean;
 import sam_testclient.entities.Message;
 import sam_testclient.sources.FileManager;

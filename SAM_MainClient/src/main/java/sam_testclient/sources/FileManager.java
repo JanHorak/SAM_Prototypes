@@ -16,9 +16,9 @@ import java.nio.file.Files;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.jan.poolhandler.resourcepoolhandler.ResourcePoolHandler;
 import sam_testclient.entities.MemberSettings;
 import sam_testclient.exceptions.InvalidSettingsException;
-import sam_testclient.services.ResourcePoolHandler;
 import sam_testclient.utilities.Utilities;
 
 /**

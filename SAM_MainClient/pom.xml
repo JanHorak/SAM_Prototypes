@@ -100,6 +100,12 @@
             <version>2.4</version>
             <type>jar</type>
         </dependency>
+        <dependency>
+            <groupId>net.jan.poolhandler</groupId>
+            <artifactId>ResourcePoolHandler</artifactId>
+            <version>1.4-SNAPSHOT</version>
+            <type>jar</type>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
