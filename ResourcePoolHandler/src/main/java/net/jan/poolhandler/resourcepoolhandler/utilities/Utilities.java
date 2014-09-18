@@ -4,17 +4,19 @@
  * and open the template in the editor.
  */
 
-package net.sam.server.exceptions;
+package net.jan.poolhandler.resourcepoolhandler.utilities;
+
+import java.util.Date;
 
 /**
  *
  * @author janhorak
  */
-public class ResourcesAlreadyLoadedException extends RuntimeException{
-
-    public ResourcesAlreadyLoadedException(String message) {
-        super(message);
+public class Utilities {
+    
+    
+    public static String getLogTime(){
+        return "["+new Date().toString()+"]";
     }
-    
-    
+
 }

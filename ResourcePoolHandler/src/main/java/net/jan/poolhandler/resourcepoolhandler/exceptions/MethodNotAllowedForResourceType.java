@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package net.sam.server.exceptions;
+package net.jan.poolhandler.resourcepoolhandler.exceptions;
 
 /**
  *

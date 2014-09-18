@@ -9,11 +9,11 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
+import net.jan.poolhandler.resourcepoolhandler.ResourcePoolHandler;
 import net.sam.server.beans.ServerMainBean;
 import net.sam.server.entities.ServerConfig;
 import net.sam.server.manager.DataAccess;
 import net.sam.server.manager.ValidationManager;
-import net.sam.server.services.ResourcePoolHandler;
 import net.sam.server.ui.ServerMainUI;
 
 /**

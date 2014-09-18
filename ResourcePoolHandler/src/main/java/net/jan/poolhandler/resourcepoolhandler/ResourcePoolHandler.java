@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.sam.server.services;
+package net.jan.poolhandler.resourcepoolhandler;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -18,11 +18,12 @@ import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
+import java.util.logging.Level;
 import javax.swing.ImageIcon;
-import net.sam.server.annotations.FileResource;
-import net.sam.server.exceptions.MethodNotAllowedForResourceType;
-import net.sam.server.exceptions.ResourcesAlreadyLoadedException;
-import net.sam.server.utilities.Utilities;
+import net.jan.poolhandler.resourcepoolhandler.annotations.FileResource;
+import net.jan.poolhandler.resourcepoolhandler.exceptions.MethodNotAllowedForResourceType;
+import net.jan.poolhandler.resourcepoolhandler.exceptions.ResourcesAlreadyLoadedException;
+import net.jan.poolhandler.resourcepoolhandler.utilities.Utilities;
 import org.apache.log4j.Logger;
 
 
@@ -42,15 +43,17 @@ import org.apache.log4j.Logger;
  * {@link FileResource} an inner abstract class for the management and the
  * access of the sources.
  *
- * @version 1.3
+ * @version 1.4
  */
 public class ResourcePoolHandler {
 
     private static boolean isLoaded = false;
 
     private static Logger logger;
-
-    private static Class<?> associatedPool;
+   
+    private static Rules updateRules;
+    
+    private static Rules associatedPool;
 
     /**
      * Common constructor for {@link ResourcePoolHandler}. Used if more than one
@@ -60,7 +63,8 @@ public class ResourcePoolHandler {
      *
      * @param resourcesPoolClass
      */
-    public ResourcePoolHandler(Class<?> resourcesPoolClass) {
+    public <T extends Rules> ResourcePoolHandler(Class<T> resourcesPoolClass, Rules rules) {
+        updateRules = rules;
         loadFields(resourcesPoolClass);
     }
 
@@ -68,22 +72,29 @@ public class ResourcePoolHandler {
      * If there is only one {@link ResourcePoolHandler} this method should be
      * called for the initial setup of the Resouces- Pool.
      *
+     * @param <T>
      * @param resourcesPoolClass
      */
-    public static void loadFileResources(Class<?> resourcesPoolClass) {
+    public static <T extends Rules> void loadFileResources(Class<T> resourcesPoolClass) {
         if (!isLoaded()) {
+            Rules r = null;
+            try {
+                r = resourcesPoolClass.newInstance();
+            } catch (InstantiationException | IllegalAccessException ex) {
+                java.util.logging.Logger.getLogger(ResourcePoolHandler.class.getName()).log(Level.SEVERE, null, ex);
+            }
             isLoaded = true;
             logger = Logger.getLogger(ResourcePoolHandler.class);
-            associatedPool = resourcesPoolClass;
+            associatedPool = r;
             for (Field field : loadFields(resourcesPoolClass)) {
-                updateField(field);
+                r.updateField(field);
             }
         } else {
             throw new ResourcesAlreadyLoadedException("The Resources are already loaded");
         }
     }
 
-    private static Field[] loadFields(Class<?> resourcesPoolClass) {
+    private static <T extends Rules> Field[] loadFields(Class<T> resourcesPoolClass) {
         return resourcesPoolClass.getDeclaredFields();
     }
 
@@ -107,7 +118,7 @@ public class ResourcePoolHandler {
      * @param fieldName - Name of field in the ResourcePool
      * @return Casted Object of Type T
      */
-    public static <T extends Object> T getResource(String fieldName) {
+    public static <T> T getResource(String fieldName) {
         Field field = getFieldByName(fieldName);
 
         field.setAccessible(true);
@@ -121,98 +132,31 @@ public class ResourcePoolHandler {
     }
 
     private static void updateField(Field field) {
-        // Default- values
-        String path = "";
-        boolean isWriteable = false;
         
-        // Getting Metadata
-        if (field.isAnnotationPresent(FileResource.class)) {
-            path = getPathFromFileResource(field);
-            isWriteable = getIsWriteableFromFileResource(field);
-
-            logger.info("Field (re)loaded: Field: " + field.getName()
-                    + " path: " + getPathFromFileResource(field)
-                    + " writeable: " + getIsWriteableFromFileResource(field)
-                    + " Type: " + field.getType().toString());
-
-            field.setAccessible(true);
-        }
-
-        // Instantiate
-        // Properties- loading
-        if (field.getType() == Properties.class) {
-            Properties properties = new Properties();
-            try {
-                properties.load(new FileInputStream(new File(path)));
-            } catch (FileNotFoundException ex) {
-                logger.error(Utilities.getLogTime() + " FileNotFound: " + ex);
-            } catch (IOException ex) {
-                logger.error(Utilities.getLogTime() + " IOException " + ex);
-            }
-            try {
-                field.set(field.getName(), properties);
-            } catch (IllegalArgumentException | IllegalAccessException ex) {
-                logger.error(Utilities.getLogTime() + " IllegalArgumentException " + ex);
-            }
-        }
-
-        // ImageIcon
-        if (field.getType()== ImageIcon.class) {
-            ImageIcon icon = new ImageIcon(getPathFromFileResource(field));
-            try {
-                field.set(field.getName(), icon);
-            } catch (IllegalArgumentException | IllegalAccessException ex) {
-                logger.error(Utilities.getLogTime() + " IllegalArgumentException " + ex);
-            }
-        }
-
-        // TextFile
-        if (field.getType() == String.class && getTypeOfFileResource(field) == FileResource.Type.TEXTFILE) {
-            String content = TextFileHelper.getContentOfTextFile(field);
-            try {
-                field.set(field.getName(), content);
-            } catch (IllegalArgumentException | IllegalAccessException ex) {
-                logger.error(Utilities.getLogTime() + " IllegalArgumentException " + ex);
-            }
-        }
-
-        if (getTypeOfFileResource(field) == FileResource.Type.XMLFILE) {
-            throw new UnsupportedOperationException("XML is not supported yet");
-        }
-
-        if (field.getType() == File.class) {
-            File file = new File(getPathFromFileResource(field));
-            try {
-                field.set(field.getName(), file);
-            } catch (IllegalArgumentException | IllegalAccessException ex) {
-                
-            }
-
-        }
 
     }
 
     // Getter for Annotation- Attributes
-    private static String getPathFromFileResource(Field field) {
+    public static String getPathFromFileResource(Field field) {
         FileResource myAnn = field.getAnnotation(FileResource.class);
         return myAnn.path();
     }
 
-    private static boolean getIsWriteableFromFileResource(Field field) {
+    public static boolean getIsWriteableFromFileResource(Field field) {
         FileResource myAnn = field.getAnnotation(FileResource.class);
         return myAnn.writeable();
     }
 
-    private static FileResource.Type getTypeOfFileResource(Field field) {
+    public static FileResource.Type getTypeOfFileResource(Field field) {
         FileResource myAnn = field.getAnnotation(FileResource.class);
         return myAnn.kindOfResource();
     }
 
-    private static Field getFieldByName(String name) {
+    public static Field getFieldByName(String name) {
         Field field = null;
 
         try {
-            field = associatedPool.getDeclaredField(name);
+            field = associatedPool.getClass().getDeclaredField(name);
         } catch (NoSuchFieldException | SecurityException ex) {
             logger.error(Utilities.getLogTime() + " NoSuchFieldException " + ex);
         }
@@ -327,7 +271,7 @@ public class ResourcePoolHandler {
 
         }
 
-        private static String getContentOfTextFile(Field field) {
+        public static String getContentOfTextFile(Field field) {
             File file = new File(getPathFromFileResource(field));
             StringBuilder contents = new StringBuilder();
             BufferedReader reader = null;

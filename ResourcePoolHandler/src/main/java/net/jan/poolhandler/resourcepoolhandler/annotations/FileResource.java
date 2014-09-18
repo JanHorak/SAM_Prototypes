@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.sam.server.annotations;
+package net.jan.poolhandler.resourcepoolhandler.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -13,6 +13,7 @@ import java.lang.annotation.Target;
 /**
  *
  * @author janhorak
+ * @version 1.3
  */
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
@@ -22,9 +23,9 @@ public @interface FileResource {
 
     boolean writeable() default true;
 
-    Type kindOfResource() default Type.PROPERTY;
+    Type kindOfResource() default Type.NA;
 
     enum Type {
-        PROPERTY, IMAGE, TEXTFILE, XMLFILE
+        TEXTFILE, XMLFILE, NA
     }
 }
