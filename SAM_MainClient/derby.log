@@ -1,0 +1,13 @@
+----------------------------------------------------------------
+Sun Sep 28 18:46:05 CEST 2014:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.11.1.1 - (1616546): instance a816c00e-0148-bd27-a6a5-00000fd7db50 
+on database directory C:\Users\Jan\Documents\Development\Projects\SAM\Prototypes\SAM_MainClient\SAMClient.db with class loader sun.misc.Launcher$AppClassLoader@6bc7c054 
+Loaded from file:/C:/Users/Jan/.m2/repository/org/apache/derby/derby/10.11.1.1/derby-10.11.1.1.jar
+java.vendor=Oracle Corporation
+java.runtime.version=1.8.0_05-b13
+user.dir=C:\Users\Jan\Documents\Development\Projects\SAM\Prototypes\SAM_MainClient
+os.name=Windows 8.1
+os.arch=amd64
+os.version=6.3
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''

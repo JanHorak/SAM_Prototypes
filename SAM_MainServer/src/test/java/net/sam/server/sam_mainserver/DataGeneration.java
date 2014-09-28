@@ -6,21 +6,12 @@
 
 package net.sam.server.sam_mainserver;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Date;
-import java.util.List;
-import java.util.logging.Level;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
-import net.sam.server.entities.MediaFile;
 import net.sam.server.entities.Member;
-import net.sam.server.entities.Message;
 import net.sam.server.entities.ServerConfig;
-import net.sam.server.enums.EnumKindOfMessage;
-import net.sam.server.enums.EnumMediaType;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -69,28 +60,6 @@ public class DataGeneration {
     }
     
     @Test
-    public void shouldAddAnImageInMediaStorage(){
-        em.getTransaction().begin();
-        File image = new File("resources/graphics/AndroidLogo.png");
-        
-        Message m = new Message(1, 3, EnumKindOfMessage.LOGIN, "Blaaa", "additional bla");
-        
-        MediaFile mt = new MediaFile();
-        mt.setFileName("AndroidLogo.png");
-        mt.setDescription("Logo from Android");
-        mt.setType(EnumMediaType.IMAGE);
-        mt.setMessage(m);
-        try {
-            mt.setContent(Files.readAllBytes(image.toPath()));
-        } catch (IOException ex) {
-            java.util.logging.Logger.getLogger(DataGeneration.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        em.persist(mt);
-        em.getTransaction().commit();
-        
-    }
-    
-    @Test
     public void shouldAddTheDefaulConfiguration(){
         em.getTransaction().begin();
         ServerConfig sc = new ServerConfig();
@@ -101,16 +70,6 @@ public class DataGeneration {
         sc.setMaximalUsers(25);
         sc.setPort(2222);
         em.persist(sc);
-        em.getTransaction().commit();
-    }
-    
-    @Test
-    public void postDelete(){
-        em.getTransaction().begin();
-        List<MediaFile> mfList = em.createQuery("SELECT m FROM MediaFile m").getResultList();
-        for (MediaFile mf : mfList){
-            em.remove(mf);
-        }
         em.getTransaction().commit();
     }
     

@@ -4,7 +4,6 @@
         <provider>org.hibernate.ejb.HibernatePersistence</provider>
         <non-jta-data-source/>
         <class>net.sam.server.entities.CA</class>
-        <class>net.sam.server.entities.MediaFile</class>
         <class>net.sam.server.entities.Member</class>
         <class>net.sam.server.entities.MessageBuffer</class>
         <class>net.sam.server.entities.Message</class>

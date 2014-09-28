@@ -12,12 +12,10 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
 import net.sam.server.entities.Handshake;
-import net.sam.server.entities.MediaFile;
 import net.sam.server.entities.Message;
 import net.sam.server.enums.EnumHandshakeReason;
 import net.sam.server.enums.EnumHandshakeStatus;
 import net.sam.server.enums.EnumKindOfMessage;
-import net.sam.server.enums.EnumMediaType;
 import net.sam.server.enums.EnumMessageStatus;
 import net.sam.server.exceptions.NotAHandshakeException;
 import org.apache.log4j.Logger;
@@ -163,18 +161,6 @@ public abstract class MessageWrapper {
             hs.setReason((EnumHandshakeReason.valueOf(innerJsonObject.getString("reason"))));
             hs.setStatus(EnumHandshakeStatus.valueOf(innerJsonObject.getString("status")));
             m.setHandshake(hs);
-        }
-
-        if (m.hasFile()) {
-            MediaFile mf = new MediaFile();
-            JsonObject innerJsonObject = jsonObject.getJsonObject("mediafile");
-
-            mf.setId(Long.decode(innerJsonObject.getString("id")));
-            mf.setFileName(innerJsonObject.getString("name"));
-            mf.setContent(innerJsonObject.getString("content").getBytes());
-            mf.setDescription(innerJsonObject.getString("description"));
-            mf.setType(EnumMediaType.valueOf(innerJsonObject.getString("type")));
-            m.setMediaStorage(mf);
         }
         return m;
     }

@@ -290,7 +290,6 @@ public class CommunicationThread extends Thread {
                             if (m.getReceiverId() == 0) {
                                 area.append(m.getContent());
                             } else {
-                                logger.info(Utilities.getLogTime() + " Message not for server");
                                 forwardMessage(m);
                             }
                         }
@@ -401,12 +400,10 @@ public class CommunicationThread extends Thread {
                                 }
 
                                 if (handshake.getStatus() == EnumHandshakeStatus.END) {
-                                    if (handshake.isAnswer()) {
-                                        forwardMessage(m);
-                                    } else {
+                                    if (!handshake.isAnswer()) {
                                         m.setSenderId(0);
-                                        forwardMessage(m);
                                     }
+                                    forwardMessage(m);
                                 }
                             }
                             if (handshake.getReason() == EnumHandshakeReason.FILE_REQUEST) {
@@ -490,8 +487,7 @@ public class CommunicationThread extends Thread {
             try {
                 writeMessage(sb.returnCommnunicationChannel(m.getReceiverId()),
                         MessageWrapper.createJSON(m));
-                System.out.println(m.toString());
-                System.out.println("--------FIRED");
+                logger.info(Utilities.getLogTime() + "Message fowarded: " + m.toString());
             } catch (IOException ex) {
                 logger.error("Cannot get Communicationchannel! " + ex);
             }
@@ -560,6 +556,7 @@ public class CommunicationThread extends Thread {
         if (sb.isMemberOnline(buffer.getReceiverId())) {
             try {
                 writeMessage(sb.returnCommnunicationChannel(buffer.getReceiverId()), MessageWrapper.createJSON(buffer));
+                logger.info(Utilities.getLogTime() + " Statusmessage is fired: " + m.toString());
             } catch (IOException ex) {
                 java.util.logging.Logger.getLogger(CommunicationThread.class.getName()).log(Level.SEVERE, null, ex);
             }

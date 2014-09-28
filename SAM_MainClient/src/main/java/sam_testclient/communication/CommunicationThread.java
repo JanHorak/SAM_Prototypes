@@ -17,6 +17,8 @@ import javax.swing.JList;
 import javax.swing.JTextArea;
 import net.jan.poolhandler.resourcepoolhandler.ResourcePoolHandler;
 import sam_testclient.beans.ClientMainBean;
+import sam_testclient.dao.DataAccess;
+import sam_testclient.entities.Buddy;
 import sam_testclient.entities.Handshake;
 import sam_testclient.entities.Message;
 import sam_testclient.enums.EnumHandshakeReason;
@@ -25,8 +27,6 @@ import sam_testclient.enums.EnumKindOfMessage;
 import sam_testclient.enums.EnumMessageStatus;
 import sam_testclient.exceptions.NotAHandshakeException;
 import sam_testclient.services.FileSubmitService;
-import sam_testclient.services.HistoricizationService;
-import sam_testclient.sources.FileManager;
 import sam_testclient.sources.MessageWrapper;
 import sam_testclient.ui.dialogs.BuddyRequestDialog;
 import sam_testclient.ui.dialogs.FileRequestDialog;
@@ -67,12 +67,11 @@ public class CommunicationThread extends Thread {
         System.out.println("Thread started!");
 
         while (live) {
-            if (!this.client.getServerSocket().isClosed()) {
+            if (!client.getServerSocket().isClosed()) {
                 Message m = null;
                 try {
                     // JSON handling
                     String s = readMessage();
-                    System.out.println(s);
                     m = MessageWrapper.JSON2Message(s);
                     System.out.println("received: " + m.toString());
                 } catch (IOException ex) {
@@ -84,23 +83,23 @@ public class CommunicationThread extends Thread {
                     // Received- Message back to sender
                     fireStatusMessage(m, EnumMessageStatus.RECEIVED);
                     m.setMessageStatus(EnumMessageStatus.RECEIVED);
-                    
+
                     // Updateing the status
-                    cmb.updateMessageStatus(m);
-                    
-                    
+                    DataAccess.saveNewMessage(m);
+
+
+                    if (ui.isBuddyTabActive(m)) {
+                        m.setMessageStatus(EnumMessageStatus.READ);
+                        DataAccess.updateMessage(m);
+                        fireStatusMessage(m, EnumMessageStatus.READ);
+                    }
+
                     // UI (ReadMessage- Handling)
                     ui.distributeMessageToAreas(m);
-
-                    // Hist
-                    if (cmb.getSettings().isSaveLocaleHistory()) {
-                        HistoricizationService.addMessageToCurrentHistory(m, false);
-                    }
-                    
                 }
-                                
+
                 if (m.getMessageType() == EnumKindOfMessage.MESSAGE_STATUS) {
-                    cmb.updateMessageStatus(m);
+                    DataAccess.updateMessage(m);
                 }
 
                 if (m.getMessageType() == EnumKindOfMessage.SYSTEM) {
@@ -150,13 +149,20 @@ public class CommunicationThread extends Thread {
                         if (handshake.getStatus() == EnumHandshakeStatus.END) {
                             // If the message is not coming from server then it is from the buddy
                             if (m.getReceiverId() != 0 && handshake.isAnswer()) {
-                                cmb.getBuddyList().put(m.getSenderId(), handshake.getContent());
-                                cmb.initCurrentHistoryMap(handshake.getContent());
-                                client.createBuddyDir(handshake.getContent());
-                                HistoricizationService.createEmptyHistFile(handshake.getContent());
-                                FileManager.serialize(cmb.getBuddyList(), "resources/buddyList.data");
+
+                                Buddy buddy = new Buddy();
+                                buddy.setInternalID(String.valueOf(m.getSenderId()));
+                                buddy.setBuddyName(m.getContent());
+
+                                cmb.getBuddyList().add(buddy);
+
+                                DataAccess.saveNewBuddy(buddy);
+
+                                client.createBuddyDir(buddy.getBuddyName());
+
                                 area.append(Utilities.getLogTime() + " " + handshake.getContent() + " is added to buddylist \n");
                                 client.sendStatusRequest();
+                                ui.addEmptyTabPane(buddy);
                             }
 
                         }
@@ -168,7 +174,7 @@ public class CommunicationThread extends Thread {
                             new FileRequestDialog(ui, m).setVisible(true);
                         }
                         if (handshake.getStatus() == EnumHandshakeStatus.END) {
-                            if (handshake.isAnswer() && !m.hasFile()) {
+                            if (handshake.isAnswer()) {
                                 int parts = Integer.decode(ResourcePoolHandler.PropertiesHelper.getValueOfKey("clientProperties", "waitingServiceParts"));
                                 String path = cmb.getLastFile().getFilePath();
                                 String fileName = cmb.getLastFile().getFileName();
@@ -183,7 +189,6 @@ public class CommunicationThread extends Thread {
                                         Logger.getLogger(CommunicationThread.class.getName()).log(Level.SEVERE, null, ex);
                                     }
                                 }
-                                cmb.setLastFile(null);
                                 MainUI.filePartSubmitEnd();
                             }
                             if (!handshake.isAnswer()) {
@@ -199,7 +204,7 @@ public class CommunicationThread extends Thread {
                 if (m.getMessageType() == EnumKindOfMessage.STATUS_RESPONSE) {
                     cmb.setBuddy_statusList(Utilities.getOnlineMap(m.getContent()));
                     updateUI();
-                    ui.initTabPane(cmb.getBuddyList());
+//                    ui.initTabPane();
                 }
 
                 try {
@@ -252,7 +257,7 @@ public class CommunicationThread extends Thread {
                 String content = (String) it_value.next();
                 String[] contentArray = content.split(" ");
                 String id = String.valueOf(it_id.next());
-                String nameOfBuddy = cmb.getBuddyList().get(Integer.valueOf(id));
+                String nameOfBuddy = cmb.getBuddynameById(id);
                 String active = contentArray[0];
                 String date = "";
                 if (contentArray.length == 3) {

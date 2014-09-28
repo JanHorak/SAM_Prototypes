@@ -27,6 +27,7 @@ import sam_testclient.utilities.Utilities;
  *
  * @author Jan
  */
+@Deprecated
 public abstract class HistoricizationService {
 
     /**
@@ -65,14 +66,11 @@ public abstract class HistoricizationService {
         return logFilePath;
     }
 
-    public static String getContentFromHistMessagesByName(String buddyName) {
-        loadCurrentHistoryInMemory();
-        Map<String, Message> messages = ClientMainBean.getInstance().getCurrentHistoryMap().get(buddyName);
-        
+    public static String getContentFromHistMessagesByName(List<Message> messageList) {       
         // Sorting
-        TreeMap<String, Message> sorted = new Message.CompareMessageByTimeStampHelper().sortByValue((HashMap<String, Message>) messages);
+        TreeMap<String, Message> sorted = new Message.CompareMessageByTimeStampHelper().sortByValue((HashMap<String, Message>) messageList);
         String result = "";
-        if (!messages.isEmpty()) {
+        if (!messageList.isEmpty()) {
             for (Message m : sorted.values()) {
                 result += m.getContent();
             }

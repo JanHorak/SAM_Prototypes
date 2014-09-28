@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import sam_testclient.beans.ClientMainBean;
+import sam_testclient.entities.Buddy;
 import sam_testclient.entities.Message;
 import sam_testclient.enums.EnumKindOfMessage;
 import sam_testclient.sources.MessageWrapper;
@@ -29,7 +30,7 @@ public class Client extends ClientServerCommunicationBase {
 
     private Socket serverSocket;
 
-    private int ownID = Utilities.generateRandomNumberBetween(9999, 9999999);
+    public static int ownID = Utilities.generateRandomNumberBetween(9999, 9999999);
 
     private Map<Integer, String> buddyList;
     
@@ -72,17 +73,6 @@ public class Client extends ClientServerCommunicationBase {
         printWriter.flush();
     }
 
-    public int getIdFromBuddy(String name) {
-        int id = 0;
-        for (Map.Entry entry : cmb.getBuddyList().entrySet()) {
-            if (name.equals(entry.getValue())) {
-                id = (int) entry.getKey();
-                break;
-            }
-        }
-        return id;
-    }
-    
     /**
      * Returns the formated String of IDs for the Status request. The String is
      * the content of the Request message Like 1 3 For the Ids of Friends in the
@@ -92,8 +82,8 @@ public class Client extends ClientServerCommunicationBase {
      */
     private String formatStatusRequest() {
         String result = "";
-        for (Object k : cmb.getBuddyList().keySet().toArray()) {
-            result += k.toString() + " ";
+        for (Buddy b : cmb.getBuddyList()) {
+            result += b.getInternalID() + " ";
         }
         return result;
     }

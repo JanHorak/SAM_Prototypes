@@ -65,7 +65,7 @@ public class MemberSettings implements Serializable{
     
     @NotNull
     private String announcementName;
-
+    
     public String getHistBorder() {
         return histBorder;
     }
@@ -166,7 +166,6 @@ public class MemberSettings implements Serializable{
     public void setAnnouncementName(String announcementName) {
         this.announcementName = announcementName;
     }
-    
     
     
 }
