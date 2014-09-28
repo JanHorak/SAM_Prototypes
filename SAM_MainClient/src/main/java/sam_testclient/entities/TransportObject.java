@@ -6,8 +6,12 @@
 package sam_testclient.entities;
 
 import java.io.Serializable;
+import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 import javax.validation.constraints.NotNull;
 import sam_testclient.enums.EnumKindOfMessage;
 
@@ -18,9 +22,12 @@ import sam_testclient.enums.EnumKindOfMessage;
  *
  * @author janhorak
  */
+@Entity
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public abstract class TransportObject implements Serializable {
 
     @NotNull
+    @Id
     private String id;
 
     @Enumerated(EnumType.STRING)

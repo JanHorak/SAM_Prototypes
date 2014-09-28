@@ -3,7 +3,7 @@ package sam_testclient.ui.main;
 import java.beans.PropertyVetoException;
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
+import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,7 +18,9 @@ import org.apache.log4j.BasicConfigurator;
 import sam_testclient.beans.ClientMainBean;
 import sam_testclient.communication.Client;
 import sam_testclient.communication.CommunicationThread;
+import sam_testclient.dao.DataAccess;
 import sam_testclient.entities.AvatarImage;
+import sam_testclient.entities.Buddy;
 import sam_testclient.entities.Handshake;
 import sam_testclient.entities.MediaFile;
 import sam_testclient.entities.Message;
@@ -29,8 +31,6 @@ import sam_testclient.enums.EnumMessageStatus;
 import sam_testclient.exceptions.NotAHandshakeException;
 import sam_testclient.services.ClientResoucesPool;
 import sam_testclient.services.FileSubmitService;
-import sam_testclient.services.HistoricizationService;
-import sam_testclient.sources.FileManager;
 import sam_testclient.sources.MessageWrapper;
 import sam_testclient.sources.ValidationManager;
 import sam_testclient.ui.components.SettingsFrame;
@@ -47,7 +47,7 @@ public class MainUI extends javax.swing.JFrame {
     private ClientMainBean cmb;
     private static int progressStep = 0;
     private static int progressBuffer = 0;
-
+    
     public String getPW() {
         return this.tf_password.getText();
     }
@@ -59,16 +59,15 @@ public class MainUI extends javax.swing.JFrame {
     public MainUI() {
         BasicConfigurator.configure();
         ResourcePoolHandler.loadFileResources(ClientResoucesPool.class);
-//        Utilities.replaceDB("SAMClient.db");
         sf = new SettingsFrame(client, this, jTextField1, messageArea);
-        
+
         statusFrame = new StatusFrame();
         this.add(sf);
         this.add(statusFrame);
         initComponents();
 
         cmb = ClientMainBean.getInstance();
-        HistoricizationService.loadCurrentHistoryInMemory();
+
         ButtonGroup bg = new ButtonGroup();
         bg.add(jRadioButton1);
         bg.add(jRadioButton2);
@@ -83,7 +82,7 @@ public class MainUI extends javax.swing.JFrame {
         lb_filesubmitPercent.setText("0%");
         lb_fileLabel_incoming.setText("");
 
-        initTabPane(cmb.getBuddyList());
+        initTabPane();
     }
 
     public void updateAvatar() {
@@ -96,66 +95,97 @@ public class MainUI extends javax.swing.JFrame {
         btn_send.setEnabled(true);
         btn_register.setEnabled(false);
     }
-
+    
+    
+    //
+    // ----------------------------------- HELPERMETHODS FOR TAB AND TAB-BEHAVIOR ----------------------------
+    //
+    
+    
     /**
      * mapps the buddylist to the tabs of the UI
      *
      * @param buddyList
      */
-    public void initTabPane(Map<Integer, String> buddyList) {
+    public void initTabPane() {
         tab_messages.removeAll();
-        for (String buddyName : buddyList.values()) {
+        for (Buddy buddy : cmb.getBuddyList()) {
             JTextArea area = new JTextArea();
-            if (HistoricizationService.isHistoryPresent(buddyName)) {
-                String content = HistoricizationService.getContentFromHistMessagesByName(buddyName);
-                area.append(content);
+            // Get all messages from db and display them
+            List<Message> conversation = DataAccess.getAllMessagesWhereBuddyIsInvolved(buddy);
+            if (!conversation.isEmpty()) {
+                for (Message m : conversation){
+                    area.append(m.getContent());
+                }
             } else {
-                area.append("You are friends now");
+                area.append("No Content");
             }
-            tab_messages.addTab(buddyName, area);
+            tab_messages.addTab(buddy.getBuddyName(), area);
         }
         tab_messages.addTab("System", messageArea);
         tab_messages.setSelectedIndex(0);
     }
 
-    public void distributeMessageToAreas(Message m) {
-        String content = m.getContent();
-        String buddyName = content.split(":")[1];
-        buddyName = buddyName.split(" ")[1];
+    public void addEmptyTabPane(Buddy buddy) {
+        JTextArea area = new JTextArea();
+        area.append("No Content");
+        tab_messages.addTab(buddy.getBuddyName(), area);
+    }
+
+    public synchronized void distributeMessageToAreas(Message m) {
+        String buddyName = Utilities.getNameFromMessage(m);
         int buddyIndex = tab_messages.indexOfTab(buddyName);
-        if (tab_messages.getSelectedIndex() != buddyIndex) {
+        if (!isBuddyTabActive(buddyName)) {
             cmb.addMessageToUnreadList(buddyIndex, m);
             tab_messages.setIconAt(buddyIndex, new ImageIcon(ResourcePoolHandler.getPathOfResource("notice_gif")));
             Utilities.playSound("resources/sounds/notice.wav");
-        } else {
-            CommunicationThread.fireStatusMessage(m, EnumMessageStatus.READ);
-            m.setMessageStatus(EnumMessageStatus.READ);
-
         }
-
-        ((JTextArea) tab_messages.getComponentAt(buddyIndex)).append(content);
+        ((JTextArea) tab_messages.getComponentAt(buddyIndex)).append(m.getContent());
     }
 
     private void addMyMessageToMessageArea(String buddyName, String content) {
         ((JTextArea) tab_messages.getComponentAt(tab_messages.indexOfTab(buddyName))).append(content);
+        selectTabByBuddyName(buddyName);
     }
+    
+    public boolean isBuddyTabActive(Message m){
+        return tab_messages.getSelectedIndex() == tab_messages.indexOfTab(Utilities.getNameFromMessage(m));
+    }
+    
+    public boolean isBuddyTabActive(String buddyName){
+        return tab_messages.getSelectedIndex() == tab_messages.indexOfTab(buddyName);
+    }
+
+    private void selectTabByBuddyName(String buddyName) {
+        tab_messages.setSelectedIndex(tab_messages.indexOfTab(buddyName));
+    }
+    
+    //
+    // ----------------------------------- END HELPERMETHODS FOR TAB AND TAB-BEHAVIOR ----------------------------
+    //
+    
 
     public void acceptBuddyRequest(Message m) throws NotAHandshakeException {
         m.getHandshake().setAnswer(true);
         m.getHandshake().setStatus(EnumHandshakeStatus.END);
 
+        Buddy b = new Buddy();
+        b.setInternalID(String.valueOf(m.getSenderId()));
+        b.setBuddyName(m.getContent());
+        cmb.getBuddyList().add(b);
+        DataAccess.saveNewBuddy(b);
+
+        m.setContent(tf_memberName.getText());
         m.setReceiverId(m.getSenderId());
         m.setSenderId(this.client.getId());
         try {
-            cmb.getBuddyList().put(m.getReceiverId(), m.getContent());
-            FileManager.serialize(cmb.getBuddyList(), "resources/buddyList.data");
             client.createBuddyDir(m.getContent());
             client.sendStatusRequest();
             client.writeMessage(MessageWrapper.createJSON(m));
-            HistoricizationService.createEmptyHistFile(m.getContent());
         } catch (IOException ex) {
             Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
         }
+        addEmptyTabPane(b);
     }
 
     public void denyBuddyRequest(Message m) throws NotAHandshakeException {
@@ -272,8 +302,8 @@ public class MainUI extends javax.swing.JFrame {
         lb_fileLabel_incoming.setText("Completed.");
     }
 
-    public int returnSelectedIDFromBuddy() {
-        return client.getIdFromBuddy(list_buddies.getSelectedValue().toString().split(": ")[0]);
+    public String returnSelectedIDFromBuddy() {
+        return cmb.getIdFromBuddy(list_buddies.getSelectedValue().toString().split(": ")[0]);
     }
 
     public JTextArea getArea() {
@@ -330,7 +360,7 @@ public class MainUI extends javax.swing.JFrame {
         jScrollPane1 = new javax.swing.JScrollPane();
         messageArea = new javax.swing.JTextArea();
         jButton3 = new javax.swing.JButton();
-        jButton4 = new javax.swing.JButton();
+        btn_showMessageStatus = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -631,10 +661,10 @@ public class MainUI extends javax.swing.JFrame {
 
         jButton3.setText("Smileys");
 
-        jButton4.setText("Status");
-        jButton4.addActionListener(new java.awt.event.ActionListener() {
+        btn_showMessageStatus.setText("Status");
+        btn_showMessageStatus.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton4ActionPerformed(evt);
+                btn_showMessageStatusActionPerformed(evt);
             }
         });
 
@@ -657,7 +687,7 @@ public class MainUI extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btn_send, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButton4)))
+                        .addComponent(btn_showMessageStatus)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
@@ -679,7 +709,7 @@ public class MainUI extends javax.swing.JFrame {
                             .addComponent(tf_message, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(btn_send)
                             .addComponent(jButton3)
-                            .addComponent(jButton4))))
+                            .addComponent(btn_showMessageStatus))))
                 .addContainerGap())
         );
 
@@ -708,30 +738,22 @@ public class MainUI extends javax.swing.JFrame {
     }//GEN-LAST:event_btn_registerActionPerformed
 
     private void btn_sendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_sendActionPerformed
-        int receiverID = client.getIdFromBuddy(list_buddies.getSelectedValue().toString().split(": ")[0]);
-        Message m = new Message(client.getId(), receiverID, EnumKindOfMessage.MESSAGE, tf_message.getText(), "");
-
         String buddyName = list_buddies.getSelectedValue().toString().split(": ")[0];
-
-        String formattedMessage_forMe = "\n" + Utilities.getTime() + " " + buddyName + ": \t" + m.getContent(); // contains Name of otherMember
+        int receiverID = Integer.decode(cmb.getIdFromBuddy(buddyName));
+        Message m = new Message(client.getId(), receiverID, EnumKindOfMessage.MESSAGE, tf_message.getText(), "");
         String formattedMessage_forOther = "\n" + Utilities.getTime() + " " + tf_memberName.getText() + ": \t" + m.getContent(); // contains my Name
-
+        addMyMessageToMessageArea(buddyName, formattedMessage_forOther);
+        tf_message.setText("");
+        
         try {
             m.setContent(formattedMessage_forOther);
             m.setMessageStatus(EnumMessageStatus.SENT);
             client.writeMessage(MessageWrapper.createJSON(m));
-            addMyMessageToMessageArea(buddyName, formattedMessage_forOther);
-            tf_message.setText("");
-
         } catch (IOException ex) {
             Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
         }
-        m.setContent(formattedMessage_forMe);
-        cmb.initMessageStatus(m, buddyName);
-
         if (cmb.getSettings().isSaveLocaleHistory()) {
-            m.setContent(formattedMessage_forMe);
-            HistoricizationService.addMessageToCurrentHistory(m, true);
+            DataAccess.saveNewMessage(m);
         }
 
     }//GEN-LAST:event_btn_sendActionPerformed
@@ -800,9 +822,10 @@ public class MainUI extends javax.swing.JFrame {
                 String name = sendFile.getName();
                 String id_UUID = Utilities.generateRandomUUID().toString();
                 int parts = Integer.decode(ResourcePoolHandler.PropertiesHelper.getValueOfKey("clientProperties", "waitingServiceParts"));
-                Message request = new Message(this.client.getId(), returnSelectedIDFromBuddy(), EnumKindOfMessage.HANDSHAKE, id_UUID, name);
+                Message request = new Message(this.client.getId(), Integer.decode(returnSelectedIDFromBuddy()), EnumKindOfMessage.HANDSHAKE, id_UUID, name);
                 Handshake hs = new Handshake(1, EnumHandshakeStatus.START, EnumHandshakeReason.FILE_REQUEST, false, String.valueOf(parts));
                 request.setHandshake(hs);
+
                 MediaFile mf = new MediaFile();
                 mf.setId(id_UUID);
                 mf.setFilePath(sendFile.getAbsolutePath());
@@ -854,30 +877,33 @@ public class MainUI extends javax.swing.JFrame {
         int index = tab_messages.getSelectedIndex();
         cmb = ClientMainBean.getInstance();
         if (index >= 0) {
+            String tabTitle = tab_messages.getTitleAt(index);
             if (!cmb.getUnreadMessagesAtTabMap().isEmpty()) {
                 if (cmb.getUnreadMessagesAtTabMap().containsKey(index)) {
                     for (Message me : cmb.getUnreadMessagesAtTabMap().get(index)) {
-                        CommunicationThread.fireStatusMessage(me, EnumMessageStatus.READ);
-
                         me.setMessageStatus(EnumMessageStatus.READ);
-                        cmb.updateMessageStatus(me);
+                        CommunicationThread.fireStatusMessage(me, EnumMessageStatus.READ);
                     }
                     cmb.removeMessagesFromUnreadList(index);
                 }
                 tab_messages.setIconAt(index, new ImageIcon());
+                if (!tabTitle.equals("System")){
+                    Buddy b = cmb.getBuddyByName(tabTitle);
+                    cmb.setActiveBuddy(b);
+                    statusFrame.reloadMessages(cmb.getActiveBuddy());
+                }
             }
         }
     }//GEN-LAST:event_tab_messagesStateChanged
 
-    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-        statusFrame.reloadMessages();
+    private void btn_showMessageStatusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_showMessageStatusActionPerformed
         statusFrame.setVisible(true);
         try {
             statusFrame.setSelected(true);
         } catch (PropertyVetoException ex) {
             Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }//GEN-LAST:event_jButton4ActionPerformed
+    }//GEN-LAST:event_btn_showMessageStatusActionPerformed
 
     /**
      * @param args the command line arguments
@@ -919,10 +945,10 @@ public class MainUI extends javax.swing.JFrame {
     private javax.swing.JButton btn_searchFriend;
     private javax.swing.JButton btn_send;
     private javax.swing.JButton btn_sendFile;
+    private javax.swing.JButton btn_showMessageStatus;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
-    private javax.swing.JButton jButton4;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;

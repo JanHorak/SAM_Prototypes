@@ -30,6 +30,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 import org.apache.log4j.Logger;
+import sam_testclient.entities.Message;
 import sun.audio.AudioPlayer;
 import sun.audio.AudioStream;
 
@@ -461,21 +462,11 @@ public abstract class Utilities {
         return result;
     }
     
-//    public static void replaceDB(String path){
-//        File old = new File(path);
-//        File old_buffer = new File(path.concat("_tmp"));
-//        try {
-//            Files.copy(old.toPath(), old_buffer.toPath(), StandardCopyOption.REPLACE_EXISTING);
-//        } catch (IOException ex) {
-//            java.util.logging.Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//        System.out.println("kopiert");
-//        old.delete();
-//        System.out.println(old.getAbsolutePath() + " gelöscht");
-//        old_buffer.renameTo(old);
-//        System.out.println(old_buffer.getAbsolutePath() + " unbenannt in: " + old.getAbsolutePath());
-//        old_buffer.delete();
-//        System.out.println(old_buffer.getAbsolutePath() + " gelöscht");
-//    }
+    public static String getNameFromMessage(Message m){
+        String content = m.getContent();
+        String buddyName = content.split(":")[1];
+        buddyName = buddyName.split(" ")[1];
+        return buddyName;
+    }
 
 }

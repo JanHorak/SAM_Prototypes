@@ -25,6 +25,7 @@ import sam_testclient.utilities.Utilities;
  *
  * @author janhorak
  */
+@Deprecated
 public class FileManager {
 
     private static org.apache.log4j.Logger logger;

@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package sam_testclient.ui.components;
 
 import java.awt.GridLayout;
@@ -13,6 +12,8 @@ import javax.swing.DefaultListModel;
 import javax.swing.JLabel;
 import javax.swing.ScrollPaneLayout;
 import sam_testclient.beans.ClientMainBean;
+import sam_testclient.dao.DataAccess;
+import sam_testclient.entities.Buddy;
 import sam_testclient.entities.Message;
 
 /**
@@ -24,20 +25,19 @@ public class StatusFrame extends javax.swing.JInternalFrame {
     /**
      * Creates new form StatusFrame
      */
+    private Buddy buddy;
+
     public StatusFrame() {
         initComponents();
-        
-        
     }
     
-    public void reloadMessages(){
-        DefaultListModel model = new DefaultListModel();     
-        Map<String, Map<String, Message>> currentHist = ClientMainBean.getInstance().getCurrentHistoryMap();
-        for (String buddy : currentHist.keySet()){
-            Map<String, Message> values = currentHist.get(buddy);
-            for (Message m : values.values()){
-                model.addElement(m.toString());
-            }
+    
+
+    public void reloadMessages(Buddy buddy) {
+        DefaultListModel model = new DefaultListModel();
+        List<Message> history = DataAccess.getAllMessagesWhereBuddyIsInvolved(buddy);
+        for (Message m : history) {
+            model.addElement(m.toString());
         }
         this.jList1.setModel(model);
     }

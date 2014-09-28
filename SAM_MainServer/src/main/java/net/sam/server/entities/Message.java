@@ -44,7 +44,7 @@ public class Message extends TransportObject implements Serializable {
         this.setTimestamp(new SimpleDateFormat("yyyy-MM-dd' 'HH:mm:ss").format(new Date()));
     }
 
-    public Message(Handshake hs, MediaFile mf) {
+    public Message(Handshake hs) {
         this.handshake = hs;
         this.setContent(hs.getContent());
         this.setOthers("");
@@ -100,9 +100,6 @@ public class Message extends TransportObject implements Serializable {
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Handshake handshake;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private MediaStorage mediaStorage;
-
     public Handshake getHandshake() throws NotAHandshakeException {
         if (isHandshake()) {
             return this.handshake;
@@ -123,21 +120,9 @@ public class Message extends TransportObject implements Serializable {
         return this.getMessageType() == EnumKindOfMessage.HANDSHAKE;
     }
 
-    public boolean hasFile() {
-        return this.mediaStorage != null;
-    }
-
     public void setHandshake(Handshake handshake) {
         this.setMessageType(EnumKindOfMessage.HANDSHAKE);
         this.handshake = handshake;
-    }
-
-    public MediaStorage getMediaStorage() {
-        return mediaStorage;
-    }
-
-    public void setMediaStorage(MediaStorage mediaStorage) {
-        this.mediaStorage = mediaStorage;
     }
 
     public void updateStatus() {

@@ -14,6 +14,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Level;
+import javax.persistence.CascadeType;
+import javax.persistence.Embeddable;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import org.apache.log4j.Logger;
 import sam_testclient.enums.EnumKindOfMessage;
 import sam_testclient.enums.EnumMessageStatus;
@@ -24,6 +32,12 @@ import sam_testclient.utilities.Utilities;
  *
  * @author janhorak
  */
+@Entity
+@NamedQueries({
+    @NamedQuery(name = "Message.findById", query = "SELECT m FROM Message m WHERE m.id = :id"),
+    @NamedQuery(name = "Message.findConversation", query = "SELECT m FROM Message m WHERE m.senderId = :sId AND m.receiverId = :ownId"),
+    @NamedQuery(name = "Message.findConversationWhereBuddyIsInvolved", query = "SELECT m FROM Message m WHERE m.senderId = :sId OR m.receiverId = :sId")
+})
 public class Message extends TransportObject implements Serializable {
 
     private static Logger logger = Logger.getLogger(Message.class);
@@ -42,7 +56,7 @@ public class Message extends TransportObject implements Serializable {
         this.setTimestamp(new SimpleDateFormat("yyyy-MM-dd' 'HH:mm:ss").format(new Date()));
     }
 
-    public Message(Handshake hs, MediaFile mf) {
+    public Message(Handshake hs) {
         this.handshake = hs;
         this.setContent(hs.getContent());
         this.setOthers("Not in use (because Handshake)");
@@ -50,12 +64,11 @@ public class Message extends TransportObject implements Serializable {
         this.setTimestamp(new SimpleDateFormat("yyyy-MM-dd' 'HH:mm:ss").format(new Date()));
     }
 
+    @Enumerated(EnumType.STRING)
     private EnumMessageStatus messageStatus;
 
     private Handshake handshake;
-
-    private MediaStorage mediaStorage;
-
+    
     public Handshake getHandshake() throws NotAHandshakeException {
         if (isHandshake()) {
             return this.handshake;
@@ -66,10 +79,6 @@ public class Message extends TransportObject implements Serializable {
 
     public boolean isHandshake() {
         return this.getMessageType() == EnumKindOfMessage.HANDSHAKE;
-    }
-
-    public boolean hasFile() {
-        return this.mediaStorage != null;
     }
 
     public EnumMessageStatus getMessageStatus() {
@@ -83,14 +92,6 @@ public class Message extends TransportObject implements Serializable {
     public void setHandshake(Handshake handshake) {
         this.setMessageType(EnumKindOfMessage.HANDSHAKE);
         this.handshake = handshake;
-    }
-
-    public MediaStorage getMediaStorage() {
-        return mediaStorage;
-    }
-
-    public void setMediaStorage(MediaStorage mediaStorage) {
-        this.mediaStorage = mediaStorage;
     }
 
     public void interchangeSenderIDAndReceiverID() {
