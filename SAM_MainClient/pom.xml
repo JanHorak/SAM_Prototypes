@@ -241,9 +241,6 @@
                         </goals>
                         <configuration>
                             <tasks>
-                                <echo>Copying BuddyList.data...</echo>
-                                <copy file="resources/buddyList.data" tofile="${basedir}/target/resources/buddyList.data"/>
-                                
                                 <echo>Copying Properties...</echo>
                                 <copy file="resources/properties/client.properties" tofile="${basedir}/target/resources/properties/client.properties"/>
                                 <copy file="resources/properties/log4j.properties" tofile="${basedir}/target/resources/properties/log4j.properties"/>

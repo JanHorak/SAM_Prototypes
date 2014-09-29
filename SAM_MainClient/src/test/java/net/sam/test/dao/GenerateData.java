@@ -35,7 +35,7 @@ public class GenerateData {
         settings.setAllowWebClients(true);
         settings.setAutoDownload(MemberSettings.AutoDownload.YES);
         settings.setAvatarPath("sadasd");
-        settings.setHistBorder("123");
+        settings.setHistBorder("10");
         settings.setName("asdasd");
         settings.setRecreationDays(2);
         settings.setRecreationType(MemberSettings.RecreationEnum.AT_LOGIN);

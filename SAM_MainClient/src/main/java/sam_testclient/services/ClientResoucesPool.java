@@ -5,7 +5,6 @@
  */
 package sam_testclient.services;
 
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -23,7 +22,7 @@ import org.apache.log4j.Logger;
  *
  * @author Jan
  */
-public class ClientResoucesPool implements Rules{
+public class ClientResoucesPool implements Rules {
 
     @FileResource(path = "resources/graphics/simpleLogoSAM.png",
             writeable = false)
@@ -40,17 +39,15 @@ public class ClientResoucesPool implements Rules{
     @FileResource(path = "resources/properties/log4j.properties",
             writeable = false)
     private static Properties log4jProperties;
-    
-    
-    // ----------- UpdateRules --------------------------
 
+    // ----------- UpdateRules --------------------------
     @Override
     public void updateField(Field field) {
         Logger logger = Logger.getLogger(ClientResoucesPool.class);
         // Default- values
         String path = "";
         boolean isWriteable = false;
-        
+
         // Getting Metadata
         if (field.isAnnotationPresent(FileResource.class)) {
             path = ResourcePoolHandler.getPathFromFileResource(field);
@@ -83,7 +80,7 @@ public class ClientResoucesPool implements Rules{
         }
 
         // ImageIcon
-        if (field.getType()== ImageIcon.class) {
+        if (field.getType() == ImageIcon.class) {
             ImageIcon icon = new ImageIcon(ResourcePoolHandler.getPathFromFileResource(field));
             try {
                 field.set(field.getName(), icon);
@@ -111,7 +108,7 @@ public class ClientResoucesPool implements Rules{
             try {
                 field.set(field.getName(), file);
             } catch (IllegalArgumentException | IllegalAccessException ex) {
-                
+
             }
 
         }

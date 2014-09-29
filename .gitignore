@@ -34,7 +34,7 @@ nbdist/
 nbactions.xml
 nb-configuration.xml
 
-#DerbyDatabases
-*.db/
+# DerbyDatabases
+SAM_MainClient/SAMClient.db
 derby.log
 derby.properties
