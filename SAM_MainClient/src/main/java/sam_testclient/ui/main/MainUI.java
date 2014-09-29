@@ -31,6 +31,7 @@ import sam_testclient.enums.EnumMessageStatus;
 import sam_testclient.exceptions.NotAHandshakeException;
 import sam_testclient.services.ClientResoucesPool;
 import sam_testclient.services.FileSubmitService;
+import sam_testclient.services.HistoricizationService;
 import sam_testclient.sources.MessageWrapper;
 import sam_testclient.sources.ValidationManager;
 import sam_testclient.ui.components.SettingsFrame;
@@ -47,7 +48,7 @@ public class MainUI extends javax.swing.JFrame {
     private ClientMainBean cmb;
     private static int progressStep = 0;
     private static int progressBuffer = 0;
-    
+
     public String getPW() {
         return this.tf_password.getText();
     }
@@ -95,13 +96,10 @@ public class MainUI extends javax.swing.JFrame {
         btn_send.setEnabled(true);
         btn_register.setEnabled(false);
     }
-    
-    
+
     //
     // ----------------------------------- HELPERMETHODS FOR TAB AND TAB-BEHAVIOR ----------------------------
     //
-    
-    
     /**
      * mapps the buddylist to the tabs of the UI
      *
@@ -113,8 +111,13 @@ public class MainUI extends javax.swing.JFrame {
             JTextArea area = new JTextArea();
             // Get all messages from db and display them
             List<Message> conversation = DataAccess.getAllMessagesWhereBuddyIsInvolved(buddy);
+
+            // Fill map of messages for hist-borders
+            int size = conversation.size();
+            cmb.getBuddyAmountOfMessages().put(buddy.getId(), size);
+
             if (!conversation.isEmpty()) {
-                for (Message m : conversation){
+                for (Message m : conversation) {
                     area.append(m.getContent());
                 }
             } else {
@@ -135,36 +138,41 @@ public class MainUI extends javax.swing.JFrame {
     public synchronized void distributeMessageToAreas(Message m) {
         String buddyName = Utilities.getNameFromMessage(m);
         int buddyIndex = tab_messages.indexOfTab(buddyName);
+
+        cmb.increaseAmountOfMessages(m.getSenderId());
+
         if (!isBuddyTabActive(buddyName)) {
             cmb.addMessageToUnreadList(buddyIndex, m);
             tab_messages.setIconAt(buddyIndex, new ImageIcon(ResourcePoolHandler.getPathOfResource("notice_gif")));
             Utilities.playSound("resources/sounds/notice.wav");
         }
         ((JTextArea) tab_messages.getComponentAt(buddyIndex)).append(m.getContent());
+        System.out.println("<<<<<<<" + Integer.decode(cmb.getSettings().getHistBorder()));
+        if (cmb.getBuddyAmountOfMessages().get(m.getSenderId()) > Integer.decode(cmb.getSettings().getHistBorder())) {
+            HistoricizationService.createHistory(m.getSenderId(), buddyName);
+        }
     }
 
     private void addMyMessageToMessageArea(String buddyName, String content) {
         ((JTextArea) tab_messages.getComponentAt(tab_messages.indexOfTab(buddyName))).append(content);
         selectTabByBuddyName(buddyName);
     }
-    
-    public boolean isBuddyTabActive(Message m){
+
+    public boolean isBuddyTabActive(Message m) {
         return tab_messages.getSelectedIndex() == tab_messages.indexOfTab(Utilities.getNameFromMessage(m));
     }
-    
-    public boolean isBuddyTabActive(String buddyName){
+
+    public boolean isBuddyTabActive(String buddyName) {
         return tab_messages.getSelectedIndex() == tab_messages.indexOfTab(buddyName);
     }
 
     private void selectTabByBuddyName(String buddyName) {
         tab_messages.setSelectedIndex(tab_messages.indexOfTab(buddyName));
     }
-    
+
     //
     // ----------------------------------- END HELPERMETHODS FOR TAB AND TAB-BEHAVIOR ----------------------------
     //
-    
-
     public void acceptBuddyRequest(Message m) throws NotAHandshakeException {
         m.getHandshake().setAnswer(true);
         m.getHandshake().setStatus(EnumHandshakeStatus.END);
@@ -185,6 +193,7 @@ public class MainUI extends javax.swing.JFrame {
         } catch (IOException ex) {
             Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
         }
+        cmb.getBuddyAmountOfMessages().put(Integer.decode(b.getInternalID()), 0);
         addEmptyTabPane(b);
     }
 
@@ -756,7 +765,7 @@ public class MainUI extends javax.swing.JFrame {
         String formattedMessage_forOther = "\n" + Utilities.getTime() + " " + tf_memberName.getText() + ": \t" + m.getContent(); // contains my Name
         addMyMessageToMessageArea(buddyName, formattedMessage_forOther);
         tf_message.setText("");
-        
+
         try {
             m.setContent(formattedMessage_forOther);
             m.setMessageStatus(EnumMessageStatus.SENT);
@@ -766,6 +775,7 @@ public class MainUI extends javax.swing.JFrame {
         }
         if (cmb.getSettings().isSaveLocaleHistory()) {
             DataAccess.saveNewMessage(m);
+            cmb.increaseAmountOfMessages(m.getReceiverId());
         }
 
     }//GEN-LAST:event_btn_sendActionPerformed
@@ -899,7 +909,7 @@ public class MainUI extends javax.swing.JFrame {
                     cmb.removeMessagesFromUnreadList(index);
                 }
                 tab_messages.setIconAt(index, new ImageIcon());
-                if (!tabTitle.equals("System")){
+                if (!tabTitle.equals("System")) {
                     Buddy b = cmb.getBuddyByName(tabTitle);
                     cmb.setActiveBuddy(b);
                     statusFrame.reloadMessages(cmb.getActiveBuddy());

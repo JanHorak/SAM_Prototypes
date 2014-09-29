@@ -155,6 +155,7 @@ public class CommunicationThread extends Thread {
                                 buddy.setBuddyName(m.getContent());
 
                                 cmb.getBuddyList().add(buddy);
+                                cmb.getBuddyAmountOfMessages().put(m.getSenderId(), 0);
 
                                 DataAccess.saveNewBuddy(buddy);
 

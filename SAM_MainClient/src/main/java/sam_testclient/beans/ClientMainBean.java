@@ -29,11 +29,10 @@ public class ClientMainBean {
     private List<Buddy> buddyList;
     private Map<Integer, String> buddy_statusMap;
     private MediaFile lastFile;
+    
+    private Map<Integer, Integer> buddyAmountOfMessages;
 
     private Map<Integer, List<Message>> unreadMessagesAtTab;
-
-    // Map with content: <BuddyName <MessageID, Message>>
-    private Map<String, Map<String, Message>> currentHistoryMap;
 
     private MemberSettings settings;
     
@@ -42,8 +41,8 @@ public class ClientMainBean {
     private ClientMainBean() {
         logger = Logger.getLogger(ClientMainBean.class);
         this.buddyList = DataAccess.getAllBuddies();
+        this.buddyAmountOfMessages = new ConcurrentHashMap<>();
         this.buddy_statusMap = new HashMap<>();
-        this.currentHistoryMap = new ConcurrentHashMap<>();
         this.unreadMessagesAtTab = new ConcurrentHashMap<>();
     }
 
@@ -129,14 +128,6 @@ public class ClientMainBean {
         this.settings = settings;
     }
 
-    public Map<String, Map<String, Message>> getCurrentHistoryMap() {
-        return currentHistoryMap;
-    }
-
-    public void setCurrentHistoryMap(Map<String, Map<String, Message>> currentHistoryMap) {
-        this.currentHistoryMap = currentHistoryMap;
-    }
-
     public Buddy getActiveBuddy() {
         return activeBuddy;
     }
@@ -144,8 +135,20 @@ public class ClientMainBean {
     public void setActiveBuddy(Buddy activeBuddy) {
         this.activeBuddy = activeBuddy;
     }
+
+    public Map<Integer, Integer> getBuddyAmountOfMessages() {
+        return buddyAmountOfMessages;
+    }
+
+    public void setBuddyAmountOfMessages(Map<Integer, Integer> buddyAmountOfMessages) {
+        this.buddyAmountOfMessages = buddyAmountOfMessages;
+    }
     
-    
+    public void increaseAmountOfMessages(int buddyId){
+        int next = buddyAmountOfMessages.get(buddyId)+1;
+        this.buddyAmountOfMessages.put(buddyId, next);
+        System.out.println(">>>>>>" + buddyAmountOfMessages.get(buddyId));
+    }
     
     //IMPR JAVA 8!!!!!!!
 
