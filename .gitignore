@@ -33,3 +33,8 @@ dist/
 nbdist/
 nbactions.xml
 nb-configuration.xml
+
+#DerbyDatabases
+*.db/
+derby.log
+derby.properties

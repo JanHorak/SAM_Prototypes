@@ -122,7 +122,7 @@ public class ServerMainBean {
         return m;
     }
 
-    public Member getRegisteredMemberIdByName(String name) {
+    public Member getRegisteredMemberByName(String name) {
         Member m = new Member();
         for (Member me : this.registeredUserList) {
             if (me.getName().equals(name)) {

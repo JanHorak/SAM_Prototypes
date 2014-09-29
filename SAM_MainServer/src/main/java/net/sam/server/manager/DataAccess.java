@@ -131,33 +131,6 @@ public abstract class DataAccess {
         shutDown();
         logger.info(Utilities.getLogTime()+" ServerConfiguration deleted: " + sc.getName());
     }
-
-    /**
-     * Login method.
-     * 
-     * @param m {@link Member}
-     * @return 
-     */
-    public static boolean login(Member m) {
-        setUp();
-        String pw = new String();
-        Query q = em.createQuery("SELECT m.password FROM Member m WHERE m.name = :name", String.class).setParameter("name", m.getName());
-        try {
-            pw = (String) q.getSingleResult();
-            System.out.println(pw);
-            if (m.getPassword().equals(pw)) {
-                return true;
-            } else {
-                return false;
-            }
-        } catch (NoResultException ex) {
-            System.err.println("No User founded!");
-            return false;
-        } finally {
-            shutDown();
-        }
-
-    }
     
     /**
      * Saves a passed Message in the MessageBuffer

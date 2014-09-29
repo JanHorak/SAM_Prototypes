@@ -110,7 +110,7 @@ public class ServerConfiguration extends javax.swing.JFrame {
         btn_save = new javax.swing.JButton();
         btn_cancel = new javax.swing.JButton();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Serverconfiguration"));
 

@@ -145,9 +145,9 @@ public class CommunicationThread extends Thread {
                             // Check if the user is not already online
                             if (!sb.isMemberOnline(m.getContent())) {
                                 // Check login- data
-                                Member me = DataAccess.getMemberByName(m.getContent());
-                                if (DataAccess.login(me)) {
-                                    Member member = DataAccess.getMemberByName(m.getContent());
+                                Member member = sb.getRegisteredMemberByName(m.getContent());
+                                System.out.println("<<<<<<<<<<<<" + m.getOthers());
+                                if (member.getPassword().equals(m.getOthers())) {
                                     sb.addMember_login(member, socket);
 
                                     sendLoginResponseMessage(member);
@@ -173,19 +173,12 @@ public class CommunicationThread extends Thread {
                                     area.append("\n" + Utilities.getLogTime() + " User logged tried to log in and failed:");
                                     area.append("\n" + Utilities.getLogTime() + " " + m.toString());
                                     area.append("\n");
+                                    loginFailedAction();
                                 }
 
                                 // Member is already logged in 
                             } else {
-                                Message hint = new Message(0, m.getSenderId(), EnumKindOfMessage.SYSTEM, "Login failed (1001)", "");
-                                try {
-                                    guard_dos.increaseLevelForSocket(socket.getInetAddress());
-                                    this.writeMessage(socket, MessageWrapper.createJSON(hint));
-                                    socket.close();
-                                    this.live = false;
-                                } catch (IOException ex) {
-                                    logger.error("IO Exception: " + ex);
-                                }
+                                loginFailedAction();
                             }
 
                         }
@@ -390,7 +383,7 @@ public class CommunicationThread extends Thread {
                                 if (handshake.getStatus() == EnumHandshakeStatus.START) {
 
                                     // Get unknwon ID of the receiver by requested Name
-                                    int recieverID = sb.getRegisteredMemberIdByName(handshake.getContent()).getUserID();
+                                    int recieverID = sb.getRegisteredMemberByName(handshake.getContent()).getUserID();
 
                                     // Replace the ServerID with the real ID of the Receiver
                                     m.setReceiverId(recieverID);
@@ -564,5 +557,17 @@ public class CommunicationThread extends Thread {
             DataAccess.saveMessageInBuffer(buffer);
         }
 
+    }
+
+    private void loginFailedAction() {
+        Message hint = new Message(0, 0, EnumKindOfMessage.SYSTEM, "Login failed (1001)", "");
+        try {
+            guard_dos.increaseLevelForSocket(socket.getInetAddress());
+            this.writeMessage(socket, MessageWrapper.createJSON(hint));
+            socket.close();
+            this.live = false;
+        } catch (IOException ex) {
+            logger.error("IO Exception: " + ex);
+        }
     }
 }
