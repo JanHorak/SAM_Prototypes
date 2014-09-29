@@ -25,7 +25,8 @@ import javax.validation.constraints.NotNull;
 @NamedQueries({
     @NamedQuery(name = "Member.findAll", query = "SELECT m FROM Member m"),
     @NamedQuery(name = "Member.findByID", query = "SELECT m FROM Member m WHERE m.memberID = :id"),
-    @NamedQuery(name = "Member.findByName", query = "SELECT m FROM Member m WHERE m.name = :name")
+    @NamedQuery(name = "Member.findByName", query = "SELECT m FROM Member m WHERE m.name = :name"),
+    @NamedQuery(name = "Member.getPasswordByName", query = "SELECT m.password FROM Member m WHERE m.name = :name")
 })
 public class Member implements Serializable{
     
