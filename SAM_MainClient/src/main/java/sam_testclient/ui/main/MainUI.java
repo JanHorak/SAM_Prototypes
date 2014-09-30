@@ -60,7 +60,7 @@ public class MainUI extends javax.swing.JFrame {
     public MainUI() {
         BasicConfigurator.configure();
         ResourcePoolHandler.loadFileResources(ClientResoucesPool.class);
-        sf = new SettingsFrame(client, this, jTextField1, messageArea);
+        sf = new SettingsFrame(client, this, tf_searchFriend, messageArea);
 
         statusFrame = new StatusFrame();
         this.add(sf);
@@ -145,11 +145,12 @@ public class MainUI extends javax.swing.JFrame {
             cmb.addMessageToUnreadList(buddyIndex, m);
             tab_messages.setIconAt(buddyIndex, new ImageIcon(ResourcePoolHandler.getPathOfResource("notice_gif")));
             Utilities.playSound("resources/sounds/notice.wav");
-        }
+        } 
         ((JTextArea) tab_messages.getComponentAt(buddyIndex)).append(m.getContent());
         System.out.println("<<<<<<<" + Integer.decode(cmb.getSettings().getHistBorder()));
-        if (cmb.getBuddyAmountOfMessages().get(m.getSenderId()) > Integer.decode(cmb.getSettings().getHistBorder())) {
+        if (cmb.getBuddyAmountOfMessages().get(m.getSenderId()) == Integer.decode(cmb.getSettings().getHistBorder())) {
             HistoricizationService.createHistory(m.getSenderId(), buddyName);
+            cmb.resetAmountOfMessages(m.getSenderId());
         }
     }
 
@@ -187,7 +188,7 @@ public class MainUI extends javax.swing.JFrame {
         m.setReceiverId(m.getSenderId());
         m.setSenderId(this.client.getId());
         try {
-            client.createBuddyDir(m.getContent());
+            client.createBuddyDir(b.getBuddyName());
             client.sendStatusRequest();
             client.writeMessage(MessageWrapper.createJSON(m));
         } catch (IOException ex) {
@@ -349,7 +350,7 @@ public class MainUI extends javax.swing.JFrame {
         tf_serverip = new javax.swing.JTextField();
         jPanel4 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
-        jTextField1 = new javax.swing.JTextField();
+        tf_searchFriend = new javax.swing.JTextField();
         btn_searchFriend = new javax.swing.JButton();
         btn_sendFile = new javax.swing.JButton();
         jLabel2 = new javax.swing.JLabel();
@@ -598,7 +599,7 @@ public class MainUI extends javax.swing.JFrame {
                                     .addGroup(jPanel4Layout.createSequentialGroup()
                                         .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                                             .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                            .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                            .addComponent(tf_searchFriend, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE))
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                         .addComponent(btn_searchFriend)
                                         .addGap(0, 0, Short.MAX_VALUE)))))
@@ -657,7 +658,7 @@ public class MainUI extends javax.swing.JFrame {
                 .addComponent(jLabel1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(tf_searchFriend, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btn_searchFriend))
                 .addGap(0, 0, Short.MAX_VALUE))
         );
@@ -776,6 +777,10 @@ public class MainUI extends javax.swing.JFrame {
         if (cmb.getSettings().isSaveLocaleHistory()) {
             DataAccess.saveNewMessage(m);
             cmb.increaseAmountOfMessages(m.getReceiverId());
+            if (cmb.getBuddyAmountOfMessages().get(m.getReceiverId()) == Integer.decode(cmb.getSettings().getHistBorder())) {
+                HistoricizationService.createHistory(m.getReceiverId(), buddyName);
+                cmb.resetAmountOfMessages(m.getReceiverId());
+            }
         }
 
     }//GEN-LAST:event_btn_sendActionPerformed
@@ -811,13 +816,13 @@ public class MainUI extends javax.swing.JFrame {
 
     private void btn_searchFriendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_searchFriendActionPerformed
         // Handshake- content: Name of searched buddy, message-content: own name
-        Handshake hs = new Handshake(0, EnumHandshakeStatus.START, EnumHandshakeReason.BUDDY_REQUEST, false, jTextField1.getText());
+        Handshake hs = new Handshake(0, EnumHandshakeStatus.START, EnumHandshakeReason.BUDDY_REQUEST, false, tf_searchFriend.getText());
         Message message = new Message(this.client.getId(), 0, EnumKindOfMessage.HANDSHAKE, tf_memberName.getText(), "");
         message.setHandshake(hs);
         try {
             client.writeMessage(MessageWrapper.createJSON(message));
             messageArea.append(Utilities.getLogTime() + " Buddyrequest sended\n");
-            jTextField1.setText("");
+            tf_searchFriend.setText("");
         } catch (IOException ex) {
             Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -992,7 +997,6 @@ public class MainUI extends javax.swing.JFrame {
     private javax.swing.JSeparator jSeparator4;
     private javax.swing.JSeparator jSeparator5;
     private javax.swing.JSeparator jSeparator6;
-    private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField jTextField2;
     private javax.swing.JLabel lb_avatar;
     private static javax.swing.JLabel lb_fileLabel_incoming;
@@ -1006,6 +1010,7 @@ public class MainUI extends javax.swing.JFrame {
     public javax.swing.JTextField tf_memberName;
     private javax.swing.JTextField tf_message;
     private javax.swing.JPasswordField tf_password;
+    private javax.swing.JTextField tf_searchFriend;
     private javax.swing.JTextField tf_serverip;
     private javax.swing.JToggleButton tgl_login;
     // End of variables declaration//GEN-END:variables

@@ -79,20 +79,20 @@ public abstract class Utilities {
         List<String> statusList = new ArrayList<>();
         input = input.substring(1, input.length() - 1);
         String[] cleaned = input.split(", ");
-        for (int i = 0; i < cleaned.length; i++){
+        for (int i = 0; i < cleaned.length; i++) {
             statusList.add(cleaned[i]);
         }
-        
-        for (String status : statusList){
+
+        for (String status : statusList) {
             String[] content = status.split(",");
             String[] availability = content[0].split("=");
             String id = availability[0];
             String date = "";
             String active = availability[1].split(" ")[0];
             StringBuilder sb = new StringBuilder();
-            if (active.equals("false")){
+            if (active.equals("false")) {
                 sb.append(availability[1].split(" ")[1]);
-                sb.append(" "+availability[1].split(" ")[2]);
+                sb.append(" " + availability[1].split(" ")[2]);
                 date = sb.toString();
             }
             System.out.println(id);
@@ -264,22 +264,12 @@ public abstract class Utilities {
      *
      * @param path path of File
      * @param content
-     * @param append if append is true, the will put the content and the end of
-     * the file. if append is false, it will replace the whole content of the
-     * aimed file.
      */
-    public static void writeContentToFile(String path, String content, boolean append) {
+    public static void writeContentToFile(String path, String content) {
         File file = new File(path);
-        if (!file.exists()) {
-            try {
-                file.createNewFile();
-            } catch (IOException ex) {
-                java.util.logging.Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
         FileWriter fw = null;
         try {
-            fw = new FileWriter(file.getAbsoluteFile(), append);
+            fw = new FileWriter(file.getAbsoluteFile());
         } catch (IOException ex) {
             java.util.logging.Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -288,11 +278,12 @@ public abstract class Utilities {
             bw.write("\n" + content);
         } catch (IOException ex) {
             java.util.logging.Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        try {
-            bw.close();
-        } catch (IOException ex) {
-            java.util.logging.Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                bw.close();
+            } catch (IOException ex) {
+                java.util.logging.Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 
@@ -314,8 +305,8 @@ public abstract class Utilities {
         }
         return "";
     }
-    
-    public static List<File> getFilesFromFolder(String path, final String endsWithFilterRegEx){
+
+    public static List<File> getFilesFromFolder(String path, final String endsWithFilterRegEx) {
         File[] fileList = new File(path).listFiles();
         List<File> result = new ArrayList<>();
         for (int i = 0; i < fileList.length; i++) {
@@ -461,8 +452,8 @@ public abstract class Utilities {
 
         return result;
     }
-    
-    public static String getNameFromMessage(Message m){
+
+    public static String getNameFromMessage(Message m) {
         String content = m.getContent();
         String buddyName = content.split(":")[1];
         buddyName = buddyName.split(" ")[1];
