@@ -342,7 +342,7 @@
                                       <Group type="102" attributes="0">
                                           <Group type="103" groupAlignment="0" max="-2" attributes="0">
                                               <Component id="jLabel1" max="32767" attributes="0"/>
-                                              <Component id="jTextField1" min="-2" pref="61" max="-2" attributes="0"/>
+                                              <Component id="tf_searchFriend" min="-2" pref="61" max="-2" attributes="0"/>
                                           </Group>
                                           <EmptySpace max="-2" attributes="0"/>
                                           <Component id="btn_searchFriend" min="-2" max="-2" attributes="0"/>
@@ -419,7 +419,7 @@
                   <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
                   <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
-                      <Component id="jTextField1" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="tf_searchFriend" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="btn_searchFriend" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
@@ -433,7 +433,7 @@
             <Property name="text" type="java.lang.String" value="Add a Friend"/>
           </Properties>
         </Component>
-        <Component class="javax.swing.JTextField" name="jTextField1">
+        <Component class="javax.swing.JTextField" name="tf_searchFriend">
         </Component>
         <Component class="javax.swing.JButton" name="btn_searchFriend">
           <Properties>

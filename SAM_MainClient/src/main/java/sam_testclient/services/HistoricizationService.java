@@ -23,7 +23,6 @@ import sam_testclient.utilities.Utilities;
  *
  * @author Jan
  */
-@Deprecated
 public abstract class HistoricizationService {
 
     /**
@@ -56,7 +55,7 @@ public abstract class HistoricizationService {
         for (Message m : messages) {
             content += m.getContent();
         }
-        Utilities.writeContentToFile(logFilePath, headerLine + "\n" + content, true);
+        Utilities.writeContentToFile(logFilePath, headerLine + "\n" + content);
 
         System.out.println("New Logfile created");
         return logFilePath;
@@ -212,6 +211,7 @@ public abstract class HistoricizationService {
         @Override
         public void run() {
             List<Message> allMessagesFromBuddy = DataAccess.getAllMessagesWhereBuddyIsInvolved(buddyId);
+            System.out.println(buddyName + " " + allMessagesFromBuddy.size() + " " + buddyId);
             createLogFile(buddyName, allMessagesFromBuddy, getHistFolderPathByName(buddyName));
         }
 

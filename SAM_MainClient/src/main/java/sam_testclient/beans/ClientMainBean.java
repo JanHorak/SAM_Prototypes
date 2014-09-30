@@ -76,7 +76,7 @@ public class ClientMainBean {
     public void removeMessagesFromUnreadList(int tabId) {
         for (Message m : unreadMessagesAtTab.get(tabId)) {
             m.setMessageStatus(EnumMessageStatus.READ);
-            DataAccess.updateMessage(m); // !!!!!!!
+            DataAccess.updateMessage(m);
         }
         unreadMessagesAtTab.get(tabId).clear();
         logger.debug("UnreadList cleared");
@@ -147,6 +147,11 @@ public class ClientMainBean {
     public void increaseAmountOfMessages(int buddyId){
         int next = buddyAmountOfMessages.get(buddyId)+1;
         this.buddyAmountOfMessages.put(buddyId, next);
+        System.out.println(">>>>>>" + buddyAmountOfMessages.get(buddyId));
+    }
+    
+    public void resetAmountOfMessages(int buddyId){
+        this.buddyAmountOfMessages.put(buddyId, 0);
         System.out.println(">>>>>>" + buddyAmountOfMessages.get(buddyId));
     }
     

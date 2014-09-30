@@ -1,6 +1,6 @@
 ----------------------------------------------------------------
-Mon Sep 29 13:13:31 CEST 2014:
-Booting Derby version The Apache Software Foundation - Apache Derby - 10.11.1.1 - (1616546): instance a816c00e-0148-c11d-87ec-00000fda7d98 
+Tue Sep 30 11:09:43 CEST 2014:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.11.1.1 - (1616546): instance a816c00e-0148-c5d2-8db1-0000103aa158 
 on database directory C:\Users\Jan\Documents\Development\Projects\SAM\Prototypes\SAM_MainClient\SAMClient.db with class loader sun.misc.Launcher$AppClassLoader@6bc7c054 
 Loaded from file:/C:/Users/Jan/.m2/repository/org/apache/derby/derby/10.11.1.1/derby-10.11.1.1.jar
 java.vendor=Oracle Corporation
