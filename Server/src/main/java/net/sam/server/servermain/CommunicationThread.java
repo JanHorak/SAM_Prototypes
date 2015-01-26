@@ -31,6 +31,7 @@ import net.sam.server.exceptions.NotAHandshakeException;
 import net.sam.server.manager.DataAccess;
 import net.sam.server.manager.MessageWrapper;
 import net.sam.server.security.DoSGuard;
+import net.sam.server.services.ContainerService;
 import net.sam.server.utilities.Utilities;
 import org.apache.log4j.Logger;
 
@@ -52,7 +53,7 @@ public class CommunicationThread extends Thread {
     public CommunicationThread(Socket socket, JTextArea area) {
         this.socket = socket;
         this.area = area;
-        sb = ServerMainBean.getInstance();
+        sb = ContainerService.getBean(ServerMainBean.class);
         guard_dos = DoSGuard.getInstance();
         logger = Logger.getLogger(CommunicationThread.class);
     }

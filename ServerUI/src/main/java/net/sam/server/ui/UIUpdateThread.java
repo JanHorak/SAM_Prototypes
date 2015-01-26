@@ -5,6 +5,7 @@
  */
 package net.sam.server.ui;
 
+import javax.inject.Inject;
 import javax.swing.JList;
 import net.sam.server.beans.ServerMainBean;
 import net.sam.server.manager.DataAccess;
@@ -20,15 +21,11 @@ public class UIUpdateThread extends Thread {
 
     private JList ui_userList;
 
-    private ServerMainBean sb;
-
     private Logger logger;
     
     public UIUpdateThread(JList loggedInList) {
         logger = Logger.getLogger(UIUpdateThread.class);
         this.ui_userList = loggedInList;
-        sb = ServerMainBean.getInstance();
-        sb.setRegisteredMembers(DataAccess.getAllRegisteredMembers());
     }
 
     @Override

@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import javax.inject.Inject;
 import javax.swing.JTextArea;
 import net.sam.server.beans.ServerMainBean;
 import net.sam.server.entities.Member;
@@ -48,8 +49,8 @@ public class ServerMainThread implements Runnable {
         this.active = active;
         this.server = server;
         this.area = area;
+        serverMainBean = ContainerService.getBean(ServerMainBean.class);
         this.commList = new ArrayList<>();
-        serverMainBean = ServerMainBean.getInstance();
         logger = Logger.getLogger(ServerMainThread.class);
         sct = new SecurityThread();
         executorPool.execute(sct);
