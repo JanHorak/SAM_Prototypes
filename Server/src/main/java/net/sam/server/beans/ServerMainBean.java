@@ -12,39 +12,30 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
 import net.sam.server.entities.Member;
 import net.sam.server.entities.ServerConfig;
 import net.sam.server.manager.DataAccess;
-import net.sam.server.utilities.Utilities;
 import org.apache.log4j.Logger;
 
 /**
  *
  * @author janhorak
  */
+@ApplicationScoped
 public class ServerMainBean {
 
-    /**
-     * Singleton- Pattern [@TODO: Maybe it should be replaced by CDI]
-     */
-    private static ServerMainBean instance = null;
-
-    public static ServerMainBean getInstance() {
-        if (instance == null) {
-            instance = new ServerMainBean();
-            logger.info(Utilities.getLogTime() + " Singleton instantiated successfully");
-        }
-        return instance;
-    }
-
-    public ServerMainBean() {
+    @PostConstruct
+    public void init() {
         this.loggedInuserList = new ArrayList<>();
         this.registeredUserList = new ArrayList<>();
         this.socketMap = new ConcurrentHashMap<>();
         this.allConfigs = new ArrayList<>();
-
+        
         this.socketMap_unsafe = new ConcurrentHashMap<>();
         this.secretBuffer = new ConcurrentHashMap<>();
+        this.registeredUserList = DataAccess.getAllRegisteredMembers();
         reloadAllConfigs();
         logger = Logger.getLogger(ServerMainBean.class);
     }
@@ -218,11 +209,11 @@ public class ServerMainBean {
     public Map<Integer, String> getOnlineStatusOfMemberById(String[] ids) {
         List<Integer> idList = new ArrayList<>();
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm dd-MM-yyyy");
-        for (int i = 0; i < ids.length; i++) {
-            idList.add(Integer.decode(ids[i]));
+        for (String id : ids) {
+            idList.add(Integer.decode(id));
         }
 
-        Map<Integer, String> buddy_online_Response = new HashMap<Integer, String>();
+        Map<Integer, String> buddy_online_Response = new HashMap<>();
         for (int id : idList) {
             for (Member m : loggedInuserList) {
                 if (m.getUserID() == id) {

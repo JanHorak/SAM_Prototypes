@@ -19,6 +19,7 @@ import org.apache.log4j.Logger;
  */
 public class DoSGuard extends Guard {
 
+
     private ServerMainBean smb;
     private boolean live;
 
@@ -26,8 +27,8 @@ public class DoSGuard extends Guard {
     private static Logger logger;
 
     private DoSGuard() {
+        smb = ContainerService.getBean(ServerMainBean.class);
         logger = Logger.getLogger(DoSGuard.class);
-        smb = ServerMainBean.getInstance();
         this.threatLevelPerSocket = new ConcurrentHashMap<>();
         this.live = true;
     }

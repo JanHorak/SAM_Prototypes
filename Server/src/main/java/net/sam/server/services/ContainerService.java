@@ -57,19 +57,4 @@ public class ContainerService {
         Object o = BeanProvider.getContextualReference(clazz, true);
         return (T) o;
     }
-
-    /**
-     * This method will return a Bean which is in the container. If the object
-     * is not in the context, it will be added and returned next time (in
-     * dependency to the annotation and the Scope)
-     *
-     * @param <T>
-     * @param clazz
-     * @return Object of kind <T>
-     */
-    public <T extends Object> T getBean2(Class<T> clazz) {
-        Object o = BeanProvider.getContextualReference(clazz, true);
-        return (T) o;
-    }
-
 }

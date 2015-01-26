@@ -6,7 +6,6 @@
 
 package sam_testclient.validators;
 
-import javax.swing.ImageIcon;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import sam_testclient.entities.AvatarImage;

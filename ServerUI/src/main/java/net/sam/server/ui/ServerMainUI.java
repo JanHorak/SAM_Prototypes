@@ -3,6 +3,7 @@ package net.sam.server.ui;
 import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
+import javax.inject.Inject;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
@@ -43,12 +44,9 @@ public class ServerMainUI extends javax.swing.JFrame {
 
         container = new ContainerService();
         container.startContainer();
-        serverMainBean = ServerMainBean.getInstance();
-
-        // Loading of the UIThread
-        uiThread = new UIUpdateThread(list_members);
-        uiThread.start();
-
+        
+        serverMainBean = ContainerService.getBean(ServerMainBean.class);
+        
         // Get wrapped Lists from Singleton for UI
         ui_registeredInUsers = ServerMainBean.wrapUserListForUI(serverMainBean.getRegisteredMembers());
         ui_loggedInUsers = ServerMainBean.wrapUserListForUI(serverMainBean.getloggedInMembers());
@@ -83,8 +81,6 @@ public class ServerMainUI extends javax.swing.JFrame {
 
     private ServerMainBean serverMainBean;
 
-    private final UIUpdateThread uiThread;
-
     private final List<String> ui_loggedInUsers;
 
     private final List<String> ui_registeredInUsers;
@@ -102,7 +98,6 @@ public class ServerMainUI extends javax.swing.JFrame {
     // ---------- ---------- ----------------
     public void refreshConfigList() {
         DefaultListModel lm = new DefaultListModel();
-        serverMainBean = ServerMainBean.getInstance();
         if (!serverMainBean.getConfigs().isEmpty()) {
             List<String> loggedInFormatted = serverMainBean.wrapServerConfigListForUI();
             for (String s : loggedInFormatted) {
@@ -521,7 +516,6 @@ public class ServerMainUI extends javax.swing.JFrame {
 
     private void radio_membersOnlineActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_radio_membersOnlineActionPerformed
         DefaultListModel lm = new DefaultListModel();
-        serverMainBean = ServerMainBean.getInstance();
         if (!serverMainBean.getloggedInMembers().isEmpty()) {
             List<String> loggedInFormatted = ServerMainBean.wrapUserListForUI(serverMainBean.getloggedInMembers());
             for (String s : loggedInFormatted) {
@@ -535,7 +529,6 @@ public class ServerMainUI extends javax.swing.JFrame {
 
     private void radio_membersRegisteredActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_radio_membersRegisteredActionPerformed
         DefaultListModel lm = new DefaultListModel();
-        serverMainBean = ServerMainBean.getInstance();
         if (!serverMainBean.getRegisteredMembers().isEmpty()) {
             List<String> loggedInFormatted = ServerMainBean.wrapUserListForUI(serverMainBean.getRegisteredMembers());
             for (String s : loggedInFormatted) {
